@@ -54,7 +54,13 @@
 }
 
 .btn__icon {
-  font-size: var(--fin-text-md);
+  display: inline-flex;
+  line-height: 0;
+  color: currentColor;
+}
+
+.btn__icon--lead {
+  margin-inline-end: 0.125rem;
 }
 
 .btn--primary {

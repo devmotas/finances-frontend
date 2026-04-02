@@ -23,8 +23,11 @@
 }
 
 .shell__logo {
-  font-size: var(--fin-text-2xl);
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fin-primary);
+  line-height: 0;
 }
 
 .shell__title {
@@ -136,13 +139,15 @@
 }
 
 .shell__tab-icon {
-  font-size: var(--fin-text-md);
+  display: inline-flex;
+  line-height: 0;
+  color: currentColor;
   opacity: 0.92;
 }
 
-.shell__tab-icon--in,
-.shell__tab-icon--out {
-  font-weight: var(--fin-weight-bold);
+.shell__tab.is-active .shell__tab-icon {
+  color: #fff;
+  opacity: 1;
 }
 
 .shell__main {

@@ -1,5 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 import { Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -8,7 +9,7 @@ import { TransactionModalComponent } from '../../shared/components/transaction-m
 
 @Component({
   selector: 'app-expenses',
-  imports: [CurrencyPipe, CategoryModalComponent, TransactionModalComponent],
+  imports: [CurrencyPipe, LucideAngularModule, CategoryModalComponent, TransactionModalComponent],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',
 })

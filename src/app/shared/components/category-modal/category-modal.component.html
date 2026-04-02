@@ -11,7 +11,9 @@
         <h2 id="cat-modal-title" class="modal__title">
           {{ editingId ? 'Editar categoria' : 'Nova categoria' }}
         </h2>
-        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">×</button>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">
+          <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
       </div>
 
       <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">

@@ -101,9 +101,26 @@
 }
 
 .card__icon {
-  font-size: var(--fin-text-xl);
-  line-height: 1;
-  filter: drop-shadow(0 1px 1px rgba(15, 23, 42, 0.06));
+  display: inline-flex;
+  line-height: 0;
+  color: var(--fin-text-muted);
+}
+
+.card--in .card__icon {
+  color: var(--fin-income);
+}
+
+.card--ess .card__icon {
+  color: var(--fin-essential);
+}
+
+.card--ne .card__icon,
+.card--out .card__icon {
+  color: var(--fin-expense);
+}
+
+.card--balance .card__icon {
+  color: var(--fin-income);
 }
 
 .card__label {
@@ -160,10 +177,11 @@
 }
 
 .empty__icon {
-  font-size: var(--fin-text-3xl);
-  display: block;
+  display: flex;
+  justify-content: center;
   margin-bottom: 0.75rem;
-  opacity: 0.4;
+  color: var(--fin-text-muted);
+  opacity: 0.45;
 }
 
 .empty__title {
@@ -319,10 +337,6 @@
   }
 
   .card__value {
-    font-size: var(--fin-text-lg);
-  }
-
-  .card__icon {
     font-size: var(--fin-text-lg);
   }
 

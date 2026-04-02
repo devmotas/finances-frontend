@@ -9,7 +9,9 @@
     >
       <div class="modal__head">
         <h2 id="tx-modal-title" class="modal__title">{{ title() }}</h2>
-        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">×</button>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">
+          <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
       </div>
 
       <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">

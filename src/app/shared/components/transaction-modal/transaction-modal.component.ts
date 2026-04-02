@@ -13,6 +13,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { Flow, Schedule, Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -35,7 +36,7 @@ function amountValidator(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-transaction-modal',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './transaction-modal.component.html',
   styleUrl: './transaction-modal.component.scss',
 })

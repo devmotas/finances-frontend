@@ -37,4 +37,5 @@ Inclui testes unitários dos cálculos financeiros em `src/app/core/utils/financ
 
 - Angular 19 (standalone, signals)
 - SCSS, `pt-BR` e moeda BRL
+- Ícones: [Lucide](https://lucide.dev/) via `lucide-angular` (registro em [`src/app/core/icons/app-lucide-icons.ts`](src/app/core/icons/app-lucide-icons.ts) + `LucideAngularModule.pick` no `app.config`)
 - Sem backend neste repositório

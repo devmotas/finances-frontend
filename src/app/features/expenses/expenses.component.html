@@ -11,10 +11,17 @@
     </div>
     <div class="page__actions">
       <button type="button" class="btn btn--secondary" (click)="openCategory()">
-        <span class="btn__icon" aria-hidden="true">🏷</span>
+        <span class="btn__icon" aria-hidden="true">
+          <lucide-icon name="tag" [size]="18" [strokeWidth]="2"></lucide-icon>
+        </span>
         Categoria
       </button>
-      <button type="button" class="btn btn--primary" (click)="openNewTx()">+ Saída</button>
+      <button type="button" class="btn btn--primary" (click)="openNewTx()">
+        <span class="btn__icon btn__icon--lead" aria-hidden="true">
+          <lucide-icon name="plus" [size]="20" [strokeWidth]="2.5"></lucide-icon>
+        </span>
+        Saída
+      </button>
     </div>
   </div>
 
@@ -52,8 +59,8 @@
           <p class="empty__title">Nenhuma despesa registrada</p>
           @if (categories().length === 0) {
             <p class="empty__hint">
-              Use <strong>Categoria</strong> para criar categorias; depois registre saídas em
-              <strong>+ Saída</strong>.
+              Use <strong>Categoria</strong> para criar categorias; depois use o botão
+              <strong>Saída</strong> (ícone +).
             </p>
           }
         </div>
@@ -99,8 +106,8 @@
           <p class="empty__title">Nenhuma despesa registrada</p>
           @if (categories().length === 0) {
             <p class="empty__hint">
-              Use <strong>Categoria</strong> para criar categorias; depois registre saídas em
-              <strong>+ Saída</strong>.
+              Use <strong>Categoria</strong> para criar categorias; depois use o botão
+              <strong>Saída</strong> (ícone +).
             </p>
           }
         </div>

@@ -41,10 +41,12 @@
 }
 
 @mixin close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
-  font-size: var(--fin-text-xl);
-  line-height: 1;
+  line-height: 0;
   cursor: pointer;
   color: var(--fin-text-muted);
   min-width: 44px;

@@ -1,10 +1,11 @@
 import { CurrencyPipe, PercentPipe } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 
 @Component({
   selector: 'app-overview',
-  imports: [CurrencyPipe, PercentPipe],
+  imports: [CurrencyPipe, PercentPipe, LucideAngularModule],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.scss',
 })
