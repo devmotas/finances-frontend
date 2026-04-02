@@ -104,6 +104,25 @@ a:hover {
   color: var(--fin-primary-hover);
 }
 
+/* Mobile: tipografia legível (mín. ~16px no corpo) e escala de títulos */
+@media (max-width: 767px) {
+  :root {
+    --fin-text-xs: 0.6875rem;
+    --fin-text-sm: 0.875rem;
+    --fin-text-base: 1rem;
+    --fin-text-md: 1rem;
+    --fin-text-lg: 1.125rem;
+    --fin-text-xl: 1.1875rem;
+    --fin-text-2xl: 1.375rem;
+    --fin-text-3xl: 2rem;
+    --fin-leading-normal: 1.6;
+  }
+
+  body {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -111,5 +130,24 @@ a:hover {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* Em telas touch, evita “lift” dos cards (só hover com ponteiro fino) */
+@media (hover: none) and (pointer: coarse) {
+  .card:hover {
+    transform: none;
+    box-shadow: var(--fin-shadow);
+    border-color: var(--fin-border);
+  }
+
+  .panel:hover {
+    box-shadow: var(--fin-shadow);
+  }
+
+  .tx-list__item:hover {
+    background: var(--fin-bg-muted);
+    box-shadow: none;
+    border-color: var(--fin-border);
   }
 }
