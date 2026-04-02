@@ -1,5 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { LucideAngularModule } from 'lucide-angular';
 import { Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -8,7 +9,7 @@ import { TransactionModalComponent } from '../../shared/components/transaction-m
 
 @Component({
   selector: 'app-expenses',
-  imports: [CurrencyPipe, CategoryModalComponent, TransactionModalComponent],
+  imports: [CurrencyPipe, LucideAngularModule, CategoryModalComponent, TransactionModalComponent],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',
 })
@@ -53,11 +54,6 @@ export class ExpensesComponent {
     this.categoryOpen.set(false);
   }
 
-  openNewTx(): void {
-    this.editingTx.set(null);
-    this.txOpen.set(true);
-  }
-
   closeTx(): void {
     this.txOpen.set(false);
     this.editingTx.set(null);
@@ -74,7 +70,21 @@ export class ExpensesComponent {
     this.toast.show('Saída excluída.', 'success');
   }
 
-  toggleChip(id: string): void {
+  selectAllFilter(): void {
+    this.filterCategoryId.set(null);
+  }
+
+  toggleCategoryFilter(id: string): void {
     this.filterCategoryId.update((cur) => (cur === id ? null : id));
+  }
+
+  openNewTx(): void {
+    if (this.facade.expenseCategories().length === 0) {
+      this.toast.show('Crie uma categoria antes de registrar uma saída.', 'info');
+      this.categoryOpen.set(true);
+      return;
+    }
+    this.editingTx.set(null);
+    this.txOpen.set(true);
   }
 }

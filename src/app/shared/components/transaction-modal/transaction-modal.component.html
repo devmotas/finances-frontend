@@ -9,13 +9,26 @@
     >
       <div class="modal__head">
         <h2 id="tx-modal-title" class="modal__title">{{ title() }}</h2>
-        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">×</button>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">
+          <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
       </div>
 
       <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
+        @if (blockNewWithoutCategories()) {
+          <p class="modal__hint" role="alert">
+            Cadastre ao menos uma categoria em <strong>Categoria</strong> na tela de Entradas ou Saídas
+            antes de registrar valores.
+          </p>
+        }
+
         <label class="field">
           <span class="field__label">Categoria</span>
-          <select class="field__input" formControlName="categoryId">
+          <select
+            class="field__input"
+            formControlName="categoryId"
+            [disabled]="blockNewWithoutCategories()"
+          >
             <option value="">Selecione uma categoria</option>
             @for (c of categories(); track c.id) {
               <option [value]="c.id">{{ c.name }}</option>
@@ -34,6 +47,7 @@
             formControlName="description"
             placeholder="Ex: Salário de janeiro ou [INSIRA O NOME DA PESSOA]"
             autocomplete="off"
+            [disabled]="blockNewWithoutCategories()"
           />
           @if (form.controls.description.touched && form.controls.description.errors?.['required']) {
             <span class="field__err">Informe a descrição.</span>
@@ -49,6 +63,7 @@
             formControlName="amount"
             placeholder="0,00"
             autocomplete="off"
+            [disabled]="blockNewWithoutCategories()"
           />
           @if (form.controls.amount.touched && form.controls.amount.errors) {
             <span class="field__err">Informe um valor maior que zero.</span>
@@ -57,12 +72,21 @@
 
         <label class="field">
           <span class="field__label">Data</span>
-          <input class="field__input" type="date" formControlName="date" />
+          <input
+            class="field__input"
+            type="date"
+            formControlName="date"
+            [disabled]="blockNewWithoutCategories()"
+          />
         </label>
 
         <label class="field">
           <span class="field__label">Tipo</span>
-          <select class="field__input" formControlName="schedule">
+          <select
+            class="field__input"
+            formControlName="schedule"
+            [disabled]="blockNewWithoutCategories()"
+          >
             <option value="fixed">Fixa (mensal)</option>
             <option value="variable">Apenas este mês</option>
           </select>
@@ -70,7 +94,9 @@
 
         <div class="modal__actions">
           <button type="button" class="btn btn--secondary" (click)="close()">Cancelar</button>
-          <button type="submit" class="btn btn--primary">Salvar</button>
+          <button type="submit" class="btn btn--primary" [disabled]="blockNewWithoutCategories()">
+            Salvar
+          </button>
         </div>
       </form>
     </div>

@@ -14,14 +14,16 @@
 
 .section__title {
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 800;
+  font-size: var(--fin-text-lg);
+  font-weight: var(--fin-weight-extrabold);
   color: var(--fin-text);
+  letter-spacing: var(--fin-tracking-tight);
 }
 
 .section__total {
-  font-weight: 800;
-  font-size: 1rem;
+  font-weight: var(--fin-weight-extrabold);
+  font-size: var(--fin-text-md);
+  font-variant-numeric: tabular-nums;
 }
 
 .section__total--ess {
@@ -46,4 +48,27 @@
 
 .tx-list__amount--out {
   color: var(--fin-expense);
+}
+
+@media (max-width: 767px) {
+  .section {
+    margin-bottom: 1.25rem;
+  }
+
+  .section__head {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.35rem;
+    margin-bottom: 0.625rem;
+  }
+
+  .section__title {
+    font-size: var(--fin-text-md);
+  }
+
+  .section__total {
+    font-size: var(--fin-text-sm);
+    align-self: flex-end;
+    text-align: right;
+  }
 }

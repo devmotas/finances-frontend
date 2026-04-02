@@ -13,6 +13,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { Flow, Schedule, Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -35,7 +36,7 @@ function amountValidator(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-transaction-modal',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './transaction-modal.component.html',
   styleUrl: './transaction-modal.component.scss',
 })
@@ -107,7 +108,16 @@ export class TransactionModalComponent {
     }
   }
 
+  /** Novo lançamento exige ao menos uma categoria real cadastrada. */
+  blockNewWithoutCategories(): boolean {
+    return !this.editing() && this.categories().length === 0;
+  }
+
   save(): void {
+    if (this.blockNewWithoutCategories()) {
+      this.toast.show('Crie uma categoria antes de salvar o lançamento.', 'error');
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.toast.show('Verifique os campos do formulário.', 'error');

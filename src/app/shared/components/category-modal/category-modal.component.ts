@@ -1,5 +1,6 @@
 import { Component, HostListener, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { LucideAngularModule } from 'lucide-angular';
 import { Category, ExpenseGroup, Flow } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -7,7 +8,7 @@ import { newId } from '../../../core/utils/id.util';
 
 @Component({
   selector: 'app-category-modal',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, LucideAngularModule],
   templateUrl: './category-modal.component.html',
   styleUrl: './category-modal.component.scss',
 })

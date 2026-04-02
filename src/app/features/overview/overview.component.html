@@ -8,7 +8,9 @@
     <article class="card card--in">
       <div class="card__accent" aria-hidden="true"></div>
       <div class="card__body">
-        <span class="card__icon" aria-hidden="true">📈</span>
+        <span class="card__icon" aria-hidden="true">
+          <lucide-icon name="trending-up" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </span>
         <h2 class="card__label">Total de Entradas</h2>
         <p class="card__value card__value--in">
           {{ totals().totalIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
@@ -19,7 +21,9 @@
     <article class="card card--ess">
       <div class="card__accent" aria-hidden="true"></div>
       <div class="card__body">
-        <span class="card__icon" aria-hidden="true">🛡</span>
+        <span class="card__icon" aria-hidden="true">
+          <lucide-icon name="shield" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </span>
         <h2 class="card__label">Despesas Essenciais</h2>
         <p class="card__value card__value--ess">
           {{ totals().totalEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
@@ -30,7 +34,9 @@
     <article class="card card--ne">
       <div class="card__accent" aria-hidden="true"></div>
       <div class="card__body">
-        <span class="card__icon" aria-hidden="true">🛡</span>
+        <span class="card__icon" aria-hidden="true">
+          <lucide-icon name="shield-alert" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </span>
         <h2 class="card__label">Despesas Não Essenciais</h2>
         <p class="card__value card__value--ne">
           {{ totals().totalNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
@@ -41,7 +47,9 @@
     <article class="card card--out">
       <div class="card__accent" aria-hidden="true"></div>
       <div class="card__body">
-        <span class="card__icon" aria-hidden="true">📉</span>
+        <span class="card__icon" aria-hidden="true">
+          <lucide-icon name="trending-down" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </span>
         <h2 class="card__label">Total de Despesas</h2>
         <p class="card__value card__value--out">
           {{ totals().totalExpenses | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
@@ -52,7 +60,9 @@
     <article class="card card--balance card--wide">
       <div class="card__accent card__accent--balance" aria-hidden="true"></div>
       <div class="card__body">
-        <span class="card__icon" aria-hidden="true">👛</span>
+        <span class="card__icon" aria-hidden="true">
+          <lucide-icon name="wallet" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </span>
         <h2 class="card__label">Saldo Final</h2>
         <p
           class="card__value"
@@ -68,7 +78,9 @@
   <div class="summary panel">
     @if (!hasData()) {
       <div class="empty">
-        <span class="empty__icon" aria-hidden="true">👛</span>
+        <span class="empty__icon" aria-hidden="true">
+          <lucide-icon name="wallet" [size]="40" [strokeWidth]="1.75"></lucide-icon>
+        </span>
         <p class="empty__title">Nenhum registro ainda</p>
         <p class="empty__hint">Adicione entradas e saídas para ver o resumo</p>
       </div>

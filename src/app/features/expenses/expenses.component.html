@@ -11,20 +11,35 @@
     </div>
     <div class="page__actions">
       <button type="button" class="btn btn--secondary" (click)="openCategory()">
-        <span class="btn__icon" aria-hidden="true">🏷</span>
+        <span class="btn__icon" aria-hidden="true">
+          <lucide-icon name="tag" [size]="18" [strokeWidth]="2"></lucide-icon>
+        </span>
         Categoria
       </button>
-      <button type="button" class="btn btn--primary" (click)="openNewTx()">+ Saída</button>
+      <button type="button" class="btn btn--primary" (click)="openNewTx()">
+        <span class="btn__icon btn__icon--lead" aria-hidden="true">
+          <lucide-icon name="plus" [size]="20" [strokeWidth]="2.5"></lucide-icon>
+        </span>
+        Saída
+      </button>
     </div>
   </div>
 
   <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    <button
+      type="button"
+      class="chip chip--system"
+      [class.chip--active]="filterCategoryId() === null"
+      (click)="selectAllFilter()"
+    >
+      Todas
+    </button>
     @for (c of categories(); track c.id) {
       <button
         type="button"
         class="chip"
         [class.chip--active]="filterCategoryId() === c.id"
-        (click)="toggleChip(c.id)"
+        (click)="toggleCategoryFilter(c.id)"
       >
         {{ c.name }}
       </button>
@@ -42,6 +57,12 @@
       @if (essentialList().length === 0) {
         <div class="empty">
           <p class="empty__title">Nenhuma despesa registrada</p>
+          @if (categories().length === 0) {
+            <p class="empty__hint">
+              Use <strong>Categoria</strong> para criar categorias; depois use o botão
+              <strong>Saída</strong> (ícone +).
+            </p>
+          }
         </div>
       } @else {
         <ul class="tx-list">
@@ -83,6 +104,12 @@
       @if (nonEssentialList().length === 0) {
         <div class="empty">
           <p class="empty__title">Nenhuma despesa registrada</p>
+          @if (categories().length === 0) {
+            <p class="empty__hint">
+              Use <strong>Categoria</strong> para criar categorias; depois use o botão
+              <strong>Saída</strong> (ícone +).
+            </p>
+          }
         </div>
       } @else {
         <ul class="tx-list">

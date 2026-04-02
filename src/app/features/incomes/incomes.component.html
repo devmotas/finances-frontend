@@ -9,20 +9,35 @@
     </div>
     <div class="page__actions">
       <button type="button" class="btn btn--secondary" (click)="openCategory()">
-        <span class="btn__icon" aria-hidden="true">🏷</span>
+        <span class="btn__icon" aria-hidden="true">
+          <lucide-icon name="tag" [size]="18" [strokeWidth]="2"></lucide-icon>
+        </span>
         Categoria
       </button>
-      <button type="button" class="btn btn--primary" (click)="openNewTx()">+ Entrada</button>
+      <button type="button" class="btn btn--primary" (click)="openNewTx()">
+        <span class="btn__icon btn__icon--lead" aria-hidden="true">
+          <lucide-icon name="plus" [size]="20" [strokeWidth]="2.5"></lucide-icon>
+        </span>
+        Entrada
+      </button>
     </div>
   </div>
 
   <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    <button
+      type="button"
+      class="chip chip--system"
+      [class.chip--active]="filterCategoryId() === null"
+      (click)="selectAllFilter()"
+    >
+      Todos
+    </button>
     @for (c of categories(); track c.id) {
       <button
         type="button"
         class="chip"
         [class.chip--active]="filterCategoryId() === c.id"
-        (click)="toggleChip(c.id)"
+        (click)="toggleCategoryFilter(c.id)"
       >
         {{ c.name }}
       </button>
@@ -33,7 +48,14 @@
     @if (list().length === 0) {
       <div class="empty">
         <p class="empty__title">Nenhuma entrada registrada</p>
-        <p class="empty__hint">Adicione uma entrada ou altere o mês no topo.</p>
+        <p class="empty__hint">
+          @if (categories().length === 0) {
+            Use <strong>Categoria</strong> para criar sua primeira categoria; depois use o botão
+            <strong>Entrada</strong> (ícone +).
+          } @else {
+            Adicione uma entrada ou altere o mês no topo.
+          }
+        </p>
       </div>
     } @else {
       <ul class="tx-list">
