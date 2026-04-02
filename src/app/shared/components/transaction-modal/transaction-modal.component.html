@@ -1,0 +1,78 @@
+@if (visible()) {
+  <div class="modal__backdrop" (click)="backdropClick($event)" role="presentation">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'tx-modal-title'"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal__head">
+        <h2 id="tx-modal-title" class="modal__title">{{ title() }}</h2>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">×</button>
+      </div>
+
+      <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
+        <label class="field">
+          <span class="field__label">Categoria</span>
+          <select class="field__input" formControlName="categoryId">
+            <option value="">Selecione uma categoria</option>
+            @for (c of categories(); track c.id) {
+              <option [value]="c.id">{{ c.name }}</option>
+            }
+          </select>
+          @if (form.controls.categoryId.touched && form.controls.categoryId.errors?.['required']) {
+            <span class="field__err">Selecione uma categoria.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Descrição</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="description"
+            placeholder="Ex: Salário de janeiro ou [INSIRA O NOME DA PESSOA]"
+            autocomplete="off"
+          />
+          @if (form.controls.description.touched && form.controls.description.errors?.['required']) {
+            <span class="field__err">Informe a descrição.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Valor (R$)</span>
+          <input
+            class="field__input"
+            type="text"
+            inputmode="decimal"
+            formControlName="amount"
+            placeholder="0,00"
+            autocomplete="off"
+          />
+          @if (form.controls.amount.touched && form.controls.amount.errors) {
+            <span class="field__err">Informe um valor maior que zero.</span>
+          }
+        </label>
+
+        <label class="field">
+          <span class="field__label">Data</span>
+          <input class="field__input" type="date" formControlName="date" />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Tipo</span>
+          <select class="field__input" formControlName="schedule">
+            <option value="fixed">Fixa (mensal)</option>
+            <option value="variable">Apenas este mês</option>
+          </select>
+        </label>
+
+        <div class="modal__actions">
+          <button type="button" class="btn btn--secondary" (click)="close()">Cancelar</button>
+          <button type="submit" class="btn btn--primary">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

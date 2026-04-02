@@ -1,0 +1,78 @@
+@if (visible()) {
+  <div class="modal__backdrop" (click)="backdropClick($event)" role="presentation">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      [attr.aria-labelledby]="'cat-modal-title'"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal__head">
+        <h2 id="cat-modal-title" class="modal__title">
+          {{ editingId ? 'Editar categoria' : 'Nova categoria' }}
+        </h2>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">×</button>
+      </div>
+
+      <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
+        <label class="field">
+          <span class="field__label">Nome</span>
+          <input
+            class="field__input"
+            type="text"
+            formControlName="name"
+            placeholder="Ex: Gastos Médicos"
+            autocomplete="off"
+          />
+          @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
+            <span class="field__err">Informe o nome.</span>
+          }
+        </label>
+
+        @if (isExpense()) {
+          <label class="field">
+            <span class="field__label">Grupo</span>
+            <select class="field__input" formControlName="expenseGroup">
+              <option value="essential">Essencial</option>
+              <option value="nonEssential">Não essencial</option>
+            </select>
+          </label>
+        }
+
+        <div class="modal__actions">
+          @if (editingId) {
+            <button type="button" class="btn btn--ghost" (click)="cancelEdit()">Cancelar edição</button>
+          }
+          <button type="button" class="btn btn--secondary" (click)="close()">Fechar</button>
+          <button type="submit" class="btn btn--primary" [disabled]="form.invalid">Salvar</button>
+        </div>
+      </form>
+
+      <div class="modal__section">
+        <h3 class="modal__subtitle">Suas categorias</h3>
+        <ul class="cat-list">
+          @for (c of list(); track c.id) {
+            <li class="cat-list__item">
+              <span class="cat-list__name">{{ c.name }}</span>
+              @if (c.expenseGroup) {
+                <span class="cat-list__tag">{{
+                  c.expenseGroup === 'essential' ? 'Essencial' : 'Não essencial'
+                }}</span>
+              }
+              <div class="cat-list__actions">
+                <button type="button" class="btn btn--sm btn--ghost" (click)="startEdit(c)">
+                  Editar
+                </button>
+                <button type="button" class="btn btn--sm btn--danger-ghost" (click)="remove(c)">
+                  Excluir
+                </button>
+              </div>
+            </li>
+          } @empty {
+            <li class="cat-list__empty">Nenhuma categoria.</li>
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+}

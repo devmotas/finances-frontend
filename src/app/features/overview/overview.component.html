@@ -1,0 +1,131 @@
+<div class="overview">
+  <header class="overview__intro">
+    <h1 class="overview__title">Visão Geral</h1>
+    <p class="overview__sub">Resumo das suas finanças</p>
+  </header>
+
+  <div class="cards">
+    <article class="card card--in">
+      <div class="card__accent" aria-hidden="true"></div>
+      <div class="card__body">
+        <span class="card__icon" aria-hidden="true">📈</span>
+        <h2 class="card__label">Total de Entradas</h2>
+        <p class="card__value card__value--in">
+          {{ totals().totalIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+      </div>
+    </article>
+
+    <article class="card card--ess">
+      <div class="card__accent" aria-hidden="true"></div>
+      <div class="card__body">
+        <span class="card__icon" aria-hidden="true">🛡</span>
+        <h2 class="card__label">Despesas Essenciais</h2>
+        <p class="card__value card__value--ess">
+          {{ totals().totalEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+      </div>
+    </article>
+
+    <article class="card card--ne">
+      <div class="card__accent" aria-hidden="true"></div>
+      <div class="card__body">
+        <span class="card__icon" aria-hidden="true">🛡</span>
+        <h2 class="card__label">Despesas Não Essenciais</h2>
+        <p class="card__value card__value--ne">
+          {{ totals().totalNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+      </div>
+    </article>
+
+    <article class="card card--out">
+      <div class="card__accent" aria-hidden="true"></div>
+      <div class="card__body">
+        <span class="card__icon" aria-hidden="true">📉</span>
+        <h2 class="card__label">Total de Despesas</h2>
+        <p class="card__value card__value--out">
+          {{ totals().totalExpenses | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+      </div>
+    </article>
+
+    <article class="card card--balance card--wide">
+      <div class="card__accent card__accent--balance" aria-hidden="true"></div>
+      <div class="card__body">
+        <span class="card__icon" aria-hidden="true">👛</span>
+        <h2 class="card__label">Saldo Final</h2>
+        <p
+          class="card__value"
+          [class.card__value--in]="totals().balance >= 0"
+          [class.card__value--out]="totals().balance < 0"
+        >
+          {{ totals().balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+      </div>
+    </article>
+  </div>
+
+  <div class="summary panel">
+    @if (!hasData()) {
+      <div class="empty">
+        <span class="empty__icon" aria-hidden="true">👛</span>
+        <p class="empty__title">Nenhum registro ainda</p>
+        <p class="empty__hint">Adicione entradas e saídas para ver o resumo</p>
+      </div>
+    } @else {
+      <h3 class="summary__title">Resumo do mês</h3>
+      <p class="summary__caption">Comparativo visual (escala pelo maior valor entre entradas e despesas)</p>
+
+      <div class="bars" role="img" aria-label="Barras comparativas">
+        <div class="bars__row">
+          <span class="bars__label">Entradas</span>
+          <div class="bars__track">
+            <div class="bars__fill bars__fill--in" [style.width.%]="barParts().incomePct * 100"></div>
+          </div>
+        </div>
+        <div class="bars__row">
+          <span class="bars__label">Despesas essenciais</span>
+          <div class="bars__track">
+            <div class="bars__fill bars__fill--ess" [style.width.%]="barParts().essentialPct * 100"></div>
+          </div>
+        </div>
+        <div class="bars__row">
+          <span class="bars__label">Despesas não essenciais</span>
+          <div class="bars__track">
+            <div class="bars__fill bars__fill--ne" [style.width.%]="barParts().nonEssentialPct * 100"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="split" aria-label="Composição das despesas">
+        <span class="split__label">Composição das despesas</span>
+        <div class="split__bar">
+          <div
+            class="split__seg split__seg--ess"
+            [style.flex-grow]="totals().totalEssential || 0.001"
+            [title]="
+              (barParts().expenseShareEssential | percent: '1.0-0' : 'pt-BR') + ' essenciais'
+            "
+          ></div>
+          <div
+            class="split__seg split__seg--ne"
+            [style.flex-grow]="totals().totalNonEssential || 0.001"
+            [title]="
+              (barParts().expenseShareNonEssential | percent: '1.0-0' : 'pt-BR') + ' não essenciais'
+            "
+          ></div>
+        </div>
+        <div class="split__legend">
+          <span
+            >Essenciais
+            {{ barParts().expenseShareEssential | percent: '1.0-0' : 'pt-BR' }}</span
+          >
+          <span
+            >Não essenciais
+            {{ barParts().expenseShareNonEssential | percent: '1.0-0' : 'pt-BR' }}</span
+          >
+        </div>
+      </div>
+    }
+  </div>
+</div>

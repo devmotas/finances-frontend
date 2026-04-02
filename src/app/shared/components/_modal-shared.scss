@@ -1,0 +1,109 @@
+@mixin backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+@mixin panel {
+  width: 100%;
+  max-width: 440px;
+  background: var(--fin-surface);
+  border-radius: var(--fin-radius-lg);
+  box-shadow: var(--fin-shadow-lg);
+  padding: 1.25rem 1.5rem;
+  box-sizing: border-box;
+}
+
+@mixin head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+@mixin title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--fin-text);
+}
+
+@mixin close-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--fin-text-muted);
+  min-width: 44px;
+  min-height: 44px;
+  margin: -0.5rem -0.5rem 0 0;
+  border-radius: var(--fin-radius-sm);
+}
+
+@mixin close-btn-states {
+  &:focus-visible {
+    outline: 2px solid var(--fin-primary);
+    outline-offset: 2px;
+  }
+}
+
+@mixin input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--fin-radius-sm);
+  border: 1px solid var(--fin-border);
+  font-size: 1rem;
+  min-height: 44px;
+  background: var(--fin-surface);
+  color: var(--fin-text);
+}
+
+@mixin field-input {
+  @include input;
+  &:focus {
+    outline: none;
+    border-color: var(--fin-primary);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--fin-primary) 22%, transparent);
+  }
+}
+
+@mixin btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--fin-radius-sm);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+@mixin btn-primary {
+  background: var(--fin-primary);
+  color: #fff;
+  border-color: var(--fin-primary);
+}
+
+@mixin btn-secondary {
+  background: var(--fin-surface);
+  color: var(--fin-text);
+  border-color: var(--fin-border);
+}
+
+@mixin btn-ghost {
+  background: transparent;
+  color: var(--fin-text-muted);
+  border-color: transparent;
+}

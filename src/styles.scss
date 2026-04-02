@@ -1,0 +1,51 @@
+/* Global design tokens — Minhas Finanças */
+:root {
+  --fin-primary: #0e5e7e;
+  --fin-primary-dark: #0a4a63;
+  --fin-text: #1e293b;
+  --fin-text-muted: #64748b;
+  --fin-border: #e2e8f0;
+  --fin-bg-page: #f1f5f9;
+  --fin-bg-muted: #f8fafc;
+  --fin-surface: #ffffff;
+  --fin-income: #15803d;
+  --fin-expense: #b91c1c;
+  --fin-essential: #c2410c;
+  --fin-radius: 12px;
+  --fin-radius-sm: 8px;
+  --fin-radius-lg: 16px;
+  --fin-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  --fin-shadow-lg: 0 10px 40px rgba(15, 23, 42, 0.12);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    'Helvetica Neue',
+    Arial,
+    sans-serif;
+  background: var(--fin-bg-page);
+  color: var(--fin-text);
+  line-height: 1.5;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

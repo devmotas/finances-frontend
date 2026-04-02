@@ -1,0 +1,49 @@
+@use '../incomes/incomes.component.scss';
+
+.section {
+  margin-bottom: 1.5rem;
+}
+
+.section__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.section__title {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 800;
+  color: var(--fin-text);
+}
+
+.section__total {
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.section__total--ess {
+  color: var(--fin-essential);
+}
+
+.section__total--ne {
+  color: var(--fin-expense);
+}
+
+.page__total--out {
+  color: var(--fin-expense);
+}
+
+.tx-list__item--ess {
+  border-left-color: var(--fin-essential);
+}
+
+.tx-list__item--ne {
+  border-left-color: var(--fin-expense);
+}
+
+.tx-list__amount--out {
+  color: var(--fin-expense);
+}

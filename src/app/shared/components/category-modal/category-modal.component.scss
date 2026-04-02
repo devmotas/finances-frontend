@@ -1,0 +1,143 @@
+@use '../modal-shared' as *;
+
+.modal__backdrop {
+  @include backdrop;
+}
+
+.modal {
+  @include panel;
+  max-height: min(90vh, 720px);
+  overflow: auto;
+}
+
+.modal__head {
+  @include head;
+}
+
+.modal__title {
+  @include title;
+}
+
+.modal__x {
+  @include close-btn;
+  @include close-btn-states;
+}
+
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field__label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--fin-text-muted);
+}
+
+.field__input {
+  @include field-input;
+}
+
+.field__err {
+  font-size: 0.8125rem;
+  color: var(--fin-expense);
+}
+
+.modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  margin-top: 0.25rem;
+}
+
+.btn {
+  @include btn;
+}
+
+.btn--primary {
+  @include btn-primary;
+}
+
+.btn--secondary {
+  @include btn-secondary;
+}
+
+.btn--ghost {
+  @include btn-ghost;
+}
+
+.btn--danger-ghost {
+  color: var(--fin-expense);
+}
+
+.btn--sm {
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  min-height: 36px;
+}
+
+.modal__section {
+  border-top: 1px solid var(--fin-border);
+  padding-top: 1rem;
+}
+
+.modal__subtitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  color: var(--fin-text);
+}
+
+.cat-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cat-list__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--fin-bg-muted);
+  border-radius: var(--fin-radius-sm);
+}
+
+.cat-list__name {
+  flex: 1;
+  min-width: 120px;
+  font-weight: 500;
+}
+
+.cat-list__tag {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  color: var(--fin-text-muted);
+}
+
+.cat-list__actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.cat-list__empty {
+  color: var(--fin-text-muted);
+  font-size: 0.875rem;
+  padding: 0.5rem 0;
+}

@@ -1,0 +1,10 @@
+@if (toast.toasts().length) {
+  <div class="toast-host" role="region" aria-label="Notificações">
+    @for (t of toast.toasts(); track t.id) {
+      <div class="toast toast--{{ t.kind }}" role="status">
+        <span class="toast__msg">{{ t.message }}</span>
+        <button type="button" class="toast__close" (click)="dismiss(t.id)" aria-label="Fechar">×</button>
+      </div>
+    }
+  </div>
+}

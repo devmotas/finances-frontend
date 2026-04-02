@@ -1,0 +1,45 @@
+<div class="shell">
+  <header class="shell__header">
+    <div class="shell__brand">
+      <span class="shell__logo" aria-hidden="true">💰</span>
+      <span class="shell__title">Minhas Finanças</span>
+    </div>
+    <div class="shell__month" role="group" aria-label="Mês de referência">
+      <button type="button" class="shell__month-btn" (click)="prev()" aria-label="Mês anterior">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+      <span class="shell__month-label">{{ monthLabel() }}</span>
+      <button type="button" class="shell__month-btn" (click)="next()" aria-label="Próximo mês">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <nav class="shell__tabs" aria-label="Navegação principal">
+    <a
+      routerLink="/visao-geral"
+      routerLinkActive="is-active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      class="shell__tab"
+    >
+      <span class="shell__tab-icon" aria-hidden="true">▦</span>
+      Visão Geral
+    </a>
+    <a routerLink="/entradas" routerLinkActive="is-active" class="shell__tab">
+      <span class="shell__tab-icon shell__tab-icon--in" aria-hidden="true">↙</span>
+      Entradas
+    </a>
+    <a routerLink="/saidas" routerLinkActive="is-active" class="shell__tab">
+      <span class="shell__tab-icon shell__tab-icon--out" aria-hidden="true">↗</span>
+      Saídas
+    </a>
+  </nav>
+
+  <main class="shell__main">
+    <router-outlet />
+  </main>
+</div>

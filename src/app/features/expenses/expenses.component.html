@@ -1,0 +1,128 @@
+<div class="page">
+  <div class="page__head">
+    <div>
+      <h1 class="page__title">Saídas</h1>
+      <p class="page__total page__total--out">
+        Total:
+        {{
+          totalEssential() + totalNonEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+        }}
+      </p>
+    </div>
+    <div class="page__actions">
+      <button type="button" class="btn btn--secondary" (click)="openCategory()">
+        <span class="btn__icon" aria-hidden="true">🏷</span>
+        Categoria
+      </button>
+      <button type="button" class="btn btn--primary" (click)="openNewTx()">+ Saída</button>
+    </div>
+  </div>
+
+  <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    @for (c of categories(); track c.id) {
+      <button
+        type="button"
+        class="chip"
+        [class.chip--active]="filterCategoryId() === c.id"
+        (click)="toggleChip(c.id)"
+      >
+        {{ c.name }}
+      </button>
+    }
+  </div>
+
+  <section class="section">
+    <div class="section__head">
+      <h2 class="section__title">Essenciais</h2>
+      <span class="section__total section__total--ess">{{
+        totalEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+      }}</span>
+    </div>
+    <div class="panel">
+      @if (essentialList().length === 0) {
+        <div class="empty">
+          <p class="empty__title">Nenhuma despesa registrada</p>
+        </div>
+      } @else {
+        <ul class="tx-list">
+          @for (t of essentialList(); track t.id) {
+            <li class="tx-list__item tx-list__item--ess">
+              <div class="tx-list__main">
+                <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
+                <span class="tx-list__desc">{{ t.description }}</span>
+                <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                  {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                </span>
+              </div>
+              <div class="tx-list__side">
+                <span class="tx-list__amount tx-list__amount--out">{{
+                  t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                }}</span>
+                <div class="tx-list__actions">
+                  <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
+                  <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section__head">
+      <h2 class="section__title">Não essenciais</h2>
+      <span class="section__total section__total--ne">{{
+        totalNonEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+      }}</span>
+    </div>
+    <div class="panel">
+      @if (nonEssentialList().length === 0) {
+        <div class="empty">
+          <p class="empty__title">Nenhuma despesa registrada</p>
+        </div>
+      } @else {
+        <ul class="tx-list">
+          @for (t of nonEssentialList(); track t.id) {
+            <li class="tx-list__item tx-list__item--ne">
+              <div class="tx-list__main">
+                <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
+                <span class="tx-list__desc">{{ t.description }}</span>
+                <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                  {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                </span>
+              </div>
+              <div class="tx-list__side">
+                <span class="tx-list__amount tx-list__amount--out">{{
+                  t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                }}</span>
+                <div class="tx-list__actions">
+                  <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
+                  <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
+                    Excluir
+                  </button>
+                </div>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  </section>
+</div>
+
+<app-category-modal
+  [visible]="categoryOpen()"
+  [flow]="'expense'"
+  (closed)="closeCategory()"
+/>
+
+<app-transaction-modal
+  [visible]="txOpen()"
+  [flow]="'expense'"
+  [editing]="editingTx()"
+  (closed)="closeTx()"
+/>

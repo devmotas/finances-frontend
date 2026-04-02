@@ -1,0 +1,132 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--fin-bg-page);
+}
+
+.shell__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--fin-surface);
+  border-bottom: 1px solid var(--fin-border);
+}
+
+.shell__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.shell__logo {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.shell__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--fin-text);
+  letter-spacing: -0.02em;
+}
+
+.shell__month {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: var(--fin-bg-muted);
+  border-radius: var(--fin-radius);
+  padding: 0.25rem 0.5rem;
+}
+
+.shell__month-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--fin-primary);
+  border-radius: var(--fin-radius-sm);
+  cursor: pointer;
+}
+
+.shell__month-btn:hover {
+  background: color-mix(in srgb, var(--fin-primary) 12%, transparent);
+}
+
+.shell__month-btn:focus-visible {
+  outline: 2px solid var(--fin-primary);
+  outline-offset: 2px;
+}
+
+.shell__month-label {
+  font-weight: 600;
+  color: var(--fin-text);
+  text-transform: capitalize;
+  min-width: 9rem;
+  text-align: center;
+  font-size: 0.9375rem;
+}
+
+.shell__tabs {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--fin-surface);
+  border-bottom: 1px solid var(--fin-border);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shell__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  min-height: 44px;
+  border-radius: var(--fin-radius);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--fin-text-muted);
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background 0.15s, color 0.15s;
+}
+
+.shell__tab:hover {
+  background: var(--fin-bg-muted);
+  color: var(--fin-text);
+}
+
+.shell__tab.is-active {
+  background: var(--fin-primary);
+  color: #fff;
+  border-color: var(--fin-primary);
+}
+
+.shell__tab-icon {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.shell__tab-icon--in,
+.shell__tab-icon--out {
+  font-weight: 700;
+}
+
+.shell__main {
+  flex: 1;
+  padding: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
