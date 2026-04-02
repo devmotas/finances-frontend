@@ -23,7 +23,7 @@ Artefatos em `dist/finances-frontend/`. Pode ser publicado em qualquer hospedage
 
 Os dados ficam no **localStorage** do navegador, chave `finances-app-v1` (JSON com categorias e transações). Não há sincronização entre dispositivos nem backup automático; limpar os dados do site remove o histórico.
 
-Na primeira visita, categorias padrão (entradas e saídas do seu modelo) são criadas automaticamente.
+Na primeira visita não há categorias: use **Categoria** para criar as suas. O filtro **Todos** / **Todas** nos chips é só visualização (mostra tudo do mês) e não é uma categoria gravada. Para lançar receitas ou despesas é obrigatório existir ao menos uma categoria real.
 
 ## Testes
 

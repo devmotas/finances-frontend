@@ -1,5 +1,4 @@
 import { computed, Injectable, signal } from '@angular/core';
-import { DEFAULT_CATEGORIES } from '../data/category-seed';
 import { AppState, Category, Transaction } from '../models/finances.models';
 
 const STORAGE_KEY = 'finances-app-v1';
@@ -8,7 +7,7 @@ const SCHEMA_VERSION = 1;
 function emptyState(): AppState {
   return {
     schemaVersion: SCHEMA_VERSION,
-    categories: [...DEFAULT_CATEGORIES],
+    categories: [],
     transactions: [],
   };
 }
@@ -31,12 +30,9 @@ export class FinancesStorageService {
     try {
       const parsed = JSON.parse(raw) as AppState;
       if (!parsed || typeof parsed !== 'object') return emptyState();
-      if (!Array.isArray(parsed.categories) || parsed.categories.length === 0) {
-        return { ...parsed, categories: [...DEFAULT_CATEGORIES], schemaVersion: SCHEMA_VERSION };
-      }
       return {
         schemaVersion: parsed.schemaVersion ?? SCHEMA_VERSION,
-        categories: parsed.categories,
+        categories: Array.isArray(parsed.categories) ? parsed.categories : [],
         transactions: Array.isArray(parsed.transactions) ? parsed.transactions : [],
       };
     } catch {

@@ -1,21 +1,63 @@
-/* Global design tokens — Minhas Finanças */
+/* Design system — Minhas Finanças */
 :root {
-  --fin-primary: #0e5e7e;
-  --fin-primary-dark: #0a4a63;
-  --fin-text: #1e293b;
+  /* Tipografia */
+  --fin-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fin-text-xs: 0.75rem;
+  --fin-text-sm: 0.8125rem;
+  --fin-text-base: 0.9375rem;
+  --fin-text-md: 1rem;
+  --fin-text-lg: 1.125rem;
+  --fin-text-xl: 1.25rem;
+  --fin-text-2xl: 1.5rem;
+  --fin-text-3xl: 1.875rem;
+  --fin-weight-normal: 400;
+  --fin-weight-medium: 500;
+  --fin-weight-semibold: 600;
+  --fin-weight-bold: 700;
+  --fin-weight-extrabold: 800;
+  --fin-leading-tight: 1.25;
+  --fin-leading-snug: 1.4;
+  --fin-leading-normal: 1.55;
+  --fin-tracking-tight: -0.02em;
+  --fin-tracking-wide: 0.04em;
+
+  /* Cores — base */
+  --fin-primary: #0b5d7a;
+  --fin-primary-hover: #094a63;
+  --fin-primary-muted: color-mix(in srgb, var(--fin-primary) 14%, transparent);
+  --fin-text: #0f172a;
+  --fin-text-secondary: #334155;
   --fin-text-muted: #64748b;
   --fin-border: #e2e8f0;
-  --fin-bg-page: #f1f5f9;
-  --fin-bg-muted: #f8fafc;
+  --fin-border-strong: #cbd5e1;
+  --fin-bg-page: #eef2f7;
+  --fin-bg-page-2: #e2e8f0;
+  --fin-bg-muted: #f1f5f9;
   --fin-surface: #ffffff;
+  --fin-surface-elevated: #ffffff;
+
+  /* Semânticas */
   --fin-income: #15803d;
-  --fin-expense: #b91c1c;
+  --fin-income-hover: #166534;
+  --fin-income-soft: color-mix(in srgb, var(--fin-income) 12%, var(--fin-surface));
+  --fin-expense: #c81e1e;
+  --fin-expense-hover: #b91c1c;
+  --fin-expense-soft: color-mix(in srgb, var(--fin-expense) 10%, var(--fin-surface));
   --fin-essential: #c2410c;
+  --fin-essential-soft: color-mix(in srgb, var(--fin-essential) 12%, var(--fin-surface));
+
+  /* Raios e sombras */
   --fin-radius: 12px;
   --fin-radius-sm: 8px;
   --fin-radius-lg: 16px;
-  --fin-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
-  --fin-shadow-lg: 0 10px 40px rgba(15, 23, 42, 0.12);
+  --fin-radius-full: 999px;
+  --fin-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 4px 12px rgba(15, 23, 42, 0.06);
+  --fin-shadow-md: 0 4px 6px rgba(15, 23, 42, 0.05), 0 10px 24px rgba(15, 23, 42, 0.08);
+  --fin-shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.12);
+  --fin-shadow-card-hover: 0 8px 24px rgba(15, 23, 42, 0.1);
+
+  --fin-transition: 0.18s ease;
+  --fin-transition-fast: 0.12s ease;
 }
 
 *,
@@ -26,21 +68,24 @@
 
 html {
   font-size: 16px;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
-  background: var(--fin-bg-page);
+  font-family: var(--fin-font-sans);
+  font-size: var(--fin-text-md);
+  font-weight: var(--fin-weight-normal);
+  line-height: var(--fin-leading-normal);
   color: var(--fin-text);
-  line-height: 1.5;
+  background-color: var(--fin-bg-page);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 0% -20%, rgba(11, 93, 122, 0.08), transparent 55%),
+    radial-gradient(ellipse 90% 60% at 100% 0%, rgba(21, 128, 61, 0.05), transparent 50%),
+    linear-gradient(180deg, var(--fin-bg-page) 0%, #f8fafc 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
@@ -48,4 +93,23 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+a {
+  color: var(--fin-primary);
+  transition: color var(--fin-transition-fast);
+}
+
+a:hover {
+  color: var(--fin-primary-hover);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

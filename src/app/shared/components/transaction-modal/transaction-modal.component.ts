@@ -107,7 +107,16 @@ export class TransactionModalComponent {
     }
   }
 
+  /** Novo lançamento exige ao menos uma categoria real cadastrada. */
+  blockNewWithoutCategories(): boolean {
+    return !this.editing() && this.categories().length === 0;
+  }
+
   save(): void {
+    if (this.blockNewWithoutCategories()) {
+      this.toast.show('Crie uma categoria antes de salvar o lançamento.', 'error');
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.toast.show('Verifique os campos do formulário.', 'error');

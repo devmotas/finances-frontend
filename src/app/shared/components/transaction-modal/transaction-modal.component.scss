@@ -23,6 +23,18 @@
   @include close-btn-states;
 }
 
+.modal__hint {
+  margin: 0 0 0.5rem;
+  padding: 0.75rem 1rem;
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-medium);
+  line-height: var(--fin-leading-snug);
+  color: var(--fin-text-secondary);
+  background: var(--fin-bg-muted);
+  border: 1px solid var(--fin-border);
+  border-radius: var(--fin-radius-sm);
+}
+
 .modal__form {
   display: flex;
   flex-direction: column;
@@ -36,9 +48,9 @@
 }
 
 .field__label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--fin-text-muted);
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-semibold);
+  color: var(--fin-text-secondary);
 }
 
 .field__input {
@@ -46,7 +58,8 @@
 }
 
 .field__err {
-  font-size: 0.8125rem;
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-medium);
   color: var(--fin-expense);
 }
 

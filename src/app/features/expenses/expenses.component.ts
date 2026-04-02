@@ -53,11 +53,6 @@ export class ExpensesComponent {
     this.categoryOpen.set(false);
   }
 
-  openNewTx(): void {
-    this.editingTx.set(null);
-    this.txOpen.set(true);
-  }
-
   closeTx(): void {
     this.txOpen.set(false);
     this.editingTx.set(null);
@@ -74,7 +69,21 @@ export class ExpensesComponent {
     this.toast.show('Saída excluída.', 'success');
   }
 
-  toggleChip(id: string): void {
+  selectAllFilter(): void {
+    this.filterCategoryId.set(null);
+  }
+
+  toggleCategoryFilter(id: string): void {
     this.filterCategoryId.update((cur) => (cur === id ? null : id));
+  }
+
+  openNewTx(): void {
+    if (this.facade.expenseCategories().length === 0) {
+      this.toast.show('Crie uma categoria antes de registrar uma saída.', 'info');
+      this.categoryOpen.set(true);
+      return;
+    }
+    this.editingTx.set(null);
+    this.txOpen.set(true);
   }
 }

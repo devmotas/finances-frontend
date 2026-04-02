@@ -19,12 +19,20 @@
   </div>
 
   <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    <button
+      type="button"
+      class="chip chip--system"
+      [class.chip--active]="filterCategoryId() === null"
+      (click)="selectAllFilter()"
+    >
+      Todas
+    </button>
     @for (c of categories(); track c.id) {
       <button
         type="button"
         class="chip"
         [class.chip--active]="filterCategoryId() === c.id"
-        (click)="toggleChip(c.id)"
+        (click)="toggleCategoryFilter(c.id)"
       >
         {{ c.name }}
       </button>
@@ -42,6 +50,12 @@
       @if (essentialList().length === 0) {
         <div class="empty">
           <p class="empty__title">Nenhuma despesa registrada</p>
+          @if (categories().length === 0) {
+            <p class="empty__hint">
+              Use <strong>Categoria</strong> para criar categorias; depois registre saídas em
+              <strong>+ Saída</strong>.
+            </p>
+          }
         </div>
       } @else {
         <ul class="tx-list">
@@ -83,6 +97,12 @@
       @if (nonEssentialList().length === 0) {
         <div class="empty">
           <p class="empty__title">Nenhuma despesa registrada</p>
+          @if (categories().length === 0) {
+            <p class="empty__hint">
+              Use <strong>Categoria</strong> para criar categorias; depois registre saídas em
+              <strong>+ Saída</strong>.
+            </p>
+          }
         </div>
       } @else {
         <ul class="tx-list">

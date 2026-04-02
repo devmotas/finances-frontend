@@ -40,11 +40,6 @@ export class IncomesComponent {
     this.categoryOpen.set(false);
   }
 
-  openNewTx(): void {
-    this.editingTx.set(null);
-    this.txOpen.set(true);
-  }
-
   closeTx(): void {
     this.txOpen.set(false);
     this.editingTx.set(null);
@@ -61,7 +56,22 @@ export class IncomesComponent {
     this.toast.show('Entrada excluída.', 'success');
   }
 
-  toggleChip(id: string): void {
+  /** Filtro virtual do sistema: mostra todas as entradas do mês (não é categoria persistida). */
+  selectAllFilter(): void {
+    this.filterCategoryId.set(null);
+  }
+
+  toggleCategoryFilter(id: string): void {
     this.filterCategoryId.update((cur) => (cur === id ? null : id));
+  }
+
+  openNewTx(): void {
+    if (this.facade.incomeCategories().length === 0) {
+      this.toast.show('Crie uma categoria antes de registrar uma entrada.', 'info');
+      this.categoryOpen.set(true);
+      return;
+    }
+    this.editingTx.set(null);
+    this.txOpen.set(true);
   }
 }
