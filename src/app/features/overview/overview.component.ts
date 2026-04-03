@@ -14,13 +14,58 @@ const ROW_LABELS = [
   'Composição das despesas',
 ] as const;
 
-/** Alinhado ao tema (--fin-essential / --fin-expense) */
+/** Alinhado a --fin-essential / --fin-expense (cards e design system) */
 const COMPOSITION_ESSENTIAL_BG = '#c2410c';
 const COMPOSITION_NON_ESSENTIAL_BG = '#c81e1e';
 
-function categoryBarColor(index: number): string {
-  const h = (index * 47 + 28) % 360;
-  return `hsl(${h} 52% 44%)`;
+/**
+ * Receitas: paleta fria (verde, teal, ciano, azul) — conversa com --fin-primary / --fin-income.
+ * Despesas: uma paleta quente única (laranja, âmbar, coral, vermelho) nas duas linhas,
+ * com deslocamento para manter contraste; reforça leitura “tudo despesa = quente”.
+ */
+const COOL_RECEIPTS_PALETTE = [
+  'hsl(155 58% 30%)',
+  'hsl(172 52% 34%)',
+  'hsl(188 50% 36%)',
+  'hsl(142 48% 32%)',
+  'hsl(198 55% 40%)',
+  'hsl(165 60% 28%)',
+  'hsl(205 48% 38%)',
+  'hsl(178 46% 42%)',
+] as const;
+
+const WARM_EXPENSE_PALETTE = [
+  'hsl(22 82% 40%)',
+  'hsl(8 76% 42%)',
+  'hsl(32 72% 36%)',
+  'hsl(355 78% 38%)',
+  'hsl(15 70% 46%)',
+  'hsl(28 68% 34%)',
+  'hsl(348 74% 40%)',
+  'hsl(12 80% 36%)',
+] as const;
+
+/** Deslocamento na mesma paleta quente entre essenciais e não essenciais */
+const WARM_EXPENSE_PHASE = 4;
+
+const CHART_SEGMENT_BORDER = 'rgba(255, 255, 255, 0.92)';
+
+function pickPaletteColor<T extends readonly string[]>(palette: T, index: number): string {
+  return palette[index % palette.length];
+}
+
+function categoryStackBackgrounds(categoryIndex: number): string[] {
+  return [
+    pickPaletteColor(COOL_RECEIPTS_PALETTE, categoryIndex),
+    pickPaletteColor(WARM_EXPENSE_PALETTE, categoryIndex),
+    pickPaletteColor(WARM_EXPENSE_PALETTE, categoryIndex + WARM_EXPENSE_PHASE),
+    'transparent',
+  ];
+}
+
+function categoryStackBorders(categoryIndex: number): string[] {
+  const b = CHART_SEGMENT_BORDER;
+  return [b, b, b, 'transparent'];
 }
 
 function buildStackedBarData(
@@ -58,8 +103,9 @@ function buildStackedBarData(
   const datasets = slices.map((s, idx) => ({
     label: s.cat.name,
     data: [s.i, s.e, s.ne, 0],
-    backgroundColor: categoryBarColor(idx),
-    borderWidth: 0,
+    backgroundColor: categoryStackBackgrounds(idx),
+    borderColor: categoryStackBorders(idx),
+    borderWidth: 1,
     borderRadius: 4,
     borderSkipped: false as const,
   }));
@@ -68,16 +114,38 @@ function buildStackedBarData(
     {
       label: 'Essenciais (total)',
       data: [0, 0, 0, totalEssential],
-      backgroundColor: COMPOSITION_ESSENTIAL_BG,
-      borderWidth: 0,
+      backgroundColor: [
+        'transparent',
+        'transparent',
+        'transparent',
+        COMPOSITION_ESSENTIAL_BG,
+      ],
+      borderColor: [
+        'transparent',
+        'transparent',
+        'transparent',
+        CHART_SEGMENT_BORDER,
+      ],
+      borderWidth: 1,
       borderRadius: 4,
       borderSkipped: false as const,
     },
     {
       label: 'Não essenciais (total)',
       data: [0, 0, 0, totalNonEssential],
-      backgroundColor: COMPOSITION_NON_ESSENTIAL_BG,
-      borderWidth: 0,
+      backgroundColor: [
+        'transparent',
+        'transparent',
+        'transparent',
+        COMPOSITION_NON_ESSENTIAL_BG,
+      ],
+      borderColor: [
+        'transparent',
+        'transparent',
+        'transparent',
+        CHART_SEGMENT_BORDER,
+      ],
+      borderWidth: 1,
       borderRadius: 4,
       borderSkipped: false as const,
     }
