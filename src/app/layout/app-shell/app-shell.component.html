@@ -1,47 +1,103 @@
 <div class="shell">
-  <header class="shell__header">
-    <div class="shell__brand">
-      <span class="shell__logo" aria-hidden="true">
-        <lucide-icon name="wallet" [size]="26" [strokeWidth]="2"></lucide-icon>
-      </span>
-      <span class="shell__title">Minhas Finanças</span>
-    </div>
-    <div class="shell__month" role="group" aria-label="Mês de referência">
-      <button type="button" class="shell__month-btn" (click)="prev()" aria-label="Mês anterior">
-        <lucide-icon name="chevron-left" [size]="22" [strokeWidth]="2"></lucide-icon>
+  <div class="shell__sticky">
+    <header class="shell__header">
+      <div class="shell__brand">
+        <span class="shell__logo" aria-hidden="true">
+          <lucide-icon name="wallet" [size]="26" [strokeWidth]="2"></lucide-icon>
+        </span>
+        <span class="shell__title">Minhas Finanças</span>
+      </div>
+      <button
+        type="button"
+        class="shell__nav-toggle"
+        (click)="toggleMobileNav()"
+        [attr.aria-expanded]="mobileNavOpen()"
+        aria-controls="shell-mobile-nav"
+        [attr.aria-label]="mobileNavOpen() ? 'Fechar navegação' : 'Abrir navegação'"
+      >
+        <lucide-icon name="menu" [size]="24" [strokeWidth]="2"></lucide-icon>
       </button>
-      <span class="shell__month-label">{{ monthLabel() }}</span>
-      <button type="button" class="shell__month-btn" (click)="next()" aria-label="Próximo mês">
-        <lucide-icon name="chevron-right" [size]="22" [strokeWidth]="2"></lucide-icon>
-      </button>
-    </div>
-  </header>
+      <div class="shell__month" role="group" aria-label="Mês de referência">
+        <button type="button" class="shell__month-btn" (click)="prev()" aria-label="Mês anterior">
+          <lucide-icon name="chevron-left" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
+        <span class="shell__month-label">{{ monthLabel() }}</span>
+        <button type="button" class="shell__month-btn" (click)="next()" aria-label="Próximo mês">
+          <lucide-icon name="chevron-right" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </div>
+    </header>
 
-  <nav class="shell__tabs" aria-label="Navegação principal">
-    <a
-      routerLink="/visao-geral"
-      routerLinkActive="is-active"
-      [routerLinkActiveOptions]="{ exact: true }"
-      class="shell__tab"
-    >
-      <span class="shell__tab-icon" aria-hidden="true">
-        <lucide-icon name="layout-dashboard" [size]="20" [strokeWidth]="2"></lucide-icon>
-      </span>
-      Visão Geral
-    </a>
-    <a routerLink="/entradas" routerLinkActive="is-active" class="shell__tab">
-      <span class="shell__tab-icon shell__tab-icon--in" aria-hidden="true">
-        <lucide-icon name="arrow-down-left" [size]="20" [strokeWidth]="2.25"></lucide-icon>
-      </span>
-      Entradas
-    </a>
-    <a routerLink="/saidas" routerLinkActive="is-active" class="shell__tab">
-      <span class="shell__tab-icon shell__tab-icon--out" aria-hidden="true">
-        <lucide-icon name="arrow-up-right" [size]="20" [strokeWidth]="2.25"></lucide-icon>
-      </span>
-      Saídas
-    </a>
-  </nav>
+    <nav class="shell__tabs" aria-label="Navegação principal">
+      @for (item of navItems; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+          class="shell__tab"
+        >
+          <span
+            class="shell__tab-icon"
+            [class.shell__tab-icon--in]="item.iconModifier === 'in'"
+            [class.shell__tab-icon--out]="item.iconModifier === 'out'"
+            aria-hidden="true"
+          >
+            <lucide-icon [name]="item.icon" [size]="20" [strokeWidth]="item.iconModifier ? 2.25 : 2"></lucide-icon>
+          </span>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </div>
+
+  @if (mobileNavOpen()) {
+    <button
+      type="button"
+      class="shell__drawer-backdrop"
+      (click)="closeMobileNav()"
+      aria-label="Fechar menu de navegação"
+    ></button>
+  }
+
+  <aside
+    id="shell-mobile-nav"
+    class="shell__drawer"
+    [class.shell__drawer--open]="mobileNavOpen()"
+    [attr.aria-hidden]="mobileNavOpen() ? 'false' : 'true'"
+  >
+    <div class="shell__drawer-head">
+      <span class="shell__drawer-title">Ir para</span>
+      <button
+        type="button"
+        class="shell__drawer-close"
+        (click)="closeMobileNav()"
+        aria-label="Fechar"
+      >
+        <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+      </button>
+    </div>
+    <nav class="shell__drawer-nav" aria-label="Navegação principal">
+      @for (item of navItems; track item.path) {
+        <a
+          [routerLink]="item.path"
+          routerLinkActive="is-active"
+          [routerLinkActiveOptions]="item.exact ? { exact: true } : { exact: false }"
+          class="shell__tab shell__tab--drawer"
+          (click)="closeMobileNav()"
+        >
+          <span
+            class="shell__tab-icon"
+            [class.shell__tab-icon--in]="item.iconModifier === 'in'"
+            [class.shell__tab-icon--out]="item.iconModifier === 'out'"
+            aria-hidden="true"
+          >
+            <lucide-icon [name]="item.icon" [size]="20" [strokeWidth]="item.iconModifier ? 2.25 : 2"></lucide-icon>
+          </span>
+          {{ item.label }}
+        </a>
+      }
+    </nav>
+  </aside>
 
   <main class="shell__main">
     <router-outlet />
