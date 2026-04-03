@@ -52,10 +52,10 @@ export class TransactionModalComponent {
 
   readonly form = this.fb.group({
     categoryId: ['', Validators.required],
-    description: ['', [Validators.required, Validators.maxLength(500)]],
+    description: ['', Validators.maxLength(500)],
     amount: ['', [Validators.required, amountValidator]],
     date: ['', Validators.required],
-    schedule: ['fixed' as Schedule, Validators.required],
+    schedule: ['variable' as Schedule, Validators.required],
   });
 
   constructor() {
@@ -76,7 +76,7 @@ export class TransactionModalComponent {
           description: '',
           amount: '',
           date: todayISO(),
-          schedule: 'fixed' as Schedule,
+          schedule: 'variable' as Schedule,
         });
       }
     });
@@ -111,6 +111,20 @@ export class TransactionModalComponent {
   /** Novo lançamento exige ao menos uma categoria real cadastrada. */
   blockNewWithoutCategories(): boolean {
     return !this.editing() && this.categories().length === 0;
+  }
+
+  categorySelectPlaceholder(): string {
+    return 'Escolha uma categoria';
+  }
+
+  descriptionPlaceholder(): string {
+    return this.flow() === 'income'
+      ? 'Opcional — ex.: 13º salário, horas extras, nota fiscal 123'
+      : 'Opcional — ex.: compras da semana, mensalidade academia';
+  }
+
+  amountPlaceholder(): string {
+    return 'Ex.: 1.250,50';
   }
 
   save(): void {

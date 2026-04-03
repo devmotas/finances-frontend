@@ -70,7 +70,9 @@
             <li class="tx-list__item tx-list__item--ess">
               <div class="tx-list__main">
                 <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                <span class="tx-list__desc">{{ t.description }}</span>
+                @if (t.description.trim()) {
+                  <span class="tx-list__desc">{{ t.description }}</span>
+                }
                 <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
                   {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
                 </span>
@@ -117,7 +119,9 @@
             <li class="tx-list__item tx-list__item--ne">
               <div class="tx-list__main">
                 <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                <span class="tx-list__desc">{{ t.description }}</span>
+                @if (t.description.trim()) {
+                  <span class="tx-list__desc">{{ t.description }}</span>
+                }
                 <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
                   {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
                 </span>

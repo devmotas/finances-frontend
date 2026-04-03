@@ -53,6 +53,11 @@
   color: var(--fin-text-secondary);
 }
 
+.field__optional {
+  font-weight: var(--fin-weight-medium);
+  color: var(--fin-text-muted);
+}
+
 .field__input {
   @include field-input;
 }

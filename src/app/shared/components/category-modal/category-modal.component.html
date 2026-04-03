@@ -23,20 +23,28 @@
             class="field__input"
             type="text"
             formControlName="name"
-            placeholder="Ex: Gastos Médicos"
+            [placeholder]="namePlaceholder()"
             autocomplete="off"
+            maxlength="120"
           />
           @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
             <span class="field__err">Informe o nome.</span>
+          }
+          @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
+            <span class="field__err">No máximo 120 caracteres.</span>
           }
         </label>
 
         @if (isExpense()) {
           <label class="field">
-            <span class="field__label">Grupo</span>
-            <select class="field__input" formControlName="expenseGroup">
-              <option value="essential">Essencial</option>
-              <option value="nonEssential">Não essencial</option>
+            <span class="field__label">Grupo da despesa</span>
+            <select
+              class="field__input"
+              formControlName="expenseGroup"
+              title="Essencial: necessidades básicas. Não essencial: desejos e extras."
+            >
+              <option value="essential">Essencial (necessidades)</option>
+              <option value="nonEssential">Não essencial (extras)</option>
             </select>
           </label>
         }

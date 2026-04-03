@@ -53,6 +53,12 @@ export class CategoryModalComponent {
     return this.flow() === 'expense';
   }
 
+  namePlaceholder(): string {
+    return this.isExpense()
+      ? 'Ex.: Moradia, alimentação, transporte'
+      : 'Ex.: Salário, freelances, rendimentos';
+  }
+
   close(): void {
     this.editingId = null;
     this.closed.emit();

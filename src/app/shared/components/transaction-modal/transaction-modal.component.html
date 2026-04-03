@@ -27,9 +27,10 @@
           <select
             class="field__input"
             formControlName="categoryId"
+            title="Obrigatório — define onde este lançamento entra nos relatórios"
             [disabled]="blockNewWithoutCategories()"
           >
-            <option value="">Selecione uma categoria</option>
+            <option value="">{{ categorySelectPlaceholder() }}</option>
             @for (c of categories(); track c.id) {
               <option [value]="c.id">{{ c.name }}</option>
             }
@@ -40,17 +41,18 @@
         </label>
 
         <label class="field">
-          <span class="field__label">Descrição</span>
+          <span class="field__label">Descrição <span class="field__optional">(opcional)</span></span>
           <input
             class="field__input"
             type="text"
             formControlName="description"
-            placeholder="Ex: Salário de janeiro ou [INSIRA O NOME DA PESSOA]"
+            [placeholder]="descriptionPlaceholder()"
             autocomplete="off"
+            maxlength="500"
             [disabled]="blockNewWithoutCategories()"
           />
-          @if (form.controls.description.touched && form.controls.description.errors?.['required']) {
-            <span class="field__err">Informe a descrição.</span>
+          @if (form.controls.description.touched && form.controls.description.errors?.['maxlength']) {
+            <span class="field__err">Use no máximo 500 caracteres.</span>
           }
         </label>
 
@@ -61,7 +63,8 @@
             type="text"
             inputmode="decimal"
             formControlName="amount"
-            placeholder="0,00"
+            [placeholder]="amountPlaceholder()"
+            title="Use vírgula para centavos, ex.: 1.250,50"
             autocomplete="off"
             [disabled]="blockNewWithoutCategories()"
           />
@@ -76,19 +79,21 @@
             class="field__input"
             type="date"
             formControlName="date"
+            title="Data do lançamento no calendário"
             [disabled]="blockNewWithoutCategories()"
           />
         </label>
 
         <label class="field">
-          <span class="field__label">Tipo</span>
+          <span class="field__label">Recorrência</span>
           <select
             class="field__input"
             formControlName="schedule"
             [disabled]="blockNewWithoutCategories()"
+            title="Fixa repete todo mês; variável vale só no mês selecionado"
           >
-            <option value="fixed">Fixa (mensal)</option>
-            <option value="variable">Apenas este mês</option>
+            <option value="fixed">Fixa — todo mês</option>
+            <option value="variable">Só neste mês</option>
           </select>
         </label>
 
