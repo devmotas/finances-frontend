@@ -8,9 +8,11 @@ import {
   inject,
   signal,
 } from '@angular/core';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { AuthService } from '../../core/services/auth.service';
 import { MonthContextService } from '../../core/services/month-context.service';
+import { ToastService } from '../../core/services/toast.service';
 
 export interface ShellNavItem {
   readonly path: string;
@@ -30,22 +32,25 @@ export class AppShellComponent {
   private readonly monthCtx = inject(MonthContextService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  private readonly toast = inject(ToastService);
 
   readonly navItems: readonly ShellNavItem[] = [
     {
-      path: '/visao-geral',
+      path: '/app/visao-geral',
       label: 'Visão Geral',
       icon: 'layout-dashboard',
       exact: true,
     },
     {
-      path: '/entradas',
+      path: '/app/entradas',
       label: 'Entradas',
       icon: 'arrow-down-left',
       iconModifier: 'in',
     },
     {
-      path: '/saidas',
+      path: '/app/saidas',
       label: 'Saídas',
       icon: 'arrow-up-right',
       iconModifier: 'out',
@@ -89,5 +94,12 @@ export class AppShellComponent {
 
   closeMobileNav(): void {
     this.mobileNavOpen.set(false);
+  }
+
+  logout(): void {
+    this.closeMobileNav();
+    this.auth.logout();
+    this.toast.show('Você saiu da conta.', 'info');
+    this.router.navigateByUrl('/login');
   }
 }

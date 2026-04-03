@@ -17,13 +17,19 @@
       >
         <lucide-icon name="menu" [size]="24" [strokeWidth]="2"></lucide-icon>
       </button>
-      <div class="shell__month" role="group" aria-label="Mês de referência">
-        <button type="button" class="shell__month-btn" (click)="prev()" aria-label="Mês anterior">
-          <lucide-icon name="chevron-left" [size]="22" [strokeWidth]="2"></lucide-icon>
-        </button>
-        <span class="shell__month-label">{{ monthLabel() }}</span>
-        <button type="button" class="shell__month-btn" (click)="next()" aria-label="Próximo mês">
-          <lucide-icon name="chevron-right" [size]="22" [strokeWidth]="2"></lucide-icon>
+      <div class="shell__header-tools">
+        <div class="shell__month" role="group" aria-label="Mês de referência">
+          <button type="button" class="shell__month-btn" (click)="prev()" aria-label="Mês anterior">
+            <lucide-icon name="chevron-left" [size]="22" [strokeWidth]="2"></lucide-icon>
+          </button>
+          <span class="shell__month-label">{{ monthLabel() }}</span>
+          <button type="button" class="shell__month-btn" (click)="next()" aria-label="Próximo mês">
+            <lucide-icon name="chevron-right" [size]="22" [strokeWidth]="2"></lucide-icon>
+          </button>
+        </div>
+        <button type="button" class="shell__logout" (click)="logout()" aria-label="Sair da conta">
+          <lucide-icon name="log-out" [size]="22" [strokeWidth]="2"></lucide-icon>
+          <span class="shell__logout-label">Sair</span>
         </button>
       </div>
     </header>
