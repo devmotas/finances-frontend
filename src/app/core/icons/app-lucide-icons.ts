@@ -24,7 +24,6 @@ import {
   X,
 } from 'lucide-angular';
 
-/** Ícones Lucide usados na app (tree-shaking via pick). */
 export const APP_LUCIDE_ICONS = {
   ArrowDownLeft,
   ArrowUpRight,

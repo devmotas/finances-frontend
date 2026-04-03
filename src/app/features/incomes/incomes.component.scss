@@ -134,7 +134,6 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--fin-primary) 25%, transparent);
 }
 
-/* Filtro virtual "Todos" / "Todas" — não é categoria persistida */
 .chip--system {
   font-weight: var(--fin-weight-semibold);
   border-style: dashed;
@@ -346,7 +345,6 @@
     padding: 0.5rem 0.75rem;
   }
 
-  /* Chips: carrossel horizontal (muitas categorias) */
   .chips {
     flex-wrap: nowrap;
     overflow-x: auto;

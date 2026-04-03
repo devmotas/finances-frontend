@@ -108,7 +108,6 @@ export class TransactionModalComponent {
     }
   }
 
-  /** Novo lançamento exige ao menos uma categoria real cadastrada. */
   blockNewWithoutCategories(): boolean {
     return !this.editing() && this.categories().length === 0;
   }

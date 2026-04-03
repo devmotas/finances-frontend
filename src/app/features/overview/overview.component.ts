@@ -14,15 +14,9 @@ const ROW_LABELS = [
   'Composição das despesas',
 ] as const;
 
-/** Alinhado a --fin-essential / --fin-expense (cards e design system) */
 const COMPOSITION_ESSENTIAL_BG = '#c2410c';
 const COMPOSITION_NON_ESSENTIAL_BG = '#c81e1e';
 
-/**
- * Receitas: paleta fria (verde, teal, ciano, azul) — conversa com --fin-primary / --fin-income.
- * Despesas: uma paleta quente única (laranja, âmbar, coral, vermelho) nas duas linhas,
- * com deslocamento para manter contraste; reforça leitura “tudo despesa = quente”.
- */
 const COOL_RECEIPTS_PALETTE = [
   'hsl(155 58% 30%)',
   'hsl(172 52% 34%)',
@@ -45,7 +39,6 @@ const WARM_EXPENSE_PALETTE = [
   'hsl(12 80% 36%)',
 ] as const;
 
-/** Deslocamento na mesma paleta quente entre essenciais e não essenciais */
 const WARM_EXPENSE_PHASE = 4;
 
 const CHART_SEGMENT_BORDER = 'rgba(255, 255, 255, 0.92)';
@@ -189,7 +182,6 @@ export class OverviewComponent {
     indexAxis: 'y',
     responsive: true,
     maintainAspectRatio: false,
-    // Só reage ao passar em cima da barra daquela linha — evita trocar de linha com o mouse entre faixas
     interaction: {
       mode: 'index',
       intersect: true,

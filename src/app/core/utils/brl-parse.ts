@@ -1,4 +1,3 @@
-/** Parse pt-BR currency string to number. Accepts "1.234,56" or "1234,56" or "1234". */
 export function parseBrlToNumber(raw: string): number | null {
   const s = raw.trim().replace(/\s/g, '');
   if (!s) return null;

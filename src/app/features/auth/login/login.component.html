@@ -8,29 +8,53 @@
       <p class="auth-card__subtitle">Acesse sua conta para continuar gerenciando suas finanças.</p>
     </header>
 
-    <form class="auth-form" (submit)="onSubmit($event, email.value, password.value)">
-      <label class="auth-field">
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <label
+        class="auth-field"
+        [class.auth-field--invalid]="form.controls.email.touched && form.controls.email.invalid"
+      >
         <span class="auth-field__label">E-mail</span>
         <span class="auth-field__control">
           <span class="auth-field__icon" aria-hidden="true">
             <lucide-icon name="mail" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
-          <input #email type="email" placeholder="voce@email.com" autocomplete="email" required />
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="voce@email.com"
+            autocomplete="email"
+            [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+            [attr.aria-describedby]="
+              form.controls.email.touched && form.controls.email.invalid ? 'login-email-err' : null
+            "
+          />
         </span>
+        @if (form.controls.email.touched && form.controls.email.errors?.['required']) {
+          <span id="login-email-err" class="auth-field__err" role="alert">Informe o e-mail.</span>
+        }
+        @if (form.controls.email.touched && form.controls.email.errors?.['email']) {
+          <span id="login-email-err" class="auth-field__err" role="alert">E-mail inválido.</span>
+        }
       </label>
 
-      <label class="auth-field">
+      <label
+        class="auth-field"
+        [class.auth-field--invalid]="form.controls.password.touched && form.controls.password.invalid"
+      >
         <span class="auth-field__label">Senha</span>
         <span class="auth-field__control">
           <span class="auth-field__icon" aria-hidden="true">
             <lucide-icon name="lock" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
           <input
-            #password
             [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password"
             placeholder="Sua senha"
             autocomplete="current-password"
-            required
+            [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
+            [attr.aria-describedby]="
+              form.controls.password.touched && form.controls.password.invalid ? 'login-password-err' : null
+            "
           />
           <button
             type="button"
@@ -46,6 +70,9 @@
             }
           </button>
         </span>
+        @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
+          <span id="login-password-err" class="auth-field__err" role="alert">Informe a senha.</span>
+        }
       </label>
 
       <a class="auth-form__helper-link" routerLink="/esqueci-senha">Esqueci minha senha</a>

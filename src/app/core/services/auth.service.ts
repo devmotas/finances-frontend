@@ -14,18 +14,14 @@ export class AuthService {
         STORAGE_KEY,
         JSON.stringify({ email: email.trim(), at: Date.now() })
       );
-    } catch {
-      /* ignore quota / private mode */
-    }
+    } catch {}
     this.authenticated.set(true);
   }
 
   logout(): void {
     try {
       localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     this.authenticated.set(false);
   }
 

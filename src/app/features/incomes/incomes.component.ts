@@ -57,7 +57,6 @@ export class IncomesComponent {
     this.toast.show('Entrada excluída.', 'success');
   }
 
-  /** Filtro virtual do sistema: mostra todas as entradas do mês (não é categoria persistida). */
   selectAllFilter(): void {
     this.filterCategoryId.set(null);
   }
