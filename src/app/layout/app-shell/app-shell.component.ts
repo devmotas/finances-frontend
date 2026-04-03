@@ -97,6 +97,9 @@ export class AppShellComponent {
   }
 
   logout(): void {
+    if (!confirm('Deseja realmente sair da conta?')) {
+      return;
+    }
     this.closeMobileNav();
     this.auth.logout();
     this.toast.show('Você saiu da conta.', 'info');

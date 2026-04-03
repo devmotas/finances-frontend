@@ -27,7 +27,12 @@
             <lucide-icon name="chevron-right" [size]="22" [strokeWidth]="2"></lucide-icon>
           </button>
         </div>
-        <button type="button" class="shell__logout" (click)="logout()" aria-label="Sair da conta">
+        <button
+          type="button"
+          class="shell__logout shell__logout--header"
+          (click)="logout()"
+          aria-label="Sair da conta"
+        >
           <lucide-icon name="log-out" [size]="22" [strokeWidth]="2"></lucide-icon>
           <span class="shell__logout-label">Sair</span>
         </button>
@@ -103,6 +108,17 @@
         </a>
       }
     </nav>
+    <div class="shell__drawer-footer">
+      <button
+        type="button"
+        class="shell__logout shell__logout--drawer"
+        (click)="logout()"
+        aria-label="Sair da conta"
+      >
+        <lucide-icon name="log-out" [size]="22" [strokeWidth]="2"></lucide-icon>
+        <span class="shell__logout-label">Sair</span>
+      </button>
+    </div>
   </aside>
 
   <main class="shell__main">
