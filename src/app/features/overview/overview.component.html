@@ -86,57 +86,24 @@
       </div>
     } @else {
       <h3 class="summary__title">Resumo do mês</h3>
-      <p class="summary__caption">Comparativo visual (escala pelo maior valor entre entradas e despesas)</p>
+      <p class="summary__caption">
+        Proporção por categoria nas três primeiras linhas; na última, total de essenciais versus não essenciais —
+        passe o mouse sobre as barras para detalhes
+      </p>
 
-      <div class="bars" role="img" aria-label="Barras comparativas">
-        <div class="bars__row">
-          <span class="bars__label">Entradas</span>
-          <div class="bars__track">
-            <div class="bars__fill bars__fill--in" [style.width.%]="barParts().incomePct * 100"></div>
-          </div>
-        </div>
-        <div class="bars__row">
-          <span class="bars__label">Despesas essenciais</span>
-          <div class="bars__track">
-            <div class="bars__fill bars__fill--ess" [style.width.%]="barParts().essentialPct * 100"></div>
-          </div>
-        </div>
-        <div class="bars__row">
-          <span class="bars__label">Despesas não essenciais</span>
-          <div class="bars__track">
-            <div class="bars__fill bars__fill--ne" [style.width.%]="barParts().nonEssentialPct * 100"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="split" aria-label="Composição das despesas">
-        <span class="split__label">Composição das despesas</span>
-        <div class="split__bar">
-          <div
-            class="split__seg split__seg--ess"
-            [style.flex-grow]="totals().totalEssential || 0.001"
-            [title]="
-              (barParts().expenseShareEssential | percent: '1.0-0' : 'pt-BR') + ' essenciais'
-            "
-          ></div>
-          <div
-            class="split__seg split__seg--ne"
-            [style.flex-grow]="totals().totalNonEssential || 0.001"
-            [title]="
-              (barParts().expenseShareNonEssential | percent: '1.0-0' : 'pt-BR') + ' não essenciais'
-            "
-          ></div>
-        </div>
-        <div class="split__legend">
-          <span
-            >Essenciais
-            {{ barParts().expenseShareEssential | percent: '1.0-0' : 'pt-BR' }}</span
-          >
-          <span
-            >Não essenciais
-            {{ barParts().expenseShareNonEssential | percent: '1.0-0' : 'pt-BR' }}</span
-          >
-        </div>
+      <div
+        class="overview-chart"
+        role="img"
+        [attr.aria-label]="
+          'Barras por categoria (entradas, despesas essenciais e não essenciais) e composição total das despesas'
+        "
+      >
+        <canvas
+          baseChart
+          [data]="overviewChartData()"
+          [options]="overviewChartOptions"
+          [type]="overviewChartType"
+        ></canvas>
       </div>
     }
   </div>
