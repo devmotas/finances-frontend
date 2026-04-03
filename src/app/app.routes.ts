@@ -1,9 +1,37 @@
 import { Routes } from '@angular/router';
 import { AppShellComponent } from './layout/app-shell/app-shell.component';
+import { authGuard } from './core/guards/auth.guard';
+import { loginPageGuard } from './core/guards/login-page.guard';
 
 export const routes: Routes = [
   {
     path: '',
+    redirectTo: 'login',
+    pathMatch: 'full',
+  },
+  {
+    path: 'login',
+    canActivate: [loginPageGuard],
+    loadComponent: () =>
+      import('./features/auth/login/login.component').then((m) => m.LoginComponent),
+  },
+  {
+    path: 'cadastro',
+    canActivate: [loginPageGuard],
+    loadComponent: () =>
+      import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
+  },
+  {
+    path: 'esqueci-senha',
+    canActivate: [loginPageGuard],
+    loadComponent: () =>
+      import('./features/auth/forgot-password/forgot-password.component').then(
+        (m) => m.ForgotPasswordComponent
+      ),
+  },
+  {
+    path: 'app',
+    canActivate: [authGuard],
     component: AppShellComponent,
     children: [
       { path: '', redirectTo: 'visao-geral', pathMatch: 'full' },
@@ -23,5 +51,9 @@ export const routes: Routes = [
           import('./features/expenses/expenses.component').then((m) => m.ExpensesComponent),
       },
     ],
+  },
+  {
+    path: '**',
+    redirectTo: 'login',
   },
 ];

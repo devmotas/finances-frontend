@@ -1,0 +1,106 @@
+<section class="auth-page">
+  <article class="auth-card">
+    <header class="auth-card__head">
+      <span class="auth-card__logo" aria-hidden="true">
+        <lucide-icon name="wallet" [size]="26" [strokeWidth]="2"></lucide-icon>
+      </span>
+      <h1 class="auth-card__title">Criar conta</h1>
+      <p class="auth-card__subtitle">Cadastre-se para começar a organizar suas finanças.</p>
+    </header>
+
+    <form
+      class="auth-form"
+      (submit)="onSubmit($event, name.value, email.value, password.value, confirmPassword.value)"
+    >
+      <label class="auth-field">
+        <span class="auth-field__label">Nome</span>
+        <span class="auth-field__control">
+          <span class="auth-field__icon" aria-hidden="true">
+            <lucide-icon name="user" [size]="18" [strokeWidth]="2"></lucide-icon>
+          </span>
+          <input #name type="text" placeholder="Seu nome completo" autocomplete="name" required />
+        </span>
+      </label>
+
+      <label class="auth-field">
+        <span class="auth-field__label">E-mail</span>
+        <span class="auth-field__control">
+          <span class="auth-field__icon" aria-hidden="true">
+            <lucide-icon name="mail" [size]="18" [strokeWidth]="2"></lucide-icon>
+          </span>
+          <input #email type="email" placeholder="voce@email.com" autocomplete="email" required />
+        </span>
+      </label>
+
+      <label class="auth-field">
+        <span class="auth-field__label">Senha</span>
+        <span class="auth-field__control">
+          <span class="auth-field__icon" aria-hidden="true">
+            <lucide-icon name="lock" [size]="18" [strokeWidth]="2"></lucide-icon>
+          </span>
+          <input
+            #password
+            [type]="passwordVisible() ? 'text' : 'password'"
+            placeholder="Crie uma senha"
+            autocomplete="new-password"
+            required
+          />
+          <button
+            type="button"
+            class="auth-field__toggle"
+            (click)="togglePasswordVisibility()"
+            [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+            [attr.aria-pressed]="passwordVisible()"
+          >
+            @if (passwordVisible()) {
+              <lucide-icon name="eye-off" [size]="18" [strokeWidth]="2"></lucide-icon>
+            } @else {
+              <lucide-icon name="eye" [size]="18" [strokeWidth]="2"></lucide-icon>
+            }
+          </button>
+        </span>
+      </label>
+
+      <label class="auth-field">
+        <span class="auth-field__label">Confirmar senha</span>
+        <span class="auth-field__control">
+          <span class="auth-field__icon" aria-hidden="true">
+            <lucide-icon name="lock" [size]="18" [strokeWidth]="2"></lucide-icon>
+          </span>
+          <input
+            #confirmPassword
+            [type]="confirmPasswordVisible() ? 'text' : 'password'"
+            placeholder="Repita a senha"
+            autocomplete="new-password"
+            required
+          />
+          <button
+            type="button"
+            class="auth-field__toggle"
+            (click)="toggleConfirmPasswordVisibility()"
+            [attr.aria-label]="confirmPasswordVisible() ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'"
+            [attr.aria-pressed]="confirmPasswordVisible()"
+          >
+            @if (confirmPasswordVisible()) {
+              <lucide-icon name="eye-off" [size]="18" [strokeWidth]="2"></lucide-icon>
+            } @else {
+              <lucide-icon name="eye" [size]="18" [strokeWidth]="2"></lucide-icon>
+            }
+          </button>
+        </span>
+      </label>
+
+      <button type="submit" class="auth-btn auth-btn--primary">
+        <span class="auth-btn__icon" aria-hidden="true">
+          <lucide-icon name="user-plus" [size]="18" [strokeWidth]="2"></lucide-icon>
+        </span>
+        Criar cadastro
+      </button>
+    </form>
+
+    <p class="auth-card__switch">
+      Já tem conta?
+      <a routerLink="/login">Entrar</a>
+    </p>
+  </article>
+</section>
