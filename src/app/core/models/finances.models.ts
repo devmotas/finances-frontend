@@ -1,22 +1,40 @@
-export type Flow = 'income' | 'expense';
+export type Flow = 'income' | 'expense' | 'investment';
 export type ExpenseGroup = 'essential' | 'nonEssential';
 export type Schedule = 'fixed' | 'variable';
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
   flow: Flow;
   expenseGroup?: ExpenseGroup;
+  openingBalanceAmount?: number;
 }
 
 export interface Transaction {
-  id: string;
-  categoryId: string;
+  id: number;
+  categoryId: number;
   description: string;
   amount: number;
   date: string;
   schedule: Schedule;
   flow: Flow;
+  recurrenceId?: number | null;
+  recurrenceIndex?: number | null;
+}
+
+export interface CategoryCreateDto {
+  name: string;
+  flow: Flow;
+  expenseGroup?: ExpenseGroup;
+  openingBalanceAmount?: number;
+}
+
+export interface TransactionCreateDto {
+  categoryId: number;
+  description?: string | null;
+  amount: number;
+  date: string;
+  schedule: Schedule;
 }
 
 export interface AppState {
@@ -30,5 +48,6 @@ export interface MonthTotals {
   totalEssential: number;
   totalNonEssential: number;
   totalExpenses: number;
+  totalInvestments: number;
   balance: number;
 }

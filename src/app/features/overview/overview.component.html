@@ -57,20 +57,54 @@
       </div>
     </article>
 
-    <article class="card card--balance card--wide">
-      <div class="card__accent card__accent--balance" aria-hidden="true"></div>
+    <article class="card card--inv">
+      <div class="card__accent card__accent--inv" aria-hidden="true"></div>
       <div class="card__body">
         <span class="card__icon" aria-hidden="true">
-          <lucide-icon name="wallet" [size]="22" [strokeWidth]="2"></lucide-icon>
+          <lucide-icon name="landmark" [size]="22" [strokeWidth]="2"></lucide-icon>
         </span>
-        <h2 class="card__label">Saldo Final</h2>
-        <p
-          class="card__value"
-          [class.card__value--in]="totals().balance >= 0"
-          [class.card__value--out]="totals().balance < 0"
-        >
-          {{ totals().balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        <h2 class="card__label">Investimentos no mês</h2>
+        <p class="card__value card__value--inv">
+          {{ totals().totalInvestments | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
         </p>
+      </div>
+    </article>
+
+    <article class="card card--balance card--wide">
+      <div class="card__accent card__accent--balance" aria-hidden="true"></div>
+      <div class="card__body card__body--split">
+        <div class="card__split-item">
+          <span class="card__icon" aria-hidden="true">
+            <lucide-icon name="wallet" [size]="22" [strokeWidth]="2"></lucide-icon>
+          </span>
+          <h2 class="card__label">Saldo do mês</h2>
+          <p
+            class="card__value"
+            [class.card__value--in]="totals().balance >= 0"
+            [class.card__value--out]="totals().balance < 0"
+          >
+            {{ totals().balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          </p>
+        </div>
+        <div class="card__split-item card__split-item--acc">
+          <h2 class="card__label card__label--secondary">Saldo acumulado</h2>
+          <p class="card__caption">
+            Desde o início até o fim deste mês: entradas − saídas − investimentos, mais a
+            <strong>soma dos saldos iniciais</strong> nas categorias de investimento (modal de categorias de
+            investimento).
+          </p>
+          @if (financeSummary(); as fs) {
+            <p
+              class="card__value card__value--acc"
+              [class.card__value--in]="fs.accumulatedBalance >= 0"
+              [class.card__value--out]="fs.accumulatedBalance < 0"
+            >
+              {{ fs.accumulatedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </p>
+          } @else {
+            <p class="card__value card__value--muted">—</p>
+          }
+        </div>
       </div>
     </article>
   </div>
@@ -87,15 +121,15 @@
     } @else {
       <h3 class="summary__title">Resumo do mês</h3>
       <p class="summary__caption">
-        Proporção por categoria nas três primeiras linhas; na última, total de essenciais versus não essenciais —
-        passe o mouse sobre as barras para detalhes
+        Proporção por categoria nas quatro primeiras linhas (inclui aportes em investimentos); na última, total de
+        essenciais versus não essenciais — passe o mouse sobre as barras para detalhes
       </p>
 
       <div
         class="overview-chart"
         role="img"
         [attr.aria-label]="
-          'Barras por categoria (entradas, despesas essenciais e não essenciais) e composição total das despesas'
+          'Barras por categoria: entradas, despesas essenciais, não essenciais, investimentos e composição total das despesas'
         "
       >
         <canvas

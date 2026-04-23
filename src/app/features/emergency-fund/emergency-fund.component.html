@@ -1,0 +1,95 @@
+<div class="ef">
+  <header class="ef__intro">
+    <h1 class="ef__title">Reserva de emergência</h1>
+    <p class="ef__sub">
+      O saldo acumulado considera entradas, saídas, investimentos e os saldos iniciais por categoria de
+      investimento. A barra
+      usa quantos meses de despesa do mês da barra superior esse conjunto cobre.
+    </p>
+  </header>
+
+  @if (summary(); as s) {
+    <div class="ef__grid">
+      <article class="ef-card">
+        <h2 class="ef-card__label">Despesas no mês (referência)</h2>
+        <p class="ef-card__value">{{ s.monthExpenseTotal | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</p>
+        <p class="ef-card__hint">Essenciais + não essenciais no mês atual da barra superior</p>
+      </article>
+
+      <article class="ef-card">
+        <h2 class="ef-card__label">Saldo acumulado</h2>
+        <p class="ef-card__value" [class.ef-card__value--pos]="s.accumulatedBalance >= 0" [class.ef-card__value--neg]="s.accumulatedBalance < 0">
+          {{ s.accumulatedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+        <p class="ef-card__hint">
+          Receitas − despesas − aportes + saldos iniciais nas categorias de investimento (até o fim do mês
+          selecionado)
+        </p>
+      </article>
+
+      <article class="ef-card">
+        <h2 class="ef-card__label">Aportes em investimentos (acumulado)</h2>
+        <p class="ef-card__value ef-card__value--inv">
+          {{ s.cumulativeInvestmentContributions | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+        <p class="ef-card__hint">Soma histórica de lançamentos com fluxo investimento (aportes positivos e resgates negativos)</p>
+      </article>
+
+      <article class="ef-card ef-card--highlight">
+        <h2 class="ef-card__label">Reserva total (referência)</h2>
+        <p class="ef-card__value ef-card__value--accent">
+          {{ s.totalEmergencyReserve | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </p>
+        <p class="ef-card__hint">
+          Saldo acumulado + aportes (= receitas − despesas + saldos iniciais por categoria de investimento)
+        </p>
+      </article>
+    </div>
+
+    <section class="ef-progress panel" aria-labelledby="ef-progress-title">
+      <div class="ef-progress__head">
+        <h2 id="ef-progress-title" class="ef-progress__title">
+          Meta: {{ resolvedTargetMonths() }} meses de despesas
+        </h2>
+        @if (reserveMonthsVsReference() != null) {
+          <p class="ef-progress__status">
+            Você está em
+            <strong>{{ reserveMonthsVsReference() | number: '1.1-2' : 'pt-BR' }}</strong>
+            × a despesa mensal de referência
+          </p>
+        } @else {
+          <p class="ef-progress__status ef-progress__status--muted">
+            Sem despesas no mês de referência — não é possível estimar meses cobertos.
+          </p>
+        }
+      </div>
+      <div
+        class="ef-progress__bar"
+        role="progressbar"
+        [attr.aria-valuenow]="progressPct()"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        [attr.aria-label]="'Progresso em relação à meta de ' + resolvedTargetMonths() + ' meses'"
+      >
+        <div class="ef-progress__fill" [style.width.%]="progressPct()"></div>
+      </div>
+      <p class="ef-progress__caption">100% indica que a reserva cobre pelo menos a meta de meses configurada.</p>
+    </section>
+  } @else if (loadFailed()) {
+    <div class="ef-empty panel">
+      <span class="ef-empty__icon" aria-hidden="true">
+        <lucide-icon name="piggy-bank" [size]="40" [strokeWidth]="1.75"></lucide-icon>
+      </span>
+      <p class="ef-empty__title">Não foi possível carregar o resumo</p>
+      <p class="ef-empty__hint">Confira se a API está no ar e se você está autenticado.</p>
+    </div>
+  } @else {
+    <div class="ef-empty panel">
+      <span class="ef-empty__icon" aria-hidden="true">
+        <lucide-icon name="piggy-bank" [size]="40" [strokeWidth]="1.75"></lucide-icon>
+      </span>
+      <p class="ef-empty__title">Carregando…</p>
+      <p class="ef-empty__hint">Aguarde um instante.</p>
+    </div>
+  }
+</div>

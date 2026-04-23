@@ -17,8 +17,8 @@
       <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
         @if (blockNewWithoutCategories()) {
           <p class="modal__hint" role="alert">
-            Cadastre ao menos uma categoria em <strong>Categoria</strong> na tela de Entradas ou Saídas
-            antes de registrar valores.
+            Cadastre ao menos uma categoria (botão <strong>Categoria</strong> nesta tela) antes de
+            registrar valores.
           </p>
         }
 
@@ -57,7 +57,7 @@
         </label>
 
         <label class="field">
-          <span class="field__label">Valor (R$)</span>
+          <span class="field__label">{{ amountFieldLabel() }}</span>
           <input
             class="field__input"
             type="text"
@@ -71,6 +71,12 @@
           @if (form.controls.amount.touched && form.controls.amount.errors) {
             <span class="field__err">Informe um valor maior que zero.</span>
           }
+          @if (flow() === 'investment' && !editing() && investmentIntent() === 'resgate') {
+            <span class="field__hint">
+              O valor informado será registrado como saída desta categoria e volta ao saldo disponível na
+              visão geral (líquido do mês).
+            </span>
+          }
         </label>
 
         <label class="field">
@@ -79,23 +85,82 @@
             class="field__input"
             type="date"
             formControlName="date"
-            title="Data do lançamento no calendário"
+            title="Ao criar: data padrão = hoje se o mês do topo for o mês civil atual; senão dia 1 daquele mês."
             [disabled]="blockNewWithoutCategories()"
           />
         </label>
 
-        <label class="field">
-          <span class="field__label">Recorrência</span>
-          <select
-            class="field__input"
-            formControlName="schedule"
-            [disabled]="blockNewWithoutCategories()"
-            title="Fixa repete todo mês; variável vale só no mês selecionado"
-          >
-            <option value="fixed">Fixa — todo mês</option>
-            <option value="variable">Só neste mês</option>
-          </select>
-        </label>
+        @if (investmentNewHidesRecurrenceControls()) {
+          <p class="modal__hint modal__hint--invest-pontual" role="note">
+            Cada aporte ou resgate vale <strong>só no mês selecionado na barra superior</strong>. Esta tela não
+            cria séries fixas nem lançamentos futuros automáticos para investimento.
+          </p>
+        } @else {
+          <label class="field">
+            <span class="field__label">Recorrência</span>
+            <select
+              class="field__input"
+              formControlName="schedule"
+              [disabled]="blockNewWithoutCategories()"
+              title="Fixa repete todo mês; variável vale só no mês selecionado"
+            >
+              <option value="fixed">Fixa — todo mês</option>
+              <option value="variable">Só neste mês</option>
+            </select>
+          </label>
+        }
+
+        @if (showSeriesUpdateScope()) {
+          <label class="field">
+            <span class="field__label">Alteração na série fixa</span>
+            <select
+              class="field__input"
+              formControlName="seriesUpdateScope"
+              title="Define se a alteração vale só para este mês ou para os meses seguintes da mesma série"
+            >
+              <option value="thisMonth">Somente este mês</option>
+              <option value="futureSeries">Este mês e todos os futuros da série</option>
+            </select>
+            <span class="field__hint">
+              “Somente este mês” altera só esta ocorrência. A outra opção replica a alteração para os
+              meses seguintes da mesma série (a partir deste lançamento).
+            </span>
+          </label>
+        }
+
+        @if (showRecurrenceMonths()) {
+          <label class="field">
+            <span class="field__label">Repetir por (meses)</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              max="120"
+              formControlName="recurrenceMonths"
+              title="Quantos meses à frente serão gerados de uma vez"
+              [disabled]="blockNewWithoutCategories()"
+            />
+            @if (
+              form.controls.recurrenceMonths.touched && form.controls.recurrenceMonths.invalid
+            ) {
+              <span class="field__err">Use um número entre 1 e 120.</span>
+            }
+            <span class="field__hint">
+              Gera lançamentos fixos nos meses seguintes automaticamente. O padrão vem de
+              <strong>Configurações</strong>.
+            </span>
+          </label>
+          @if (flow() === 'expense') {
+            <label class="field field--check">
+              <input type="checkbox" formControlName="markInstallment" />
+              <span class="field__label field__label--inline">Compra parcelada (rótulo “Parcela X de Y”)</span>
+              <span class="field__hint">
+                Só faz sentido para saídas (ex.: compra em 12x). O número de parcelas é o mesmo de
+                “Repetir por (meses)”.
+              </span>
+            </label>
+          }
+        }
 
         <div class="modal__actions">
           <button type="button" class="btn btn--secondary" (click)="close()">Cancelar</button>

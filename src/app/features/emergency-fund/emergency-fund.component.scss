@@ -1,0 +1,172 @@
+.ef__intro {
+  margin-bottom: 1.5rem;
+}
+
+.ef__title {
+  margin: 0 0 0.35rem;
+  font-size: var(--fin-text-2xl);
+  font-weight: var(--fin-weight-extrabold);
+  color: var(--fin-text);
+  letter-spacing: var(--fin-tracking-tight);
+}
+
+.ef__sub {
+  margin: 0;
+  max-width: 44rem;
+  font-size: var(--fin-text-base);
+  color: var(--fin-text-muted);
+  line-height: var(--fin-leading-snug);
+}
+
+.ef__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .ef__grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ef-card {
+  position: relative;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: var(--fin-radius);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--fin-shadow);
+}
+
+.ef-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  border-radius: var(--fin-radius) 0 0 var(--fin-radius);
+  background: var(--fin-border);
+}
+
+.ef-card--highlight::before {
+  background: linear-gradient(180deg, var(--fin-primary), color-mix(in srgb, var(--fin-primary) 65%, #000));
+}
+
+.ef-card__label {
+  margin: 0 0 0.5rem;
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-semibold);
+  color: var(--fin-text-muted);
+}
+
+.ef-card__value {
+  margin: 0;
+  font-size: var(--fin-text-xl);
+  font-weight: var(--fin-weight-extrabold);
+  font-variant-numeric: tabular-nums;
+  color: var(--fin-text);
+}
+
+.ef-card__value--pos {
+  color: var(--fin-income);
+}
+
+.ef-card__value--neg {
+  color: var(--fin-expense);
+}
+
+.ef-card__value--inv {
+  color: var(--fin-investment);
+}
+
+.ef-card__value--accent {
+  color: var(--fin-primary);
+}
+
+.ef-card__hint {
+  margin: 0.5rem 0 0;
+  font-size: var(--fin-text-xs);
+  color: var(--fin-text-muted);
+  line-height: var(--fin-leading-snug);
+}
+
+.panel {
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: var(--fin-radius);
+  padding: 1.25rem 1.5rem;
+  box-shadow: var(--fin-shadow);
+}
+
+.ef-progress__head {
+  margin-bottom: 1rem;
+}
+
+.ef-progress__title {
+  margin: 0 0 0.35rem;
+  font-size: var(--fin-text-lg);
+  font-weight: var(--fin-weight-extrabold);
+  color: var(--fin-text);
+}
+
+.ef-progress__status {
+  margin: 0;
+  font-size: var(--fin-text-base);
+  color: var(--fin-text-muted);
+}
+
+.ef-progress__status strong {
+  color: var(--fin-text);
+}
+
+.ef-progress__status--muted {
+  color: var(--fin-text-muted);
+}
+
+.ef-progress__bar {
+  height: 12px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--fin-border) 80%, transparent);
+  overflow: hidden;
+}
+
+.ef-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--fin-primary), color-mix(in srgb, var(--fin-primary) 70%, #0f172a));
+  transition: width 0.35s ease;
+}
+
+.ef-progress__caption {
+  margin: 0.75rem 0 0;
+  font-size: var(--fin-text-xs);
+  color: var(--fin-text-muted);
+}
+
+.ef-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+}
+
+.ef-empty__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+  color: var(--fin-primary);
+  opacity: 0.55;
+}
+
+.ef-empty__title {
+  margin: 0 0 0.35rem;
+  font-weight: var(--fin-weight-bold);
+  color: var(--fin-text);
+}
+
+.ef-empty__hint {
+  margin: 0;
+  font-size: var(--fin-text-sm);
+  color: var(--fin-text-muted);
+}

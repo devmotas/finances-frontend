@@ -1,0 +1,211 @@
+<div class="page">
+  <div class="page__head">
+    <div>
+      <h1 class="page__title">Configurações</h1>
+      <p class="page__sub">Preferências do app, dados da conta e segurança.</p>
+    </div>
+  </div>
+
+  @if (initialLoading()) {
+    <div class="panel panel--muted">
+      <p class="muted">Carregando…</p>
+    </div>
+  } @else {
+    <div class="tabs" role="tablist" aria-label="Seções de configurações">
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'prefs'"
+        [class.tabs__btn--active]="activeTab() === 'prefs'"
+        (click)="setTab('prefs')"
+      >
+        Preferências
+      </button>
+      <button
+        type="button"
+        class="tabs__btn"
+        role="tab"
+        [attr.aria-selected]="activeTab() === 'profile'"
+        [class.tabs__btn--active]="activeTab() === 'profile'"
+        (click)="setTab('profile')"
+      >
+        Perfil e senha
+      </button>
+    </div>
+
+    @if (activeTab() === 'prefs') {
+      <div class="panel">
+        <form class="form" (ngSubmit)="savePrefs()" [formGroup]="prefsForm">
+          <div class="form__icon" aria-hidden="true">
+            <lucide-icon name="settings" [size]="28" [strokeWidth]="2"></lucide-icon>
+          </div>
+          <label class="field">
+            <span class="field__label">Meses para frente (padrão)</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              max="120"
+              formControlName="defaultRecurrenceMonths"
+              title="Entre 1 e 120 meses"
+            />
+            @if (
+              prefsForm.controls.defaultRecurrenceMonths.touched &&
+              prefsForm.controls.defaultRecurrenceMonths.invalid
+            ) {
+              <span class="field__err">Use um número entre 1 e 120.</span>
+            }
+            <span class="field__hint">
+              Esse valor pré-preenche o campo “Repetir por X meses” ao lançar uma despesa ou receita
+              <strong>fixa</strong>.
+            </span>
+          </label>
+          <label class="field">
+            <span class="field__label">Meta do fundo de emergência (meses de despesa)</span>
+            <input
+              class="field__input"
+              type="number"
+              min="1"
+              max="120"
+              formControlName="emergencyFundTargetMonths"
+              title="Ex.: 6 para reserva de 6 meses de gastos médios"
+            />
+            @if (
+              prefsForm.controls.emergencyFundTargetMonths.touched &&
+              prefsForm.controls.emergencyFundTargetMonths.invalid
+            ) {
+              <span class="field__err">Use um número entre 1 e 120.</span>
+            }
+            <span class="field__hint">
+              Usado na página <strong>Reserva</strong> (barra lateral) para a barra de progresso: meta de quantos
+              meses de despesa do mês selecionado você deseja cobrir.
+            </span>
+          </label>
+          <div class="form__actions">
+            <button type="submit" class="btn btn--primary" [disabled]="prefsSaving()">
+              {{ prefsSaving() ? 'Salvando…' : 'Salvar' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    @if (activeTab() === 'profile') {
+      <div class="profile-layout">
+        <div class="panel">
+          <form class="form form--wide" (ngSubmit)="saveProfile()" [formGroup]="profileForm">
+            <div class="form__icon" aria-hidden="true">
+              <lucide-icon name="user" [size]="28" [strokeWidth]="2"></lucide-icon>
+            </div>
+            <h2 class="panel__section-title">Dados do perfil</h2>
+            <label class="field">
+              <span class="field__label">Nome</span>
+              <input class="field__input" type="text" autocomplete="name" formControlName="name" />
+              @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('required')) {
+                <span class="field__err">Informe seu nome.</span>
+              }
+              @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('minlength')) {
+                <span class="field__err">Use ao menos 2 caracteres.</span>
+              }
+            </label>
+            <div class="field">
+              <span class="field__label">E-mail</span>
+              <p class="field__readonly">{{ accountEmail() }}</p>
+              <span class="field__hint">O e-mail da conta não pode ser alterado por aqui.</span>
+            </div>
+            <div class="form__actions">
+              <button type="submit" class="btn btn--primary" [disabled]="profileSaving()">
+                {{ profileSaving() ? 'Salvando…' : 'Salvar perfil' }}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <form class="form form--wide" (ngSubmit)="savePassword()" [formGroup]="passwordForm">
+            <div class="form__icon" aria-hidden="true">
+              <lucide-icon name="lock" [size]="28" [strokeWidth]="2"></lucide-icon>
+            </div>
+            <h2 class="panel__section-title">Alterar senha</h2>
+            <label class="field">
+              <span class="field__label">Senha atual</span>
+              <div class="field__row">
+                <input
+                  class="field__input field__input--grow"
+                  [type]="passwordVisible() ? 'text' : 'password'"
+                  autocomplete="current-password"
+                  formControlName="currentPassword"
+                />
+                <button
+                  type="button"
+                  class="btn btn--icon"
+                  (click)="togglePasswordVisibility()"
+                  [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                >
+                  <lucide-icon [name]="passwordVisible() ? 'eye-off' : 'eye'" [size]="20"></lucide-icon>
+                </button>
+              </div>
+            </label>
+            <label class="field">
+              <span class="field__label">Nova senha</span>
+              <div class="field__row">
+                <input
+                  class="field__input field__input--grow"
+                  [type]="newPasswordVisible() ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  formControlName="newPassword"
+                />
+                <button
+                  type="button"
+                  class="btn btn--icon"
+                  (click)="toggleNewPasswordVisibility()"
+                  [attr.aria-label]="newPasswordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                >
+                  <lucide-icon [name]="newPasswordVisible() ? 'eye-off' : 'eye'" [size]="20"></lucide-icon>
+                </button>
+              </div>
+              @if (
+                passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength')
+              ) {
+                <span class="field__err">Mínimo de 8 caracteres.</span>
+              }
+            </label>
+            <label class="field">
+              <span class="field__label">Confirmar nova senha</span>
+              <div class="field__row">
+                <input
+                  class="field__input field__input--grow"
+                  [type]="confirmPasswordVisible() ? 'text' : 'password'"
+                  autocomplete="new-password"
+                  formControlName="confirmNewPassword"
+                />
+                <button
+                  type="button"
+                  class="btn btn--icon"
+                  (click)="toggleConfirmPasswordVisibility()"
+                  [attr.aria-label]="confirmPasswordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                >
+                  <lucide-icon [name]="confirmPasswordVisible() ? 'eye-off' : 'eye'" [size]="20"></lucide-icon>
+                </button>
+              </div>
+              @if (
+                passwordForm.touched &&
+                passwordForm.hasError('passwordMismatch') &&
+                passwordForm.controls.confirmNewPassword.value
+              ) {
+                <span class="field__err">As senhas não coincidem.</span>
+              }
+            </label>
+            <p class="field__hint">A nova senha precisa ter pelo menos 8 caracteres, como no cadastro.</p>
+            <div class="form__actions">
+              <button type="submit" class="btn btn--primary" [disabled]="passwordSaving()">
+                {{ passwordSaving() ? 'Alterando…' : 'Alterar senha' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  }
+</div>

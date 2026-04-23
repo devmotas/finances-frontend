@@ -96,6 +96,52 @@
   transform: translateY(1px);
 }
 
+.btn--ghost {
+  background: transparent;
+  color: var(--fin-text-secondary);
+  border-color: transparent;
+  min-height: 40px;
+  padding: 0.4rem 0.65rem;
+  font-size: var(--fin-text-sm);
+}
+
+.btn--ghost:hover {
+  background: var(--fin-bg-muted);
+  color: var(--fin-text);
+}
+
+.export-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding-right: 0.5rem;
+  margin-right: 0.15rem;
+  border-right: 1px solid var(--fin-border);
+}
+
+.export-toolbar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.export-toolbar__label {
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-medium);
+  color: var(--fin-text-muted);
+}
+
+.export-toolbar__select {
+  min-height: 40px;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--fin-radius-sm);
+  border: 1px solid var(--fin-border);
+  background: var(--fin-surface);
+  color: var(--fin-text);
+  font-size: var(--fin-text-sm);
+}
+
 .chips {
   display: flex;
   flex-wrap: wrap;
@@ -134,7 +180,6 @@
   box-shadow: 0 0 0 1px color-mix(in srgb, var(--fin-primary) 25%, transparent);
 }
 
-/* Filtro virtual "Todos" / "Todas" — não é categoria persistida */
 .chip--system {
   font-weight: var(--fin-weight-semibold);
   border-style: dashed;
@@ -238,6 +283,25 @@
   font-size: var(--fin-text-base);
   color: var(--fin-text);
   line-height: var(--fin-leading-snug);
+}
+
+.tx-list__badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.125rem;
+}
+
+.tx-list__serie {
+  display: inline-flex;
+  align-items: center;
+  line-height: 0;
+  color: var(--fin-primary);
+  padding: 0.15rem 0.35rem 0.15rem 0.25rem;
+  border-radius: var(--fin-radius-full);
+  border: 1px solid color-mix(in srgb, var(--fin-primary) 35%, transparent);
+  background: color-mix(in srgb, var(--fin-primary) 12%, transparent);
 }
 
 .tx-list__badge {
@@ -346,7 +410,6 @@
     padding: 0.5rem 0.75rem;
   }
 
-  /* Chips: carrossel horizontal (muitas categorias) */
   .chips {
     flex-wrap: nowrap;
     overflow-x: auto;

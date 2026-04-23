@@ -1,0 +1,197 @@
+<div class="page">
+  <div class="page__head">
+    <div class="page__head-top">
+      <h1 class="page__title">Investimentos</h1>
+      <div class="page__actions">
+        <button type="button" class="btn btn--secondary" (click)="openCategory()">
+          <span class="btn__icon" aria-hidden="true">
+            <lucide-icon name="tag" [size]="18" [strokeWidth]="2"></lucide-icon>
+          </span>
+          Categoria
+        </button>
+        <button type="button" class="btn btn--secondary" (click)="openNewResgate()">
+          <span class="btn__icon" aria-hidden="true">
+            <lucide-icon name="arrow-down-left" [size]="18" [strokeWidth]="2"></lucide-icon>
+          </span>
+          Resgate
+        </button>
+        <button type="button" class="btn btn--primary" (click)="openNewTx()">
+          <span class="btn__icon btn__icon--lead" aria-hidden="true">
+            <lucide-icon name="plus" [size]="20" [strokeWidth]="2.5"></lucide-icon>
+          </span>
+          Aporte
+        </button>
+      </div>
+    </div>
+    <p class="page__stats" role="group" aria-label="Resumo de investimentos no mês selecionado">
+      <span
+        class="page__stat"
+        title="Soma líquida no mês: aportes (positivos) menos resgates (saídas da categoria)."
+      >
+        <span class="page__stat-label">Investimentos no mês (líquido)</span>
+        <span class="page__stat-value page__stat-value--month">{{
+          monthInvested() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+        }}</span>
+      </span>
+      <span class="page__stat-sep" aria-hidden="true"></span>
+      <span
+        class="page__stat"
+        title="Soma dos saldos iniciais nas categorias de investimento mais todos os aportes com data anterior ao primeiro dia do mês selecionado."
+      >
+        <span class="page__stat-label">Patrimônio antes do mês</span>
+        <span class="page__stat-value page__stat-value--acc">{{
+          positionBeforeMonth() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+        }}</span>
+      </span>
+      <span class="page__stat-sep" aria-hidden="true"></span>
+      <span
+        class="page__stat"
+        title="Patrimônio antes do mês mais os aportes registrados até o último dia do mês selecionado."
+      >
+        <span class="page__stat-label">Patrimônio no fim do mês</span>
+        <span class="page__stat-value page__stat-value--total">{{
+          positionThroughMonthEnd() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+        }}</span>
+      </span>
+    </p>
+  </div>
+
+  @if (hasChartSeries()) {
+    <section class="chart-panel panel" aria-labelledby="inv-chart-title">
+      <h2 id="inv-chart-title" class="chart-panel__title">Evolução (saldo inicial + 12 meses)</h2>
+      <p class="chart-panel__caption">
+        Cada cor na barra é uma <strong>categoria de investimento</strong> (mesma cor em todos os meses e em
+        <strong>Saldo inicial</strong>). A linha é o patrimônio acumulado (inicial + aportes até o fim de cada
+        período).
+      </p>
+      <div class="inv-chart" role="img" aria-label="Gráfico: saldo inicial e últimos 12 meses de investimentos">
+        <canvas
+          baseChart
+          [data]="evolutionChartData()"
+          [options]="evolutionChartOptions()"
+          [type]="evolutionChartType"
+        ></canvas>
+      </div>
+
+      @if (categoryPositionTotals().length > 0) {
+        <div class="inv-cat-totals" aria-labelledby="inv-cat-totals-title">
+          <h3 id="inv-cat-totals-title" class="inv-cat-totals__title">
+            Posição por categoria até {{ selectedMonthTitleLabel() }}
+          </h3>
+          <p class="inv-cat-totals__hint">
+            Saldo inicial da categoria + todos os aportes com data até o fim do mês da barra superior.
+          </p>
+          <ul class="inv-cat-totals__list">
+            @for (row of categoryPositionTotals(); track row.categoryId; let i = $index) {
+              <li
+                class="inv-cat-totals__item"
+                [style.border-left-color]="categoryTotalAccent(i)"
+              >
+                <span class="inv-cat-totals__name">{{ row.name }}</span>
+                <span class="inv-cat-totals__value">{{
+                  row.totalThroughMonthEnd | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                }}</span>
+              </li>
+            }
+          </ul>
+        </div>
+      }
+    </section>
+  }
+
+  <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    <button
+      type="button"
+      class="chip chip--system"
+      [class.chip--active]="filterCategoryId() === null"
+      (click)="selectAllFilter()"
+    >
+      Todos
+    </button>
+    @for (c of categories(); track c.id) {
+      <button
+        type="button"
+        class="chip"
+        [class.chip--active]="filterCategoryId() === c.id"
+        (click)="toggleCategoryFilter(c.id)"
+      >
+        {{ c.name }}
+      </button>
+    }
+  </div>
+
+  <div class="panel">
+    @if (list().length === 0) {
+      <div class="empty">
+        <p class="empty__title">Nenhum lançamento neste mês</p>
+        <p class="empty__hint">
+          @if (categories().length === 0) {
+            Use <strong>Categoria</strong> para criar sua primeira categoria; depois use
+            <strong>Aporte</strong> ou <strong>Resgate</strong>.
+          } @else {
+            Registre um <strong>Aporte</strong>, um <strong>Resgate</strong> (saída parcial por categoria) ou
+            altere o mês no topo.
+          }
+        </p>
+      </div>
+    } @else {
+      <ul class="tx-list">
+        @for (t of list(); track t.id) {
+          <li class="tx-list__item">
+            <div class="tx-list__main">
+              <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
+              @if (t.description.trim()) {
+                <span class="tx-list__desc">{{ t.description }}</span>
+              }
+              <span class="tx-list__badges">
+                @if (txHasRecurrence(t)) {
+                  <span
+                    class="tx-list__serie"
+                    title="Parte de uma série fixa"
+                    aria-label="Recorrente"
+                  >
+                    <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
+                  </span>
+                }
+                @if (t.amount < 0) {
+                  <span class="tx-list__badge tx-list__badge--resgate">Resgate</span>
+                }
+                <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                  {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                </span>
+              </span>
+            </div>
+            <div class="tx-list__side">
+              <span
+                class="tx-list__amount tx-list__amount--inv"
+                [class.tx-list__amount--resgate]="t.amount < 0"
+                >{{
+                t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+              }}</span>
+              <div class="tx-list__actions">
+                <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
+                <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
+                  Excluir
+                </button>
+              </div>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>
+
+<app-category-modal
+  [visible]="categoryOpen()"
+  [flow]="'investment'"
+  (closed)="closeCategory()"
+/>
+
+<app-transaction-modal
+  [visible]="txOpen()"
+  [flow]="'investment'"
+  [investmentIntent]="txInvestmentIntent()"
+  [editing]="editingTx()"
+  (closed)="closeTx()"
+/>

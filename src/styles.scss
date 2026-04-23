@@ -1,6 +1,4 @@
-/* Design system — Minhas Finanças */
 :root {
-  /* Tipografia */
   --fin-font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --fin-text-xs: 0.75rem;
   --fin-text-sm: 0.8125rem;
@@ -21,7 +19,6 @@
   --fin-tracking-tight: -0.02em;
   --fin-tracking-wide: 0.04em;
 
-  /* Cores — base */
   --fin-primary: #0b5d7a;
   --fin-primary-hover: #094a63;
   --fin-primary-muted: color-mix(in srgb, var(--fin-primary) 14%, transparent);
@@ -36,7 +33,6 @@
   --fin-surface: #ffffff;
   --fin-surface-elevated: #ffffff;
 
-  /* Semânticas */
   --fin-income: #15803d;
   --fin-income-hover: #166534;
   --fin-income-soft: color-mix(in srgb, var(--fin-income) 12%, var(--fin-surface));
@@ -45,8 +41,10 @@
   --fin-expense-soft: color-mix(in srgb, var(--fin-expense) 10%, var(--fin-surface));
   --fin-essential: #c2410c;
   --fin-essential-soft: color-mix(in srgb, var(--fin-essential) 12%, var(--fin-surface));
+  --fin-investment: #5b21b6;
+  --fin-investment-hover: #4c1d95;
+  --fin-investment-soft: color-mix(in srgb, var(--fin-investment) 12%, var(--fin-surface));
 
-  /* Raios e sombras */
   --fin-radius: 12px;
   --fin-radius-sm: 8px;
   --fin-radius-lg: 16px;
@@ -104,7 +102,20 @@ a:hover {
   color: var(--fin-primary-hover);
 }
 
-/* Mobile: tipografia legível (mín. ~16px no corpo) e escala de títulos */
+.auth-field--invalid .auth-field__control {
+  border-color: var(--fin-expense);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--fin-expense) 18%, transparent);
+}
+
+.auth-field__err {
+  display: block;
+  margin: 0;
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-medium);
+  color: var(--fin-expense);
+  line-height: var(--fin-leading-snug);
+}
+
 @media (max-width: 767px) {
   :root {
     --fin-text-xs: 0.6875rem;
@@ -133,7 +144,6 @@ a:hover {
   }
 }
 
-/* Em telas touch, evita “lift” dos cards (só hover com ponteiro fino) */
 @media (hover: none) and (pointer: coarse) {
   .card:hover {
     transform: none;

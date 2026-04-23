@@ -88,6 +88,10 @@
   background: linear-gradient(180deg, var(--fin-expense), color-mix(in srgb, var(--fin-expense) 75%, #000));
 }
 
+.card__accent--inv {
+  background: linear-gradient(180deg, var(--fin-investment), color-mix(in srgb, var(--fin-investment) 72%, #000));
+}
+
 .card__accent--balance {
   background: linear-gradient(180deg, var(--fin-income), color-mix(in srgb, var(--fin-income) 70%, #000));
 }
@@ -98,6 +102,55 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+}
+
+.card__body--split {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.25rem 1.5rem;
+  align-items: flex-start;
+}
+
+.card__split-item {
+  flex: 1 1 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.card__split-item--acc {
+  padding-left: 0;
+  border-left: none;
+}
+
+@media (min-width: 640px) {
+  .card__split-item--acc {
+    padding-left: 1.25rem;
+    border-left: 1px solid var(--fin-border);
+  }
+}
+
+.card__label--secondary {
+  font-size: var(--fin-text-sm);
+}
+
+.card__caption {
+  margin: 0;
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-medium);
+  color: var(--fin-text-muted);
+  line-height: var(--fin-leading-snug);
+  max-width: 42ch;
+}
+
+.card__value--acc {
+  font-size: var(--fin-text-xl);
+}
+
+.card__value--muted {
+  color: var(--fin-text-muted);
+  font-size: var(--fin-text-lg);
 }
 
 .card__icon {
@@ -117,6 +170,10 @@
 .card--ne .card__icon,
 .card--out .card__icon {
   color: var(--fin-expense);
+}
+
+.card--inv .card__icon {
+  color: var(--fin-investment);
 }
 
 .card--balance .card__icon {
@@ -154,6 +211,10 @@
 
 .card__value--out {
   color: var(--fin-expense);
+}
+
+.card__value--inv {
+  color: var(--fin-investment);
 }
 
 .panel {
@@ -215,14 +276,14 @@
 
 .overview-chart {
   position: relative;
-  height: 280px;
+  height: 320px;
   width: 100%;
   margin-bottom: 0.25rem;
 }
 
 @media (max-width: 480px) {
   .overview-chart {
-    height: 260px;
+    height: 300px;
   }
 }
 

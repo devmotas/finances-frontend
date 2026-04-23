@@ -23,7 +23,7 @@ export function filterTransactionsByMonth(
   return transactions.filter((t) => transactionInMonth(t, year, month));
 }
 
-export function categoryMap(categories: Category[]): Map<string, Category> {
+export function categoryMap(categories: Category[]): Map<number, Category> {
   return new Map(categories.map((c) => [c.id, c]));
 }
 
@@ -39,10 +39,15 @@ export function computeMonthTotals(
   let totalIncome = 0;
   let totalEssential = 0;
   let totalNonEssential = 0;
+  let totalInvestments = 0;
 
   for (const t of monthTx) {
     if (t.flow === 'income') {
       totalIncome += t.amount;
+      continue;
+    }
+    if (t.flow === 'investment') {
+      totalInvestments += t.amount;
       continue;
     }
     const cat = cats.get(t.categoryId);
@@ -52,13 +57,14 @@ export function computeMonthTotals(
   }
 
   const totalExpenses = totalEssential + totalNonEssential;
-  const balance = totalIncome - totalExpenses;
+  const balance = totalIncome - totalExpenses - totalInvestments;
 
   return {
     totalIncome,
     totalEssential,
     totalNonEssential,
     totalExpenses,
+    totalInvestments,
     balance,
   };
 }

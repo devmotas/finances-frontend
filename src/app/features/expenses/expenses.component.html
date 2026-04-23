@@ -10,6 +10,24 @@
       </p>
     </div>
     <div class="page__actions">
+      <div class="export-toolbar" aria-label="Exportar relatório">
+        <label class="export-toolbar__field">
+          <span class="export-toolbar__label">Período</span>
+          <select class="export-toolbar__select" [value]="exportPeriod()" (change)="onExportPeriodChange($event)">
+            <option value="month">Mês atual</option>
+            <option value="quarter">Trimestre atual</option>
+            <option value="year">Ano inteiro</option>
+          </select>
+        </label>
+        <button type="button" class="btn btn--ghost" (click)="exportReport('csv')" title="Exportar CSV">
+          <lucide-icon name="download" [size]="18" [strokeWidth]="2"></lucide-icon>
+          CSV
+        </button>
+        <button type="button" class="btn btn--ghost" (click)="exportReport('pdf')" title="Exportar PDF">
+          <lucide-icon name="download" [size]="18" [strokeWidth]="2"></lucide-icon>
+          PDF
+        </button>
+      </div>
       <button type="button" class="btn btn--secondary" (click)="openCategory()">
         <span class="btn__icon" aria-hidden="true">
           <lucide-icon name="tag" [size]="18" [strokeWidth]="2"></lucide-icon>
@@ -73,8 +91,19 @@
                 @if (t.description.trim()) {
                   <span class="tx-list__desc">{{ t.description }}</span>
                 }
-                <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
-                  {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                <span class="tx-list__badges">
+                  @if (txHasRecurrence(t)) {
+                    <span
+                      class="tx-list__serie"
+                      title="Parte de uma série recorrente"
+                      aria-label="Recorrente"
+                    >
+                      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
+                    </span>
+                  }
+                  <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                    {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                  </span>
                 </span>
               </div>
               <div class="tx-list__side">
@@ -122,8 +151,19 @@
                 @if (t.description.trim()) {
                   <span class="tx-list__desc">{{ t.description }}</span>
                 }
-                <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
-                  {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                <span class="tx-list__badges">
+                  @if (txHasRecurrence(t)) {
+                    <span
+                      class="tx-list__serie"
+                      title="Parte de uma série recorrente"
+                      aria-label="Recorrente"
+                    >
+                      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
+                    </span>
+                  }
+                  <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                    {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                  </span>
                 </span>
               </div>
               <div class="tx-list__side">
@@ -157,3 +197,4 @@
   [editing]="editingTx()"
   (closed)="closeTx()"
 />
+

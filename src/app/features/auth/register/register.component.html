@@ -8,42 +8,76 @@
       <p class="auth-card__subtitle">Cadastre-se para começar a organizar suas finanças.</p>
     </header>
 
-    <form
-      class="auth-form"
-      (submit)="onSubmit($event, name.value, email.value, password.value, confirmPassword.value)"
-    >
-      <label class="auth-field">
+    <form class="auth-form" [formGroup]="form" (ngSubmit)="onSubmit()">
+      <label
+        class="auth-field"
+        [class.auth-field--invalid]="form.controls.name.touched && form.controls.name.invalid"
+      >
         <span class="auth-field__label">Nome</span>
         <span class="auth-field__control">
           <span class="auth-field__icon" aria-hidden="true">
             <lucide-icon name="user" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
-          <input #name type="text" placeholder="Seu nome completo" autocomplete="name" required />
+          <input
+            type="text"
+            formControlName="name"
+            placeholder="Seu nome completo"
+            autocomplete="name"
+            maxlength="200"
+            [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid"
+          />
         </span>
+        @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
+          <span class="auth-field__err" role="alert">Informe seu nome.</span>
+        }
+        @if (form.controls.name.touched && form.controls.name.errors?.['minlength']) {
+          <span class="auth-field__err" role="alert">Use pelo menos 2 caracteres.</span>
+        }
+        @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
+          <span class="auth-field__err" role="alert">No máximo 200 caracteres.</span>
+        }
       </label>
 
-      <label class="auth-field">
+      <label
+        class="auth-field"
+        [class.auth-field--invalid]="form.controls.email.touched && form.controls.email.invalid"
+      >
         <span class="auth-field__label">E-mail</span>
         <span class="auth-field__control">
           <span class="auth-field__icon" aria-hidden="true">
             <lucide-icon name="mail" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
-          <input #email type="email" placeholder="voce@email.com" autocomplete="email" required />
+          <input
+            type="email"
+            formControlName="email"
+            placeholder="voce@email.com"
+            autocomplete="email"
+            [attr.aria-invalid]="form.controls.email.touched && form.controls.email.invalid"
+          />
         </span>
+        @if (form.controls.email.touched && form.controls.email.errors?.['required']) {
+          <span class="auth-field__err" role="alert">Informe o e-mail.</span>
+        }
+        @if (form.controls.email.touched && form.controls.email.errors?.['email']) {
+          <span class="auth-field__err" role="alert">E-mail inválido.</span>
+        }
       </label>
 
-      <label class="auth-field">
+      <label
+        class="auth-field"
+        [class.auth-field--invalid]="form.controls.password.touched && form.controls.password.invalid"
+      >
         <span class="auth-field__label">Senha</span>
         <span class="auth-field__control">
           <span class="auth-field__icon" aria-hidden="true">
             <lucide-icon name="lock" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
           <input
-            #password
             [type]="passwordVisible() ? 'text' : 'password'"
+            formControlName="password"
             placeholder="Crie uma senha"
             autocomplete="new-password"
-            required
+            [attr.aria-invalid]="form.controls.password.touched && form.controls.password.invalid"
           />
           <button
             type="button"
@@ -59,20 +93,35 @@
             }
           </button>
         </span>
+        @if (form.controls.password.touched && form.controls.password.errors?.['required']) {
+          <span class="auth-field__err" role="alert">Informe a senha.</span>
+        }
+        @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) {
+          <span class="auth-field__err" role="alert">A senha deve ter pelo menos 6 caracteres.</span>
+        }
       </label>
 
-      <label class="auth-field">
+      <label
+        class="auth-field"
+        [class.auth-field--invalid]="
+          (form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid) ||
+          (form.touched && form.hasError('passwordMismatch'))
+        "
+      >
         <span class="auth-field__label">Confirmar senha</span>
         <span class="auth-field__control">
           <span class="auth-field__icon" aria-hidden="true">
             <lucide-icon name="lock" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
           <input
-            #confirmPassword
             [type]="confirmPasswordVisible() ? 'text' : 'password'"
+            formControlName="confirmPassword"
             placeholder="Repita a senha"
             autocomplete="new-password"
-            required
+            [attr.aria-invalid]="
+              (form.controls.confirmPassword.touched && form.controls.confirmPassword.invalid) ||
+              (form.touched && form.hasError('passwordMismatch'))
+            "
           />
           <button
             type="button"
@@ -88,6 +137,12 @@
             }
           </button>
         </span>
+        @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.errors?.['required']) {
+          <span class="auth-field__err" role="alert">Confirme a senha.</span>
+        }
+        @if (form.touched && form.hasError('passwordMismatch')) {
+          <span class="auth-field__err" role="alert">As senhas não conferem.</span>
+        }
       </label>
 
       <button type="submit" class="auth-btn auth-btn--primary">
