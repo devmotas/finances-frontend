@@ -1,14 +1,15 @@
+import { CurrencyPipe } from '@angular/common';
 import { Component, HostListener, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { Category, ExpenseGroup, Flow } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { newId } from '../../../core/utils/id.util';
+import { httpErrorMessage } from '../../../core/utils/http-error.util';
 
 @Component({
   selector: 'app-category-modal',
-  imports: [ReactiveFormsModule, LucideAngularModule],
+  imports: [ReactiveFormsModule, LucideAngularModule, CurrencyPipe],
   templateUrl: './category-modal.component.html',
   styleUrl: './category-modal.component.scss',
 })
@@ -21,11 +22,15 @@ export class CategoryModalComponent {
   readonly flow = input.required<Flow>();
   readonly closed = output<void>();
 
-  editingId: string | null = null;
+  editingId: number | null = null;
 
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(120)]],
     expenseGroup: ['essential' as ExpenseGroup],
+    openingBalanceAmount: this.fb.nonNullable.control(0, [
+      Validators.min(-999999999999.99),
+      Validators.max(999999999999.99),
+    ]),
   });
 
   constructor() {
@@ -35,6 +40,7 @@ export class CategoryModalComponent {
         this.form.reset({
           name: '',
           expenseGroup: 'essential',
+          openingBalanceAmount: 0,
         });
       }
     });
@@ -53,10 +59,18 @@ export class CategoryModalComponent {
     return this.flow() === 'expense';
   }
 
+  isInvestment(): boolean {
+    return this.flow() === 'investment';
+  }
+
   namePlaceholder(): string {
-    return this.isExpense()
-      ? 'Ex.: Moradia, alimentação, transporte'
-      : 'Ex.: Salário, freelances, rendimentos';
+    if (this.flow() === 'expense') {
+      return 'Ex.: Moradia, alimentação, transporte';
+    }
+    if (this.flow() === 'investment') {
+      return 'Ex.: Tesouro Direto, corretora XYZ, reserva em FIIs';
+    }
+    return 'Ex.: Salário, freelances, rendimentos';
   }
 
   close(): void {
@@ -75,12 +89,13 @@ export class CategoryModalComponent {
     this.form.patchValue({
       name: c.name,
       expenseGroup: c.expenseGroup ?? 'essential',
+      openingBalanceAmount: c.openingBalanceAmount ?? 0,
     });
   }
 
   cancelEdit(): void {
     this.editingId = null;
-    this.form.reset({ name: '', expenseGroup: 'essential' });
+    this.form.reset({ name: '', expenseGroup: 'essential', openingBalanceAmount: 0 });
   }
 
   save(): void {
@@ -91,41 +106,66 @@ export class CategoryModalComponent {
     const name = (this.form.value.name ?? '').trim();
     const flow = this.flow();
     const group = this.isExpense() ? (this.form.value.expenseGroup as ExpenseGroup) : undefined;
+    const openingBalanceAmount = this.isInvestment()
+      ? this.form.controls.openingBalanceAmount.getRawValue()
+      : 0;
 
-    if (this.editingId) {
+    if (this.editingId != null) {
       const existing = this.facade.getCategory(this.editingId);
       if (!existing) return;
-      this.facade.updateCategory({
-        ...existing,
-        name,
-        expenseGroup: flow === 'expense' ? group : undefined,
-      });
-      this.toast.show('Categoria atualizada.', 'success');
+      this.facade
+        .updateCategory({
+          ...existing,
+          name,
+          expenseGroup: flow === 'expense' ? group : undefined,
+          openingBalanceAmount,
+        })
+        .subscribe({
+          next: () => {
+            this.toast.show('Categoria atualizada.', 'success');
+            this.cancelEdit();
+          },
+          error: (err: unknown) => {
+            this.toast.show(httpErrorMessage(err, 'Não foi possível atualizar.'), 'error');
+          },
+        });
     } else {
-      const cat: Category = {
-        id: newId(),
-        name,
-        flow,
-        expenseGroup: flow === 'expense' ? group : undefined,
-      };
-      this.facade.addCategory(cat);
-      this.toast.show('Categoria criada.', 'success');
+      this.facade
+        .addCategory({
+          name,
+          flow,
+          expenseGroup: flow === 'expense' ? group : undefined,
+          openingBalanceAmount,
+        })
+        .subscribe({
+          next: () => {
+            this.toast.show('Categoria criada.', 'success');
+            this.cancelEdit();
+          },
+          error: (err: unknown) => {
+            this.toast.show(httpErrorMessage(err, 'Não foi possível criar.'), 'error');
+          },
+        });
     }
-    this.cancelEdit();
   }
 
   remove(c: Category): void {
     if (!this.facade.canDeleteCategory(c.id)) {
       this.toast.show(
-        'Não é possível excluir: existem lançamentos usando esta categoria.',
+        'Não é possível excluir: existem lançamentos usando esta categoria neste mês (ou o servidor pode bloquear se houver em outros meses).',
         'error'
       );
       return;
     }
     if (!confirm(`Excluir a categoria "${c.name}"?`)) return;
-    this.facade.deleteCategory(c.id);
-    if (this.editingId === c.id) this.cancelEdit();
-    this.toast.show('Categoria excluída.', 'success');
+    this.facade.deleteCategory(c.id).subscribe({
+      next: () => {
+        if (this.editingId === c.id) this.cancelEdit();
+        this.toast.show('Categoria excluída.', 'success');
+      },
+      error: (err: unknown) => {
+        this.toast.show(httpErrorMessage(err, 'Não foi possível excluir.'), 'error');
+      },
+    });
   }
-
 }

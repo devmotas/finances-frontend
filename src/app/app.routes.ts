@@ -50,6 +50,23 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/expenses/expenses.component').then((m) => m.ExpensesComponent),
       },
+      {
+        path: 'investimentos',
+        loadComponent: () =>
+          import('./features/investments/investments.component').then((m) => m.InvestmentsComponent),
+      },
+      {
+        path: 'reserva-emergencia',
+        loadComponent: () =>
+          import('./features/emergency-fund/emergency-fund.component').then(
+            (m) => m.EmergencyFundComponent
+          ),
+      },
+      {
+        path: 'configuracoes',
+        loadComponent: () =>
+          import('./features/settings/settings.component').then((m) => m.SettingsComponent),
+      },
     ],
   },
   {

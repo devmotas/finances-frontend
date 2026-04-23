@@ -11,6 +11,7 @@ import {
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
+import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
 import { ToastService } from '../../core/services/toast.service';
 
@@ -29,6 +30,8 @@ export interface ShellNavItem {
   styleUrl: './app-shell.component.scss',
 })
 export class AppShellComponent {
+  private readonly _financesBootstrap = inject(FinancesFacadeService);
+
   private readonly monthCtx = inject(MonthContextService);
   private readonly document = inject(DOCUMENT);
   private readonly destroyRef = inject(DestroyRef);
@@ -54,6 +57,21 @@ export class AppShellComponent {
       label: 'Saídas',
       icon: 'arrow-up-right',
       iconModifier: 'out',
+    },
+    {
+      path: '/app/investimentos',
+      label: 'Investimentos',
+      icon: 'landmark',
+    },
+    {
+      path: '/app/reserva-emergencia',
+      label: 'Reserva',
+      icon: 'piggy-bank',
+    },
+    {
+      path: '/app/configuracoes',
+      label: 'Configurações',
+      icon: 'settings',
     },
   ];
 

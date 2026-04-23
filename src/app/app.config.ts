@@ -1,3 +1,4 @@
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { registerLocaleData } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import {
@@ -10,12 +11,18 @@ import {
 import { provideRouter } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
+import { authInterceptor } from './core/interceptors/auth.interceptor';
+import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
+
 import {
   BarController,
   BarElement,
   CategoryScale,
   Legend,
   LinearScale,
+  LineController,
+  LineElement,
+  PointElement,
   Tooltip,
 } from 'chart.js';
 import { provideCharts } from 'ng2-charts';
@@ -27,6 +34,7 @@ registerLocaleData(localePt);
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideHttpClient(withInterceptors([apiBaseUrlInterceptor, authInterceptor])),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideCharts({
       registerables: [
@@ -34,6 +42,9 @@ export const appConfig: ApplicationConfig = {
         BarElement,
         CategoryScale,
         LinearScale,
+        LineController,
+        LineElement,
+        PointElement,
         Tooltip,
         Legend,
       ],

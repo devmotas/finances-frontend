@@ -1,16 +1,34 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { LucideAngularModule } from 'lucide-angular';
+import {
+  catchError,
+  combineLatest,
+  distinctUntilChanged,
+  filter,
+  map,
+  of,
+  switchMap,
+  tap,
+} from 'rxjs';
 import { Category, Transaction } from '../../core/models/finances.models';
-import { categoryMap } from '../../core/utils/finance-calculations';
+import { AuthTokenService } from '../../core/services/auth-token.service';
+import {
+  FinanceSummaryApiService,
+  FinanceSummaryDto,
+} from '../../core/services/finance-summary-api.service';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
+import { MonthContextService } from '../../core/services/month-context.service';
+import { categoryMap } from '../../core/utils/finance-calculations';
 
 const ROW_LABELS = [
   'Entradas',
   'Despesas essenciais',
   'Despesas não essenciais',
+  'Investimentos',
   'Composição das despesas',
 ] as const;
 
@@ -41,6 +59,17 @@ const WARM_EXPENSE_PALETTE = [
 
 const WARM_EXPENSE_PHASE = 4;
 
+const INVESTMENT_PALETTE = [
+  'hsl(262 52% 42%)',
+  'hsl(245 48% 45%)',
+  'hsl(280 45% 42%)',
+  'hsl(230 50% 40%)',
+  'hsl(268 46% 38%)',
+  'hsl(252 44% 44%)',
+  'hsl(270 50% 40%)',
+  'hsl(258 46% 43%)',
+] as const;
+
 const CHART_SEGMENT_BORDER = 'rgba(255, 255, 255, 0.92)';
 
 function pickPaletteColor<T extends readonly string[]>(palette: T, index: number): string {
@@ -52,13 +81,14 @@ function categoryStackBackgrounds(categoryIndex: number): string[] {
     pickPaletteColor(COOL_RECEIPTS_PALETTE, categoryIndex),
     pickPaletteColor(WARM_EXPENSE_PALETTE, categoryIndex),
     pickPaletteColor(WARM_EXPENSE_PALETTE, categoryIndex + WARM_EXPENSE_PHASE),
+    pickPaletteColor(INVESTMENT_PALETTE, categoryIndex),
     'transparent',
   ];
 }
 
 function categoryStackBorders(categoryIndex: number): string[] {
   const b = CHART_SEGMENT_BORDER;
-  return [b, b, b, 'transparent'];
+  return [b, b, b, b, 'transparent'];
 }
 
 function buildStackedBarData(
@@ -68,17 +98,19 @@ function buildStackedBarData(
   totalNonEssential: number
 ): ChartData<'bar'> {
   const catById = categoryMap(categories);
-  const byCat = new Map<string, { i: number; e: number; ne: number }>();
+  const byCat = new Map<number, { i: number; e: number; ne: number; inv: number }>();
 
   for (const t of monthTx) {
     const cat = catById.get(t.categoryId);
     if (!cat) continue;
     if (!byCat.has(t.categoryId)) {
-      byCat.set(t.categoryId, { i: 0, e: 0, ne: 0 });
+      byCat.set(t.categoryId, { i: 0, e: 0, ne: 0, inv: 0 });
     }
     const b = byCat.get(t.categoryId)!;
     if (t.flow === 'income') {
       b.i += t.amount;
+    } else if (t.flow === 'investment') {
+      b.inv += t.amount;
     } else if (cat.flow === 'expense') {
       if (cat.expenseGroup === 'essential') b.e += t.amount;
       else if (cat.expenseGroup === 'nonEssential') b.ne += t.amount;
@@ -87,15 +119,15 @@ function buildStackedBarData(
 
   const slices = categories
     .map((c) => {
-      const b = byCat.get(c.id) ?? { i: 0, e: 0, ne: 0 };
-      return { cat: c, ...b, sum: b.i + b.e + b.ne };
+      const b = byCat.get(c.id) ?? { i: 0, e: 0, ne: 0, inv: 0 };
+      return { cat: c, ...b, sum: b.i + b.e + b.ne + b.inv };
     })
     .filter((s) => s.sum > 0)
     .sort((a, b) => b.sum - a.sum);
 
   const datasets = slices.map((s, idx) => ({
     label: s.cat.name,
-    data: [s.i, s.e, s.ne, 0],
+    data: [s.i, s.e, s.ne, s.inv, 0],
     backgroundColor: categoryStackBackgrounds(idx),
     borderColor: categoryStackBorders(idx),
     borderWidth: 1,
@@ -106,14 +138,16 @@ function buildStackedBarData(
   datasets.push(
     {
       label: 'Essenciais (total)',
-      data: [0, 0, 0, totalEssential],
+      data: [0, 0, 0, 0, totalEssential],
       backgroundColor: [
+        'transparent',
         'transparent',
         'transparent',
         'transparent',
         COMPOSITION_ESSENTIAL_BG,
       ],
       borderColor: [
+        'transparent',
         'transparent',
         'transparent',
         'transparent',
@@ -125,14 +159,16 @@ function buildStackedBarData(
     },
     {
       label: 'Não essenciais (total)',
-      data: [0, 0, 0, totalNonEssential],
+      data: [0, 0, 0, 0, totalNonEssential],
       backgroundColor: [
+        'transparent',
         'transparent',
         'transparent',
         'transparent',
         COMPOSITION_NON_ESSENTIAL_BG,
       ],
       borderColor: [
+        'transparent',
         'transparent',
         'transparent',
         'transparent',
@@ -158,12 +194,18 @@ function buildStackedBarData(
 })
 export class OverviewComponent {
   readonly facade = inject(FinancesFacadeService);
+  private readonly summaryApi = inject(FinanceSummaryApiService);
+  private readonly monthCtx = inject(MonthContextService);
+  private readonly tokens = inject(AuthTokenService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly financeSummary = signal<FinanceSummaryDto | null>(null);
 
   readonly totals = computed(() => this.facade.monthTotals());
 
   readonly hasData = computed(() => {
     const t = this.totals();
-    return t.totalIncome > 0 || t.totalExpenses > 0;
+    return t.totalIncome > 0 || t.totalExpenses > 0 || t.totalInvestments > 0;
   });
 
   readonly overviewChartData = computed((): ChartData<'bar'> => {
@@ -248,4 +290,24 @@ export class OverviewComponent {
       },
     },
   };
+
+  constructor() {
+    combineLatest([toObservable(this.monthCtx.selectedMonth), toObservable(this.tokens.hasToken)])
+      .pipe(
+        distinctUntilChanged(
+          (a, b) =>
+            a[0].year === b[0].year && a[0].month === b[0].month && a[1] === b[1]
+        ),
+        tap(([, has]) => {
+          if (!has) this.financeSummary.set(null);
+        }),
+        filter(([, has]) => has),
+        map(([ym]) => ym),
+        switchMap((ym) =>
+          this.summaryApi.get(ym.year, ym.month).pipe(catchError(() => of(null as FinanceSummaryDto | null)))
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((s) => this.financeSummary.set(s));
+  }
 }

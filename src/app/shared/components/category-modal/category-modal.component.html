@@ -49,6 +49,28 @@
           </label>
         }
 
+        @if (isInvestment()) {
+          <label class="field">
+            <span class="field__label">Saldo inicial nesta categoria (R$)</span>
+            <input
+              class="field__input"
+              type="number"
+              step="0.01"
+              formControlName="openingBalanceAmount"
+              title="Valor já existente nesta linha antes dos lançamentos no app (somado ao saldo acumulado)"
+            />
+            @if (
+              form.controls.openingBalanceAmount.touched && form.controls.openingBalanceAmount.invalid
+            ) {
+              <span class="field__err">Use um valor numérico dentro do limite permitido.</span>
+            }
+            <span class="field__hint">
+              Distribua o patrimônio pré-existente entre as categorias de investimento; o resumo usa a soma de
+              todas elas.
+            </span>
+          </label>
+        }
+
         <div class="modal__actions">
           @if (editingId) {
             <button type="button" class="btn btn--ghost" (click)="cancelEdit()">Cancelar edição</button>
@@ -69,6 +91,11 @@
                   c.expenseGroup === 'essential' ? 'Essencial' : 'Não essencial'
                 }}</span>
               }
+              @if (isInvestment() && (c.openingBalanceAmount ?? 0) !== 0) {
+                <span class="cat-list__tag"
+                  >Inicial {{ c.openingBalanceAmount ?? 0 | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span
+                >
+              }
               <div class="cat-list__actions">
                 <button type="button" class="btn btn--sm btn--ghost" (click)="startEdit(c)">
                   Editar
@@ -81,7 +108,7 @@
           } @empty {
             <li class="cat-list__empty">
               Nenhuma categoria cadastrada. Preencha o formulário acima para criar a primeira — você
-              precisa de categorias para registrar entradas e saídas.
+              precisa de categorias para registrar lançamentos neste fluxo.
             </li>
           }
         </ul>

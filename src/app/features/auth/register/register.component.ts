@@ -2,8 +2,10 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { AuthApiService } from '../../../core/services/auth-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { matchPasswordGroupValidator } from '../../../shared/validators/match-password-group.validator';
+import { httpErrorMessage } from '../../../core/utils/http-error.util';
 
 @Component({
   selector: 'app-register',
@@ -14,6 +16,7 @@ import { matchPasswordGroupValidator } from '../../../shared/validators/match-pa
 export class RegisterComponent {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly authApi = inject(AuthApiService);
   private readonly fb = inject(FormBuilder);
 
   readonly passwordVisible = signal(false);
@@ -43,7 +46,15 @@ export class RegisterComponent {
       return;
     }
 
-    this.toast.show('Cadastro realizado com sucesso. Faça login para entrar.', 'success');
-    this.router.navigateByUrl('/login');
+    const { name, email, password } = this.form.getRawValue();
+    this.authApi.register({ name: name.trim(), email: email.trim(), password }).subscribe({
+      next: () => {
+        this.toast.show('Cadastro realizado com sucesso. Faça login para entrar.', 'success');
+        void this.router.navigateByUrl('/login');
+      },
+      error: (err: unknown) => {
+        this.toast.show(httpErrorMessage(err, 'Não foi possível concluir o cadastro.'), 'error');
+      },
+    });
   }
 }

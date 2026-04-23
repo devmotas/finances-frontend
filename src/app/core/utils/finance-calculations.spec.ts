@@ -5,14 +5,15 @@ describe('finance-calculations', () => {
   const state: AppState = {
     schemaVersion: 1,
     categories: [
-      { id: 'c1', name: 'Salário', flow: 'income' },
-      { id: 'e1', name: 'Aluguel', flow: 'expense', expenseGroup: 'essential' },
-      { id: 'e2', name: 'Lazer', flow: 'expense', expenseGroup: 'nonEssential' },
+      { id: 1, name: 'Salário', flow: 'income' },
+      { id: 2, name: 'Aluguel', flow: 'expense', expenseGroup: 'essential' },
+      { id: 3, name: 'Lazer', flow: 'expense', expenseGroup: 'nonEssential' },
+      { id: 4, name: 'Tesouro', flow: 'investment' },
     ],
     transactions: [
       {
-        id: 't1',
-        categoryId: 'c1',
+        id: 101,
+        categoryId: 1,
         description: 'Sal',
         amount: 5000,
         date: '2026-04-15',
@@ -20,8 +21,8 @@ describe('finance-calculations', () => {
         flow: 'income',
       },
       {
-        id: 't2',
-        categoryId: 'e1',
+        id: 102,
+        categoryId: 2,
         description: 'Aluguel',
         amount: 2000,
         date: '2026-04-01',
@@ -29,13 +30,22 @@ describe('finance-calculations', () => {
         flow: 'expense',
       },
       {
-        id: 't3',
-        categoryId: 'e2',
+        id: 103,
+        categoryId: 3,
         description: 'Cinema',
         amount: 100,
         date: '2026-03-30',
         schedule: 'variable',
         flow: 'expense',
+      },
+      {
+        id: 104,
+        categoryId: 4,
+        description: 'Aporte',
+        amount: 500,
+        date: '2026-04-10',
+        schedule: 'variable',
+        flow: 'investment',
       },
     ],
   };
@@ -47,7 +57,7 @@ describe('finance-calculations', () => {
 
   it('filterTransactionsByMonth', () => {
     const m = filterTransactionsByMonth(state.transactions, 2026, 4);
-    expect(m.length).toBe(2);
+    expect(m.length).toBe(3);
   });
 
   it('computeMonthTotals', () => {
@@ -56,6 +66,28 @@ describe('finance-calculations', () => {
     expect(t.totalEssential).toBe(2000);
     expect(t.totalNonEssential).toBe(0);
     expect(t.totalExpenses).toBe(2000);
-    expect(t.balance).toBe(3000);
+    expect(t.totalInvestments).toBe(500);
+    expect(t.balance).toBe(2500);
+  });
+
+  it('computeMonthTotals subtracts investment resgates (negative amounts)', () => {
+    const withResgate: AppState = {
+      ...state,
+      transactions: [
+        ...state.transactions,
+        {
+          id: 105,
+          categoryId: 4,
+          description: 'Resgate parcial',
+          amount: -200,
+          date: '2026-04-20',
+          schedule: 'variable',
+          flow: 'investment',
+        },
+      ],
+    };
+    const t = computeMonthTotals(withResgate, 2026, 4);
+    expect(t.totalInvestments).toBe(300);
+    expect(t.balance).toBe(2700);
   });
 });

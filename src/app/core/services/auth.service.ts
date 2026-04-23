@@ -1,35 +1,32 @@
-import { Injectable, signal } from '@angular/core';
-
-const STORAGE_KEY = 'finances.auth';
+import { computed, Injectable, inject } from '@angular/core';
+import { Observable, tap } from 'rxjs';
+import { AuthApiService, AuthResponseDto } from './auth-api.service';
+import { AuthTokenService } from './auth-token.service';
+import { UserProfileService } from './user-profile.service';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly authenticated = signal(this.readStored());
+  private readonly authApi = inject(AuthApiService);
+  private readonly tokens = inject(AuthTokenService);
+  private readonly userProfile = inject(UserProfileService);
 
-  readonly isAuthenticated = this.authenticated.asReadonly();
+  readonly isAuthenticated = computed(() => this.tokens.hasToken());
 
-  login(email: string): void {
-    try {
-      localStorage.setItem(
-        STORAGE_KEY,
-        JSON.stringify({ email: email.trim(), at: Date.now() })
-      );
-    } catch {}
-    this.authenticated.set(true);
+  getToken(): string | null {
+    return this.tokens.token();
+  }
+
+  login(email: string, password: string): Observable<AuthResponseDto> {
+    return this.authApi.login({ email, password }).pipe(
+      tap((res) => {
+        this.tokens.setToken(res.token);
+        this.userProfile.setFromUser(res.user);
+      })
+    );
   }
 
   logout(): void {
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {}
-    this.authenticated.set(false);
-  }
-
-  private readStored(): boolean {
-    try {
-      return !!localStorage.getItem(STORAGE_KEY);
-    } catch {
-      return false;
-    }
+    this.tokens.clear();
+    this.userProfile.clear();
   }
 }

@@ -11,6 +11,18 @@ npm start
 
 Abra `http://localhost:4200/`. A rota inicial redireciona para **Visão Geral**.
 
+## Ambientes
+
+O frontend usa os arquivos:
+
+- `src/environments/environment.ts` (local/dev)
+- `src/environments/environment.prod.ts` (produção)
+
+Troca automática:
+
+- `npm start` usa `environment.ts`
+- `npm run build` usa `environment.prod.ts` (via `fileReplacements` do Angular)
+
 ## Build de produção
 
 ```bash
