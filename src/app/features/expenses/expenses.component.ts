@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { Category, Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
@@ -32,6 +32,7 @@ export class ExpensesComponent {
   private readonly reportsApi = inject(ReportsApiService);
 
   readonly exportPeriod = signal<ReportPeriod>('month');
+  readonly exportOpen = signal(false);
 
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
@@ -109,12 +110,23 @@ export class ExpensesComponent {
     this.filterCategoryId.update((cur) => (cur === id ? null : id));
   }
 
+  toggleExport(e: MouseEvent): void {
+    e.stopPropagation();
+    this.exportOpen.update((v) => !v);
+  }
+
+  @HostListener('document:click')
+  closeExport(): void {
+    this.exportOpen.set(false);
+  }
+
   onExportPeriodChange(e: Event): void {
     const v = (e.target as HTMLSelectElement).value as ReportPeriod;
     this.exportPeriod.set(v);
   }
 
   exportReport(format: ReportFormat): void {
+    this.exportOpen.set(false);
     const { year, month } = this.monthCtx.selectedMonth();
     const period = this.exportPeriod();
     this.reportsApi.download(format, year, period, month).subscribe({

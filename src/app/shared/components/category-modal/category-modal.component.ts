@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, HostListener, effect, inject, input, output } from '@angular/core';
+import { Component, ElementRef, HostListener, effect, inject, input, output } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { Category, ExpenseGroup, Flow } from '../../../core/models/finances.models';
@@ -17,6 +17,7 @@ export class CategoryModalComponent {
   private readonly fb = inject(FormBuilder);
   private readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
+  private readonly el = inject(ElementRef);
 
   readonly visible = input(false);
   readonly flow = input.required<Flow>();
@@ -91,6 +92,9 @@ export class CategoryModalComponent {
       expenseGroup: c.expenseGroup ?? 'essential',
       openingBalanceAmount: c.openingBalanceAmount ?? 0,
     });
+    (this.el.nativeElement as HTMLElement)
+      .querySelector<HTMLElement>('.modal')
+      ?.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   cancelEdit(): void {

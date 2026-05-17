@@ -8,23 +8,46 @@
       </p>
     </div>
     <div class="page__actions">
-      <div class="export-toolbar" aria-label="Exportar relatório">
-        <label class="export-toolbar__field">
-          <span class="export-toolbar__label">Período</span>
-          <select class="export-toolbar__select" [value]="exportPeriod()" (change)="onExportPeriodChange($event)">
-            <option value="month">Mês atual</option>
-            <option value="quarter">Trimestre atual</option>
-            <option value="year">Ano inteiro</option>
-          </select>
-        </label>
-        <button type="button" class="btn btn--ghost" (click)="exportReport('csv')" title="Exportar CSV">
+      <div class="export-menu">
+        <button
+          type="button"
+          class="btn btn--ghost export-menu__trigger"
+          (click)="toggleExport($event)"
+          [attr.aria-expanded]="exportOpen()"
+          title="Exportar relatório"
+        >
           <lucide-icon name="download" [size]="18" [strokeWidth]="2"></lucide-icon>
-          CSV
+          Exportar
+          <lucide-icon
+            name="chevron-down"
+            [size]="14"
+            [strokeWidth]="2.5"
+            class="export-menu__chevron"
+            [class.export-menu__chevron--open]="exportOpen()"
+          ></lucide-icon>
         </button>
-        <button type="button" class="btn btn--ghost" (click)="exportReport('pdf')" title="Exportar PDF">
-          <lucide-icon name="download" [size]="18" [strokeWidth]="2"></lucide-icon>
-          PDF
-        </button>
+        @if (exportOpen()) {
+          <div class="export-menu__panel" (click)="$event.stopPropagation()">
+            <label class="export-menu__field">
+              <span class="export-menu__label">Período</span>
+              <select class="export-menu__select" [value]="exportPeriod()" (change)="onExportPeriodChange($event)">
+                <option value="month">Mês atual</option>
+                <option value="quarter">Trimestre atual</option>
+                <option value="year">Ano inteiro</option>
+              </select>
+            </label>
+            <div class="export-menu__actions">
+              <button type="button" class="btn btn--ghost export-menu__btn" (click)="exportReport('csv')">
+                <lucide-icon name="download" [size]="16" [strokeWidth]="2"></lucide-icon>
+                CSV
+              </button>
+              <button type="button" class="btn btn--ghost export-menu__btn" (click)="exportReport('pdf')">
+                <lucide-icon name="download" [size]="16" [strokeWidth]="2"></lucide-icon>
+                PDF
+              </button>
+            </div>
+          </div>
+        }
       </div>
       <button type="button" class="btn btn--secondary" (click)="openCategory()">
         <span class="btn__icon" aria-hidden="true">
