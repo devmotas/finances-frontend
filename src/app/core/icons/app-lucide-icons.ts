@@ -1,6 +1,7 @@
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CloudOff,
@@ -33,6 +34,7 @@ import {
 export const APP_LUCIDE_ICONS = {
   ArrowDownLeft,
   ArrowUpRight,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   CloudOff,
