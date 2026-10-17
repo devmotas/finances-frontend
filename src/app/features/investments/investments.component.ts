@@ -15,6 +15,10 @@ import { MonthContextService } from '../../core/services/month-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
 import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
+import {
+  SeriesDeleteChoice,
+  SeriesDeleteModalComponent,
+} from '../../shared/components/series-delete-modal/series-delete-modal.component';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 
 function investmentCategoryStackColors(
@@ -36,6 +40,7 @@ function investmentCategoryStackColors(
     BaseChartDirective,
     CategoryModalComponent,
     TransactionModalComponent,
+    SeriesDeleteModalComponent,
   ],
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.scss',
@@ -50,6 +55,7 @@ export class InvestmentsComponent {
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
   readonly editingTx = signal<Transaction | null>(null);
+  readonly pendingDelete = signal<Transaction | null>(null);
   readonly txInvestmentIntent = signal<'aporte' | 'resgate'>('aporte');
   readonly filterCategoryId = signal<number | null>(null);
 
@@ -314,19 +320,20 @@ export class InvestmentsComponent {
   }
 
   removeTx(t: Transaction): void {
-    let applyToFutureSeries = false;
-    if (this.txHasRecurrence(t)) {
-      applyToFutureSeries = confirm(
-        'Este lançamento faz parte de uma série fixa.\n\n' +
-          'OK = Excluir este mês e todos os meses seguintes da série\n' +
-          'Cancelar = Excluir somente este mês'
-      );
-    } else if (!confirm(t.amount < 0 ? 'Excluir este resgate?' : 'Excluir este aporte?')) {
-      return;
-    }
+    this.pendingDelete.set(t);
+  }
+
+  cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
+  confirmDelete(choice: SeriesDeleteChoice): void {
+    const t = this.pendingDelete();
+    this.pendingDelete.set(null);
+    if (!t) return;
+    const applyToFutureSeries = this.txHasRecurrence(t) && choice.applyToFutureSeries;
     this.facade.deleteTransaction(t.id, { applyToFutureSeries }).subscribe({
-      next: () =>
-        this.toast.show(t.amount < 0 ? 'Resgate excluído.' : 'Aporte excluído.', 'success'),
+      next: () => this.toast.show(t.amount < 0 ? 'Resgate excluído.' : 'Aporte excluído.', 'success'),
       error: (err: unknown) => {
         this.toast.show(httpErrorMessage(err, 'Não foi possível excluir.'), 'error');
       },

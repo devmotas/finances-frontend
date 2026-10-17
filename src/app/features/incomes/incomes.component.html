@@ -152,3 +152,11 @@
   [editing]="editingTx()"
   (closed)="closeTx()"
 />
+
+<app-series-delete-modal
+  [visible]="pendingDelete() !== null"
+  [isSeries]="pendingDelete() !== null && txHasRecurrence(pendingDelete()!)"
+  [itemLabel]="pendingDelete() ? 'esta entrada' : ''"
+  (confirmed)="confirmDelete($event)"
+  (cancelled)="cancelDelete()"
+/>

@@ -195,3 +195,11 @@
   [editing]="editingTx()"
   (closed)="closeTx()"
 />
+
+<app-series-delete-modal
+  [visible]="pendingDelete() !== null"
+  [isSeries]="pendingDelete() !== null && txHasRecurrence(pendingDelete()!)"
+  [itemLabel]="pendingDelete() ? pendingDelete()!.amount < 0 ? 'este resgate' : 'este aporte' : ''"
+  (confirmed)="confirmDelete($event)"
+  (cancelled)="cancelDelete()"
+/>

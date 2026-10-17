@@ -1,0 +1,46 @@
+@if (visible()) {
+  <div class="modal__backdrop" (click)="backdropClick($event)" role="presentation">
+    <div
+      class="modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="series-delete-title"
+      aria-describedby="series-delete-desc"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal__head">
+        <h2 id="series-delete-title" class="modal__title">
+          {{ isSeries() ? 'Excluir lançamento da série' : 'Excluir lançamento' }}
+        </h2>
+        <button type="button" class="modal__x" (click)="cancel()" aria-label="Fechar">
+          <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </div>
+
+      @if (isSeries()) {
+        <p id="series-delete-desc" class="modal__text">
+          Este lançamento faz parte de uma série fixa. Você pode excluir só o mês atual ou este mês e
+          todos os seguintes da série.
+        </p>
+      } @else {
+        <p id="series-delete-desc" class="modal__text">Excluir {{ itemLabel() }}?</p>
+      }
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" data-autofocus (click)="cancel()">
+          Cancelar
+        </button>
+        @if (isSeries()) {
+          <button type="button" class="btn btn--secondary" (click)="deleteOnlyThis()">
+            Só este mês
+          </button>
+          <button type="button" class="btn btn--danger" (click)="deleteThisAndNext()">
+            Este e os próximos
+          </button>
+        } @else {
+          <button type="button" class="btn btn--danger" (click)="deleteOnlyThis()">Excluir</button>
+        }
+      </div>
+    </div>
+  </div>
+}

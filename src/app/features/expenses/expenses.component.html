@@ -221,3 +221,10 @@
   (closed)="closeTx()"
 />
 
+<app-series-delete-modal
+  [visible]="pendingDelete() !== null"
+  [isSeries]="pendingDelete() !== null && txHasRecurrence(pendingDelete()!)"
+  [itemLabel]="pendingDelete() ? 'esta saída' : ''"
+  (confirmed)="confirmDelete($event)"
+  (cancelled)="cancelDelete()"
+/>

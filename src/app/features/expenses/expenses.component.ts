@@ -12,6 +12,10 @@ import {
 import { ToastService } from '../../core/services/toast.service';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
 import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
+import {
+  SeriesDeleteChoice,
+  SeriesDeleteModalComponent,
+} from '../../shared/components/series-delete-modal/series-delete-modal.component';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 
 @Component({
@@ -21,6 +25,7 @@ import { TransactionModalComponent } from '../../shared/components/transaction-m
     LucideAngularModule,
     CategoryModalComponent,
     TransactionModalComponent,
+    SeriesDeleteModalComponent,
   ],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',
@@ -37,6 +42,7 @@ export class ExpensesComponent implements OnInit {
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
   readonly editingTx = signal<Transaction | null>(null);
+  readonly pendingDelete = signal<Transaction | null>(null);
   readonly filterCategoryId = signal<number | null>(null);
 
   readonly essentialList = computed(() => this.filtered('essential'));
@@ -88,16 +94,18 @@ export class ExpensesComponent implements OnInit {
   }
 
   removeTx(t: Transaction): void {
-    let applyToFutureSeries = false;
-    if (this.txHasRecurrence(t)) {
-      applyToFutureSeries = confirm(
-        'Esta saída faz parte de uma série fixa.\n\n' +
-          'OK = Excluir este mês e todos os meses seguintes da série\n' +
-          'Cancelar = Excluir somente este mês'
-      );
-    } else if (!confirm('Excluir esta saída?')) {
-      return;
-    }
+    this.pendingDelete.set(t);
+  }
+
+  cancelDelete(): void {
+    this.pendingDelete.set(null);
+  }
+
+  confirmDelete(choice: SeriesDeleteChoice): void {
+    const t = this.pendingDelete();
+    this.pendingDelete.set(null);
+    if (!t) return;
+    const applyToFutureSeries = this.txHasRecurrence(t) && choice.applyToFutureSeries;
     this.facade.deleteTransaction(t.id, { applyToFutureSeries }).subscribe({
       next: () => this.toast.show('Saída excluída.', 'success'),
       error: (err: unknown) => {

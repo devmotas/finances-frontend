@@ -1,0 +1,97 @@
+@use '../modal-shared' as *;
+
+.modal__backdrop {
+  @include backdrop;
+}
+
+.modal {
+  @include panel;
+}
+
+.modal__head {
+  @include head;
+}
+
+.modal__title {
+  @include title;
+}
+
+.modal__x {
+  @include close-btn;
+  @include close-btn-states;
+}
+
+.modal__text {
+  margin: 0 0 1.25rem;
+  font-size: var(--fin-text-base);
+  line-height: var(--fin-leading-normal);
+  color: var(--fin-text-secondary);
+}
+
+.modal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.btn {
+  @include btn;
+
+  &:focus-visible {
+    outline: 2px solid var(--fin-primary);
+    outline-offset: 2px;
+  }
+}
+
+.btn--secondary {
+  @include btn-secondary;
+}
+
+.btn--ghost {
+  @include btn-ghost;
+}
+
+.btn--danger {
+  background: var(--fin-expense);
+  color: #fff;
+  border-color: var(--fin-expense);
+
+  &:hover:not(:disabled) {
+    background: var(--fin-expense-hover);
+    border-color: var(--fin-expense-hover);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+}
+
+@media (max-width: 767px) {
+  .modal__backdrop {
+    align-items: flex-end;
+    padding: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  .modal {
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--fin-radius-lg) var(--fin-radius-lg) 0 0;
+    padding: 1rem 1rem 1.25rem;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom, 0));
+  }
+
+  .modal__title {
+    font-size: var(--fin-text-md);
+  }
+
+  .modal__actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal__actions .btn {
+    width: 100%;
+  }
+}
