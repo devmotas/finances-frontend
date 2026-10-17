@@ -25,6 +25,7 @@ import { MonthContextService } from '../../core/services/month-context.service';
 import { categoryMap } from '../../core/utils/finance-calculations';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
+import { CHART_SEGMENT_BORDER, cssToken, flowShade, formatCompactBrl } from '../../shared/charts/chart-theme';
 
 const ROW_LABELS = [
   'Entradas',
@@ -34,61 +35,17 @@ const ROW_LABELS = [
   'Composição das despesas',
 ] as const;
 
-const COMPOSITION_ESSENTIAL_BG = '#c2410c';
-const COMPOSITION_NON_ESSENTIAL_BG = '#c81e1e';
-
-const COOL_RECEIPTS_PALETTE = [
-  'hsl(155 58% 30%)',
-  'hsl(172 52% 34%)',
-  'hsl(188 50% 36%)',
-  'hsl(142 48% 32%)',
-  'hsl(198 55% 40%)',
-  'hsl(165 60% 28%)',
-  'hsl(205 48% 38%)',
-  'hsl(178 46% 42%)',
-] as const;
-
-const WARM_EXPENSE_PALETTE = [
-  'hsl(22 82% 40%)',
-  'hsl(8 76% 42%)',
-  'hsl(32 72% 36%)',
-  'hsl(355 78% 38%)',
-  'hsl(15 70% 46%)',
-  'hsl(28 68% 34%)',
-  'hsl(348 74% 40%)',
-  'hsl(12 80% 36%)',
-] as const;
-
-const WARM_EXPENSE_PHASE = 4;
-
-const INVESTMENT_PALETTE = [
-  'hsl(262 52% 42%)',
-  'hsl(245 48% 45%)',
-  'hsl(280 45% 42%)',
-  'hsl(230 50% 40%)',
-  'hsl(268 46% 38%)',
-  'hsl(252 44% 44%)',
-  'hsl(270 50% 40%)',
-  'hsl(258 46% 43%)',
-] as const;
-
-const CHART_SEGMENT_BORDER = 'rgba(255, 255, 255, 0.92)';
-
-function pickPaletteColor<T extends readonly string[]>(palette: T, index: number): string {
-  return palette[index % palette.length];
-}
-
 function categoryStackBackgrounds(categoryIndex: number): string[] {
   return [
-    pickPaletteColor(COOL_RECEIPTS_PALETTE, categoryIndex),
-    pickPaletteColor(WARM_EXPENSE_PALETTE, categoryIndex),
-    pickPaletteColor(WARM_EXPENSE_PALETTE, categoryIndex + WARM_EXPENSE_PHASE),
-    pickPaletteColor(INVESTMENT_PALETTE, categoryIndex),
+    flowShade('income', categoryIndex),
+    flowShade('essential', categoryIndex),
+    flowShade('nonEssential', categoryIndex),
+    flowShade('investment', categoryIndex),
     'transparent',
   ];
 }
 
-function categoryStackBorders(categoryIndex: number): string[] {
+function categoryStackBorders(): string[] {
   const b = CHART_SEGMENT_BORDER;
   return [b, b, b, b, 'transparent'];
 }
@@ -131,7 +88,7 @@ function buildStackedBarData(
     label: s.cat.name,
     data: [s.i, s.e, s.ne, s.inv, 0],
     backgroundColor: categoryStackBackgrounds(idx),
-    borderColor: categoryStackBorders(idx),
+    borderColor: categoryStackBorders(),
     borderWidth: 1,
     borderRadius: 4,
     borderSkipped: false as const,
@@ -146,7 +103,7 @@ function buildStackedBarData(
         'transparent',
         'transparent',
         'transparent',
-        COMPOSITION_ESSENTIAL_BG,
+        cssToken('--fin-essential'),
       ],
       borderColor: [
         'transparent',
@@ -167,7 +124,7 @@ function buildStackedBarData(
         'transparent',
         'transparent',
         'transparent',
-        COMPOSITION_NON_ESSENTIAL_BG,
+        cssToken('--fin-expense'),
       ],
       borderColor: [
         'transparent',
@@ -269,17 +226,11 @@ export class OverviewComponent {
       x: {
         stacked: true,
         beginAtZero: true,
-        grid: { color: 'rgba(148, 163, 184, 0.22)' },
+        grid: { color: cssToken('--fin-border') },
         ticks: {
           font: { size: 11 },
-          color: '#64748b',
-          callback: (value) =>
-            new Intl.NumberFormat('pt-BR', {
-              style: 'currency',
-              currency: 'BRL',
-              maximumFractionDigits: 0,
-              notation: 'compact',
-            }).format(Number(value)),
+          color: cssToken('--fin-text-muted'),
+          callback: (value) => formatCompactBrl(Number(value)),
         },
       },
       y: {
@@ -287,7 +238,7 @@ export class OverviewComponent {
         grid: { display: false },
         ticks: {
           font: { size: 12, weight: 600 },
-          color: '#334155',
+          color: cssToken('--fin-text-secondary'),
         },
       },
     },

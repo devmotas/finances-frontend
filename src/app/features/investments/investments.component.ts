@@ -21,17 +21,10 @@ import { TransactionDeletion } from '../../shared/components/series-delete-modal
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
+import { CHART_SEGMENT_BORDER, cssToken, flowShade, formatCompactBrl } from '../../shared/charts/chart-theme';
 
-function investmentCategoryStackColors(
-  index: number,
-  total: number
-): { bg: string; border: string } {
-  const hue = Math.round((360 * index) / Math.max(total, 1)) % 360;
-  return {
-    bg: `hsla(${hue}, 58%, 48%, 0.82)`,
-    border: `hsla(${hue}, 58%, 32%, 0.95)`,
-  };
-}
+const INITIAL_BALANCE_SHADE = 3;
+const MONTH_SHADE = 0;
 
 const INVESTMENT_FLOW: Flow = 'investment';
 
@@ -136,22 +129,19 @@ export class InvestmentsComponent {
       label: 'Patrimônio acumulado',
       data: s.map((p) => p.cumulativeWealth),
       yAxisID: 'y1',
-      borderColor: '#0b5d7a',
-      backgroundColor: 'rgba(11, 93, 122, 0.08)',
+      borderColor: cssToken('--fin-investment-hover'),
+      backgroundColor: cssToken('--fin-investment-hover'),
       borderWidth: 2.5,
       tension: 0.25,
       pointRadius: 3,
-      pointBackgroundColor: '#0b5d7a',
+      pointBackgroundColor: cssToken('--fin-investment-hover'),
       order: 1,
       fill: false,
     };
 
     if (!stacked) {
       const barBg = s.map((p) =>
-        p.displayLabel ? 'rgba(180, 83, 9, 0.55)' : 'rgba(91, 33, 182, 0.55)'
-      );
-      const barBorder = s.map((p) =>
-        p.displayLabel ? 'rgba(146, 64, 14, 0.95)' : 'rgba(91, 33, 182, 0.95)'
+        flowShade('investment', p.displayLabel ? INITIAL_BALANCE_SHADE : MONTH_SHADE)
       );
       return {
         labels,
@@ -162,7 +152,7 @@ export class InvestmentsComponent {
             data: s.map((p) => p.invested),
             yAxisID: 'y',
             backgroundColor: barBg,
-            borderColor: barBorder,
+            borderColor: CHART_SEGMENT_BORDER,
             borderWidth: 1,
             borderRadius: 4,
             borderSkipped: false,
@@ -174,7 +164,6 @@ export class InvestmentsComponent {
     }
 
     const barDatasets = cats.map((cat, idx) => {
-      const { bg, border } = investmentCategoryStackColors(idx, cats.length);
       const short =
         cat.name.length > 26 ? `${cat.name.slice(0, 24).trimEnd()}…` : cat.name;
       return {
@@ -183,8 +172,8 @@ export class InvestmentsComponent {
         data: s.map((row) => row.categoryAmounts[idx] ?? 0),
         yAxisID: 'y',
         stack: 'inv',
-        backgroundColor: bg,
-        borderColor: border,
+        backgroundColor: flowShade('investment', idx),
+        borderColor: CHART_SEGMENT_BORDER,
         borderWidth: 1,
         borderRadius: 2,
         borderSkipped: false,
@@ -210,7 +199,7 @@ export class InvestmentsComponent {
         legend: {
           display: true,
           position: 'bottom',
-          labels: { boxWidth: 10, font: { size: 10 }, color: '#475569' },
+          labels: { boxWidth: 10, font: { size: 10 }, color: cssToken('--fin-text-secondary') },
         },
         tooltip: {
           filter: (item) => {
@@ -236,10 +225,10 @@ export class InvestmentsComponent {
       scales: {
         x: {
           stacked,
-          grid: { color: 'rgba(148, 163, 184, 0.22)' },
+          grid: { color: cssToken('--fin-border') },
           ticks: {
             font: { size: 11 },
-            color: '#64748b',
+            color: cssToken('--fin-text-muted'),
             maxRotation: 40,
             minRotation: 0,
           },
@@ -252,19 +241,13 @@ export class InvestmentsComponent {
           title: {
             display: true,
             text: stacked ? 'Por categoria (R$)' : 'Valor da coluna (R$)',
-            color: '#64748b',
+            color: cssToken('--fin-text-muted'),
             font: { size: 11 },
           },
-          grid: { color: 'rgba(148, 163, 184, 0.22)' },
+          grid: { color: cssToken('--fin-border') },
           ticks: {
-            color: '#64748b',
-            callback: (value) =>
-              new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                maximumFractionDigits: 0,
-                notation: 'compact',
-              }).format(Number(value)),
+            color: cssToken('--fin-text-muted'),
+            callback: (value) => formatCompactBrl(Number(value)),
           },
         },
         y1: {
@@ -273,16 +256,10 @@ export class InvestmentsComponent {
           beginAtZero: true,
           stacked: false,
           grid: { drawOnChartArea: false },
-          title: { display: true, text: 'Patrimônio (R$)', color: '#64748b', font: { size: 11 } },
+          title: { display: true, text: 'Patrimônio (R$)', color: cssToken('--fin-text-muted'), font: { size: 11 } },
           ticks: {
-            color: '#64748b',
-            callback: (value) =>
-              new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-                maximumFractionDigits: 0,
-                notation: 'compact',
-              }).format(Number(value)),
+            color: cssToken('--fin-text-muted'),
+            callback: (value) => formatCompactBrl(Number(value)),
           },
         },
       },
@@ -305,8 +282,7 @@ export class InvestmentsComponent {
   });
 
   categoryTotalAccent(index: number): string {
-    const n = this.apiMeta()?.stackCategories.length ?? 1;
-    return investmentCategoryStackColors(index, n).border;
+    return flowShade('investment', index);
   }
 
   openCategory(): void {
