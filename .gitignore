@@ -40,3 +40,6 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Notas locais de trabalho (tickets, design). Repo público: não versionar.
+/.scratch/
