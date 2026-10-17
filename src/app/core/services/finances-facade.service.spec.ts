@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { Category, Transaction } from '../models/finances.models';
 import { LOAD_STATE } from '../models/load-state.model';
 import { AuthTokenService } from './auth-token.service';
@@ -57,6 +57,21 @@ describe('FinancesFacadeService - estado de carga', () => {
 
     expect(facade.categories()).toEqual([someCategory]);
     expect(facade.hasLoadError()).toBeTrue();
+  });
+
+  it('descarta a resposta de uma carga antiga quando outra começa', () => {
+    const olderCategory = { id: 2, name: 'Antiga', flow: 'income' } as Category;
+    const slowCategories = new Subject<Category[]>();
+    transactionApi.getByMonth.and.returnValue(of([] as Transaction[]));
+    categoryApi.getAll.and.returnValue(slowCategories);
+    facade.reloadCurrentMonth();
+
+    categoryApi.getAll.and.returnValue(of([someCategory]));
+    facade.reloadCurrentMonth();
+    slowCategories.next([olderCategory]);
+    slowCategories.complete();
+
+    expect(facade.categories()).toEqual([someCategory]);
   });
 
   it('limpa o erro quando uma nova tentativa dá certo', () => {

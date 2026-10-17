@@ -6,11 +6,11 @@ import {
   distinctUntilChanged,
   filter,
   forkJoin,
-  map,
+  merge,
   Observable,
   of,
+  Subject,
   switchMap,
-  take,
   tap,
 } from 'rxjs';
 import {
@@ -51,6 +51,7 @@ export class FinancesFacadeService {
   private readonly _transactions = signal<Transaction[]>([]);
   private readonly _loadState = signal<LoadState>(LOAD_STATE.loading);
   private readonly _lastLoadFailed = signal(false);
+  private readonly reloadRequests$ = new Subject<void>();
 
   readonly categories = computed(() => this._categories());
   readonly transactions = computed(() => this._transactions());
@@ -88,19 +89,23 @@ export class FinancesFacadeService {
         if (u) this.userProfile.setFromUser(u);
       });
 
-    combineLatest([toObservable(this.monthCtx.selectedMonth), toObservable(this.tokens.hasToken)])
+    const authenticatedMonthChanges$ = combineLatest([
+      toObservable(this.monthCtx.selectedMonth),
+      toObservable(this.tokens.hasToken),
+    ]).pipe(
+      distinctUntilChanged(
+        (a, b) => a[0].year === b[0].year && a[0].month === b[0].month && a[1] === b[1]
+      ),
+      tap(([, has]) => {
+        if (!has) {
+          this.resetState();
+        }
+      }),
+      filter(([, has]) => has)
+    );
+
+    merge(authenticatedMonthChanges$, this.reloadRequests$)
       .pipe(
-        distinctUntilChanged(
-          (a, b) =>
-            a[0].year === b[0].year && a[0].month === b[0].month && a[1] === b[1]
-        ),
-        tap(([, has]) => {
-          if (!has) {
-            this.resetState();
-          }
-        }),
-        filter(([, has]) => has),
-        map(([ym]) => ym),
         switchMap(() => this.loadMonthPayload$()),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -137,9 +142,7 @@ export class FinancesFacadeService {
   }
 
   reloadCurrentMonth(): void {
-    this.loadMonthPayload$()
-      .pipe(take(1))
-      .subscribe((payload) => this.applyMonthPayload(payload));
+    this.reloadRequests$.next();
   }
 
   resetState(): void {
