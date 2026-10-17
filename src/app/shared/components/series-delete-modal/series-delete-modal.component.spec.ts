@@ -1,17 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { LucideAngularModule } from 'lucide-angular';
 import { APP_LUCIDE_ICONS } from '../../../core/icons/app-lucide-icons';
-import { SeriesDeleteChoice, SeriesDeleteModalComponent } from './series-delete-modal.component';
+import { SeriesDeleteModalComponent } from './series-delete-modal.component';
+import { SERIES_DELETE_SCOPE, SeriesDeleteScope } from './series-delete-scope';
 
 describe('SeriesDeleteModalComponent', () => {
   let fixture: ComponentFixture<SeriesDeleteModalComponent>;
-  let confirmed: SeriesDeleteChoice[];
+  let confirmed: SeriesDeleteScope[];
   let cancelled: number;
 
   function setup(isSeries: boolean): void {
     fixture = TestBed.createComponent(SeriesDeleteModalComponent);
     fixture.componentRef.setInput('visible', true);
     fixture.componentRef.setInput('isSeries', isSeries);
+    fixture.componentRef.setInput('itemLabel', 'esta saída');
     confirmed = [];
     cancelled = 0;
     fixture.componentInstance.confirmed.subscribe((c) => confirmed.push(c));
@@ -59,13 +61,13 @@ describe('SeriesDeleteModalComponent', () => {
   it('"Só este mês" exclui sem afetar os próximos', () => {
     setup(true);
     button('Só este mês').click();
-    expect(confirmed).toEqual([{ applyToFutureSeries: false }]);
+    expect(confirmed).toEqual([SERIES_DELETE_SCOPE.thisMonth]);
   });
 
   it('"Este e os próximos" exclui a partir deste mês', () => {
     setup(true);
     button('Este e os próximos').click();
-    expect(confirmed).toEqual([{ applyToFutureSeries: true }]);
+    expect(confirmed).toEqual([SERIES_DELETE_SCOPE.thisAndFuture]);
   });
 
   it('lançamento avulso mostra apenas Excluir e Cancelar', () => {
@@ -75,6 +77,6 @@ describe('SeriesDeleteModalComponent', () => {
     ).map((b) => b.textContent?.trim());
     expect(labels).toEqual(['Cancelar', 'Excluir']);
     button('Excluir').click();
-    expect(confirmed).toEqual([{ applyToFutureSeries: false }]);
+    expect(confirmed).toEqual([SERIES_DELETE_SCOPE.thisMonth]);
   });
 });

@@ -175,7 +175,7 @@
                 }}</span>
                 <div class="tx-list__actions">
                   <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
-                  <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
+                  <button type="button" class="link-btn link-btn--danger" (click)="deletion.request(t)">
                     Excluir
                   </button>
                 </div>
@@ -203,9 +203,9 @@
 />
 
 <app-series-delete-modal
-  [visible]="pendingDelete() !== null"
-  [isSeries]="pendingDelete() !== null && txHasRecurrence(pendingDelete()!)"
-  [itemLabel]="pendingDelete() ? pendingDelete()!.amount < 0 ? 'este resgate' : 'este aporte' : ''"
-  (confirmed)="confirmDelete($event)"
-  (cancelled)="cancelDelete()"
+  [visible]="deletion.isOpen()"
+  [isSeries]="deletion.isSeries()"
+  [itemLabel]="deletion.itemLabel()"
+  (confirmed)="deletion.confirm($event)"
+  (cancelled)="deletion.cancel()"
 />

@@ -31,14 +31,14 @@
           Cancelar
         </button>
         @if (isSeries()) {
-          <button type="button" class="btn btn--secondary" (click)="deleteOnlyThis()">
+          <button type="button" class="btn btn--secondary" (click)="deleteThisMonth()">
             Só este mês
           </button>
-          <button type="button" class="btn btn--danger" (click)="deleteThisAndNext()">
+          <button type="button" class="btn btn--danger" (click)="deleteThisAndFuture()">
             Este e os próximos
           </button>
         } @else {
-          <button type="button" class="btn btn--danger" (click)="deleteOnlyThis()">Excluir</button>
+          <button type="button" class="btn btn--danger" (click)="deleteThisMonth()">Excluir</button>
         }
       </div>
     </div>

@@ -11,11 +11,10 @@ import {
 } from '../../core/services/reports-api.service';
 import { ToastService } from '../../core/services/toast.service';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
+import { isSeriesTransaction } from '../../core/utils/transaction-series';
 import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
-import {
-  SeriesDeleteChoice,
-  SeriesDeleteModalComponent,
-} from '../../shared/components/series-delete-modal/series-delete-modal.component';
+import { SeriesDeleteModalComponent } from '../../shared/components/series-delete-modal/series-delete-modal.component';
+import { TransactionDeletion } from '../../shared/components/series-delete-modal/transaction-deletion';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 
@@ -35,6 +34,10 @@ import { MonthLoadErrorComponent } from '../../shared/components/month-load-erro
 export class ExpensesComponent implements OnInit {
   readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
+  readonly deletion = new TransactionDeletion(this.facade, this.toast, {
+    itemLabel: () => 'esta saída',
+    deletedMessage: () => 'Saída excluída.',
+  });
   private readonly monthCtx = inject(MonthContextService);
   private readonly reportsApi = inject(ReportsApiService);
 
@@ -44,7 +47,6 @@ export class ExpensesComponent implements OnInit {
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
   readonly editingTx = signal<Transaction | null>(null);
-  readonly pendingDelete = signal<Transaction | null>(null);
   readonly filterCategoryId = signal<number | null>(null);
 
   readonly essentialList = computed(() => this.filtered('essential'));
@@ -92,28 +94,7 @@ export class ExpensesComponent implements OnInit {
   }
 
   txHasRecurrence(t: Transaction): boolean {
-    return t.schedule === 'fixed' && t.recurrenceId != null && t.recurrenceId > 0;
-  }
-
-  removeTx(t: Transaction): void {
-    this.pendingDelete.set(t);
-  }
-
-  cancelDelete(): void {
-    this.pendingDelete.set(null);
-  }
-
-  confirmDelete(choice: SeriesDeleteChoice): void {
-    const t = this.pendingDelete();
-    this.pendingDelete.set(null);
-    if (!t) return;
-    const applyToFutureSeries = this.txHasRecurrence(t) && choice.applyToFutureSeries;
-    this.facade.deleteTransaction(t.id, { applyToFutureSeries }).subscribe({
-      next: () => this.toast.show('Saída excluída.', 'success'),
-      error: (err: unknown) => {
-        this.toast.show(httpErrorMessage(err, 'Não foi possível excluir.'), 'error');
-      },
-    });
+    return isSeriesTransaction(t);
   }
 
   selectAllFilter(): void {

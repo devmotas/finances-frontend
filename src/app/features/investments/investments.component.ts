@@ -14,11 +14,10 @@ import {
 import { MonthContextService } from '../../core/services/month-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
+import { isSeriesTransaction } from '../../core/utils/transaction-series';
 import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
-import {
-  SeriesDeleteChoice,
-  SeriesDeleteModalComponent,
-} from '../../shared/components/series-delete-modal/series-delete-modal.component';
+import { SeriesDeleteModalComponent } from '../../shared/components/series-delete-modal/series-delete-modal.component';
+import { TransactionDeletion } from '../../shared/components/series-delete-modal/transaction-deletion';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 
@@ -31,6 +30,10 @@ function investmentCategoryStackColors(
     bg: `hsla(${hue}, 58%, 48%, 0.82)`,
     border: `hsla(${hue}, 58%, 32%, 0.95)`,
   };
+}
+
+function isWithdrawal(t: Transaction): boolean {
+  return t.amount < 0;
 }
 
 @Component({
@@ -51,13 +54,16 @@ export class InvestmentsComponent {
   private readonly destroyRef = inject(DestroyRef);
   readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
+  readonly deletion = new TransactionDeletion(this.facade, this.toast, {
+    itemLabel: (t) => (isWithdrawal(t) ? 'este resgate' : 'este aporte'),
+    deletedMessage: (t) => (isWithdrawal(t) ? 'Resgate excluído.' : 'Aporte excluído.'),
+  });
   private readonly monthCtx = inject(MonthContextService);
   private readonly investmentApi = inject(InvestmentApiService);
 
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
   readonly editingTx = signal<Transaction | null>(null);
-  readonly pendingDelete = signal<Transaction | null>(null);
   readonly txInvestmentIntent = signal<'aporte' | 'resgate'>('aporte');
   readonly filterCategoryId = signal<number | null>(null);
 
@@ -312,34 +318,13 @@ export class InvestmentsComponent {
   }
 
   editTx(t: Transaction): void {
-    this.txInvestmentIntent.set(t.amount < 0 ? 'resgate' : 'aporte');
+    this.txInvestmentIntent.set(isWithdrawal(t) ? 'resgate' : 'aporte');
     this.editingTx.set(t);
     this.txOpen.set(true);
   }
 
   txHasRecurrence(t: Transaction): boolean {
-    return t.schedule === 'fixed' && t.recurrenceId != null && t.recurrenceId > 0;
-  }
-
-  removeTx(t: Transaction): void {
-    this.pendingDelete.set(t);
-  }
-
-  cancelDelete(): void {
-    this.pendingDelete.set(null);
-  }
-
-  confirmDelete(choice: SeriesDeleteChoice): void {
-    const t = this.pendingDelete();
-    this.pendingDelete.set(null);
-    if (!t) return;
-    const applyToFutureSeries = this.txHasRecurrence(t) && choice.applyToFutureSeries;
-    this.facade.deleteTransaction(t.id, { applyToFutureSeries }).subscribe({
-      next: () => this.toast.show(t.amount < 0 ? 'Resgate excluído.' : 'Aporte excluído.', 'success'),
-      error: (err: unknown) => {
-        this.toast.show(httpErrorMessage(err, 'Não foi possível excluir.'), 'error');
-      },
-    });
+    return isSeriesTransaction(t);
   }
 
   selectAllFilter(): void {

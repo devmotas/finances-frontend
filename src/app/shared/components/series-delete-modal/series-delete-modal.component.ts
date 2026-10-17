@@ -1,16 +1,11 @@
 import { Component, ElementRef, HostListener, effect, inject, input, output } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
+import { SERIES_DELETE_SCOPE, SeriesDeleteScope } from './series-delete-scope';
 
-export interface SeriesDeleteChoice {
-  readonly applyToFutureSeries: boolean;
-}
+const ESCAPE_KEY = 'Escape';
+const BACKDROP_CLASS = 'modal__backdrop';
+const AUTOFOCUS_SELECTOR = '[data-autofocus]';
 
-/**
- * Confirmação de exclusão de lançamento.
- * - Série fixa: "Só este mês", "Este e os próximos" ou "Cancelar".
- * - Lançamento avulso: "Excluir" ou "Cancelar".
- * Cancelar, Esc e clique fora apenas emitem `cancelled` (nenhuma exclusão).
- */
 @Component({
   selector: 'app-series-delete-modal',
   imports: [LucideAngularModule],
@@ -21,46 +16,42 @@ export class SeriesDeleteModalComponent {
   private readonly el = inject(ElementRef);
 
   readonly visible = input(false);
-  /** Quando true, mostra as opções de série (só este mês / este e os próximos). */
   readonly isSeries = input(false);
-  /** Ex.: "esta saída", "este aporte". */
-  readonly itemLabel = input('este lançamento');
+  readonly itemLabel = input.required<string>();
 
-  readonly confirmed = output<SeriesDeleteChoice>();
+  readonly confirmed = output<SeriesDeleteScope>();
   readonly cancelled = output<void>();
 
   constructor() {
     effect(() => {
-      if (this.visible()) {
-        setTimeout(() =>
-          (this.el.nativeElement as HTMLElement)
-            .querySelector<HTMLButtonElement>('[data-autofocus]')
-            ?.focus()
-        );
-      }
+      if (this.visible()) setTimeout(() => this.focusSafestAction());
     });
   }
 
   @HostListener('document:keydown', ['$event'])
   onDocKey(e: KeyboardEvent): void {
-    if (e.key === 'Escape' && this.visible()) this.cancel();
+    if (e.key === ESCAPE_KEY && this.visible()) this.cancel();
   }
 
   backdropClick(e: MouseEvent): void {
-    if ((e.target as HTMLElement).classList.contains('modal__backdrop')) {
-      this.cancel();
-    }
+    if ((e.target as HTMLElement).classList.contains(BACKDROP_CLASS)) this.cancel();
   }
 
   cancel(): void {
     this.cancelled.emit();
   }
 
-  deleteOnlyThis(): void {
-    this.confirmed.emit({ applyToFutureSeries: false });
+  deleteThisMonth(): void {
+    this.confirmed.emit(SERIES_DELETE_SCOPE.thisMonth);
   }
 
-  deleteThisAndNext(): void {
-    this.confirmed.emit({ applyToFutureSeries: true });
+  deleteThisAndFuture(): void {
+    this.confirmed.emit(SERIES_DELETE_SCOPE.thisAndFuture);
+  }
+
+  private focusSafestAction(): void {
+    (this.el.nativeElement as HTMLElement)
+      .querySelector<HTMLButtonElement>(AUTOFOCUS_SELECTOR)
+      ?.focus();
   }
 }
