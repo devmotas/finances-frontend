@@ -24,7 +24,7 @@
   --fin-primary-muted: color-mix(in srgb, var(--fin-primary) 14%, transparent);
   --fin-text: #0f172a;
   --fin-text-secondary: #334155;
-  --fin-text-muted: #64748b;
+  --fin-text-muted: #56657a;
   --fin-border: #e2e8f0;
   --fin-border-strong: #cbd5e1;
   --fin-bg-page: #eef2f7;
@@ -141,7 +141,6 @@ a:hover {
 
 @media (max-width: 767px) {
   :root {
-    --fin-text-xs: 0.6875rem;
     --fin-text-sm: 0.875rem;
     --fin-text-base: 1rem;
     --fin-text-md: 1rem;
@@ -181,6 +180,6 @@ a:hover {
   .tx-list__item:hover {
     background: var(--fin-bg-muted);
     box-shadow: none;
-    border-color: var(--fin-border);
+    border-color: var(--fin-border) var(--fin-border) var(--fin-border) var(--flow-ink);
   }
 }
