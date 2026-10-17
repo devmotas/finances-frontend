@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, HostListener, OnInit, computed, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
@@ -32,7 +32,7 @@ import { MonthLoadingComponent } from '../../shared/components/month-loading/mon
   templateUrl: './incomes.component.html',
   styleUrl: './incomes.component.scss',
 })
-export class IncomesComponent implements OnInit {
+export class IncomesComponent {
   readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
   readonly deletion = new TransactionDeletion(this.facade, this.toast, {
@@ -61,10 +61,6 @@ export class IncomesComponent implements OnInit {
   readonly total = computed(() => this.facade.monthTotals().totalIncome);
 
   readonly categories = computed(() => this.facade.incomeCategories());
-
-  ngOnInit(): void {
-    this.facade.reloadCurrentMonth();
-  }
 
   openCategory(): void {
     this.categoryOpen.set(true);
