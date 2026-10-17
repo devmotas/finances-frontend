@@ -1,12 +1,24 @@
 import { Injectable, signal } from '@angular/core';
+import { VALIDATION_LIMITS } from '../models/validation-limits';
 import { UserDto } from './auth-api.service';
+
+const DEFAULT_RECURRENCE_MONTHS = 12;
+const DEFAULT_EMERGENCY_FUND_TARGET_MONTHS = 6;
+
+function clampMonths(months: number): number {
+  return Math.min(VALIDATION_LIMITS.monthsMax, Math.max(VALIDATION_LIMITS.monthsMin, months));
+}
+
+function monthsOrDefault(value: unknown, fallback: number): number {
+  return typeof value === 'number' && Number.isFinite(value) ? clampMonths(value) : fallback;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UserProfileService {
   private readonly _name = signal('');
   private readonly _email = signal('');
-  private readonly _defaultRecurrenceMonths = signal(12);
-  private readonly _emergencyFundTargetMonths = signal(6);
+  private readonly _defaultRecurrenceMonths = signal(DEFAULT_RECURRENCE_MONTHS);
+  private readonly _emergencyFundTargetMonths = signal(DEFAULT_EMERGENCY_FUND_TARGET_MONTHS);
 
   readonly name = this._name.asReadonly();
   readonly email = this._email.asReadonly();
@@ -16,28 +28,26 @@ export class UserProfileService {
   setFromUser(user: UserDto): void {
     this._name.set(typeof user.name === 'string' ? user.name : '');
     this._email.set(typeof user.email === 'string' ? user.email : '');
-    const v = user.defaultRecurrenceMonths;
     this._defaultRecurrenceMonths.set(
-      typeof v === 'number' && Number.isFinite(v) ? Math.min(120, Math.max(1, v)) : 12
+      monthsOrDefault(user.defaultRecurrenceMonths, DEFAULT_RECURRENCE_MONTHS)
     );
-    const e = user.emergencyFundTargetMonths;
     this._emergencyFundTargetMonths.set(
-      typeof e === 'number' && Number.isFinite(e) ? Math.min(120, Math.max(1, e)) : 6
+      monthsOrDefault(user.emergencyFundTargetMonths, DEFAULT_EMERGENCY_FUND_TARGET_MONTHS)
     );
   }
 
   patchLocal(months: number): void {
-    this._defaultRecurrenceMonths.set(Math.min(120, Math.max(1, months)));
+    this._defaultRecurrenceMonths.set(clampMonths(months));
   }
 
   patchEmergencyMonthsLocal(months: number): void {
-    this._emergencyFundTargetMonths.set(Math.min(120, Math.max(1, months)));
+    this._emergencyFundTargetMonths.set(clampMonths(months));
   }
 
   clear(): void {
     this._name.set('');
     this._email.set('');
-    this._defaultRecurrenceMonths.set(12);
-    this._emergencyFundTargetMonths.set(6);
+    this._defaultRecurrenceMonths.set(DEFAULT_RECURRENCE_MONTHS);
+    this._emergencyFundTargetMonths.set(DEFAULT_EMERGENCY_FUND_TARGET_MONTHS);
   }
 }

@@ -25,13 +25,13 @@
             formControlName="name"
             [placeholder]="namePlaceholder()"
             autocomplete="off"
-            maxlength="120"
+            [maxlength]="limits.categoryNameMax"
           />
           @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
             <span class="field__err">Informe o nome.</span>
           }
           @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
-            <span class="field__err">No máximo 120 caracteres.</span>
+            <span class="field__err">No máximo {{ limits.categoryNameMax }} caracteres.</span>
           }
         </label>
 

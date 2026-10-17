@@ -8,6 +8,7 @@ import { UserProfileService } from '../../core/services/user-profile.service';
 import { ToastService } from '../../core/services/toast.service';
 import { matchPasswordGroupValidator } from '../../shared/validators/match-password-group.validator';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
+import { VALIDATION_LIMITS } from '../../core/models/validation-limits';
 
 type SettingsTab = 'prefs' | 'profile';
 
@@ -19,6 +20,7 @@ type SettingsTab = 'prefs' | 'profile';
 })
 export class SettingsComponent {
   private readonly fb = inject(FormBuilder);
+  readonly limits = VALIDATION_LIMITS;
   private readonly userApi = inject(UserApiService);
   private readonly userProfile = inject(UserProfileService);
   private readonly auth = inject(AuthService);
@@ -37,16 +39,16 @@ export class SettingsComponent {
   readonly prefsForm = this.fb.nonNullable.group({
     defaultRecurrenceMonths: [
       12,
-      [Validators.required, Validators.min(1), Validators.max(120)],
+      [Validators.required, Validators.min(VALIDATION_LIMITS.monthsMin), Validators.max(VALIDATION_LIMITS.monthsMax)],
     ],
     emergencyFundTargetMonths: [
       6,
-      [Validators.required, Validators.min(1), Validators.max(120)],
+      [Validators.required, Validators.min(VALIDATION_LIMITS.monthsMin), Validators.max(VALIDATION_LIMITS.monthsMax)],
     ],
   });
 
   readonly profileForm = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(120)]],
+    name: ['', [Validators.required, Validators.minLength(VALIDATION_LIMITS.nameMin), Validators.maxLength(VALIDATION_LIMITS.nameMax)]],
   });
 
   readonly accountEmail = signal('');
@@ -54,7 +56,7 @@ export class SettingsComponent {
   readonly passwordForm = this.fb.nonNullable.group(
     {
       currentPassword: ['', [Validators.required]],
-      newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(120)]],
+      newPassword: ['', [Validators.required, Validators.minLength(VALIDATION_LIMITS.passwordMin), Validators.maxLength(VALIDATION_LIMITS.passwordMax)]],
       confirmNewPassword: ['', [Validators.required]],
     },
     { validators: [matchPasswordGroupValidator('newPassword', 'confirmNewPassword')] }

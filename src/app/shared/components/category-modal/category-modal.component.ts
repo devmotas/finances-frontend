@@ -6,6 +6,7 @@ import { Category, ExpenseGroup, Flow } from '../../../core/models/finances.mode
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
+import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
 
 @Component({
   selector: 'app-category-modal',
@@ -15,6 +16,7 @@ import { httpErrorMessage } from '../../../core/utils/http-error.util';
 })
 export class CategoryModalComponent {
   private readonly fb = inject(FormBuilder);
+  readonly limits = VALIDATION_LIMITS;
   private readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
   private readonly el = inject(ElementRef);
@@ -26,7 +28,7 @@ export class CategoryModalComponent {
   editingId: number | null = null;
 
   readonly form = this.fb.group({
-    name: ['', [Validators.required, Validators.maxLength(120)]],
+    name: ['', [Validators.required, Validators.maxLength(VALIDATION_LIMITS.categoryNameMax)]],
     expenseGroup: ['essential' as ExpenseGroup],
     openingBalanceAmount: this.fb.nonNullable.control(0, [
       Validators.min(-999999999999.99),

@@ -45,16 +45,16 @@
             <input
               class="field__input"
               type="number"
-              min="1"
-              max="120"
+              [min]="limits.monthsMin"
+              [max]="limits.monthsMax"
               formControlName="defaultRecurrenceMonths"
-              title="Entre 1 e 120 meses"
+              [title]="'Entre ' + limits.monthsMin + ' e ' + limits.monthsMax + ' meses'"
             />
             @if (
               prefsForm.controls.defaultRecurrenceMonths.touched &&
               prefsForm.controls.defaultRecurrenceMonths.invalid
             ) {
-              <span class="field__err">Use um número entre 1 e 120.</span>
+              <span class="field__err">Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.</span>
             }
             <span class="field__hint">
               Esse valor pré-preenche o campo “Repetir por X meses” ao lançar uma despesa ou receita
@@ -66,8 +66,8 @@
             <input
               class="field__input"
               type="number"
-              min="1"
-              max="120"
+              [min]="limits.monthsMin"
+              [max]="limits.monthsMax"
               formControlName="emergencyFundTargetMonths"
               title="Ex.: 6 para reserva de 6 meses de gastos médios"
             />
@@ -75,7 +75,7 @@
               prefsForm.controls.emergencyFundTargetMonths.touched &&
               prefsForm.controls.emergencyFundTargetMonths.invalid
             ) {
-              <span class="field__err">Use um número entre 1 e 120.</span>
+              <span class="field__err">Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.</span>
             }
             <span class="field__hint">
               Usado na página <strong>Reserva</strong> (barra lateral) para a barra de progresso: meta de quantos
@@ -106,7 +106,7 @@
                 <span class="field__err">Informe seu nome.</span>
               }
               @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('minlength')) {
-                <span class="field__err">Use ao menos 2 caracteres.</span>
+                <span class="field__err">Use ao menos {{ limits.nameMin }} caracteres.</span>
               }
             </label>
             <div class="field">
@@ -168,7 +168,7 @@
               @if (
                 passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength')
               ) {
-                <span class="field__err">Mínimo de 8 caracteres.</span>
+                <span class="field__err">Mínimo de {{ limits.passwordMin }} caracteres.</span>
               }
             </label>
             <label class="field">
@@ -197,7 +197,7 @@
                 <span class="field__err">As senhas não coincidem.</span>
               }
             </label>
-            <p class="field__hint">A nova senha precisa ter pelo menos 8 caracteres, como no cadastro.</p>
+            <p class="field__hint">A nova senha precisa ter pelo menos {{ limits.passwordMin }} caracteres, como no cadastro.</p>
             <div class="form__actions">
               <button type="submit" class="btn btn--primary" [disabled]="passwordSaving()">
                 {{ passwordSaving() ? 'Alterando…' : 'Alterar senha' }}

@@ -6,6 +6,7 @@ import { AuthApiService } from '../../../core/services/auth-api.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { matchPasswordGroupValidator } from '../../../shared/validators/match-password-group.validator';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
+import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
 
 @Component({
   selector: 'app-register',
@@ -18,15 +19,16 @@ export class RegisterComponent {
   private readonly toast = inject(ToastService);
   private readonly authApi = inject(AuthApiService);
   private readonly fb = inject(FormBuilder);
+  readonly limits = VALIDATION_LIMITS;
 
   readonly passwordVisible = signal(false);
   readonly confirmPasswordVisible = signal(false);
 
   readonly form = this.fb.nonNullable.group(
     {
-      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
+      name: ['', [Validators.required, Validators.minLength(VALIDATION_LIMITS.nameMin), Validators.maxLength(VALIDATION_LIMITS.nameMax)]],
       email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.required, Validators.minLength(VALIDATION_LIMITS.passwordMin)]],
       confirmPassword: ['', [Validators.required]],
     },
     { validators: [matchPasswordGroupValidator('password', 'confirmPassword')] }

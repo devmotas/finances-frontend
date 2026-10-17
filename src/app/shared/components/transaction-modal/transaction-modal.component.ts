@@ -21,6 +21,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
 import { formatNumberToBrlInput, parseBrlToNumber } from '../../../core/utils/brl-parse';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
+import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
 
 function defaultDateForSelectedMonth(sel: { year: number; month: number }): string {
   const now = new Date();
@@ -47,6 +48,7 @@ function amountValidator(control: AbstractControl): ValidationErrors | null {
 })
 export class TransactionModalComponent {
   private readonly fb = inject(FormBuilder);
+  readonly limits = VALIDATION_LIMITS;
   private readonly facade = inject(FinancesFacadeService);
   private readonly monthCtx = inject(MonthContextService);
   private readonly toast = inject(ToastService);
@@ -60,13 +62,13 @@ export class TransactionModalComponent {
 
   readonly form = this.fb.group({
     categoryId: ['', Validators.required],
-    description: ['', Validators.maxLength(500)],
+    description: ['', Validators.maxLength(VALIDATION_LIMITS.descriptionMax)],
     amount: ['', [Validators.required, amountValidator]],
     date: ['', Validators.required],
     schedule: ['variable' as Schedule, Validators.required],
     recurrenceMonths: [
       12,
-      [Validators.required, Validators.min(1), Validators.max(120)],
+      [Validators.required, Validators.min(VALIDATION_LIMITS.monthsMin), Validators.max(VALIDATION_LIMITS.monthsMax)],
     ],
     seriesUpdateScope: this.fb.nonNullable.control<'thisMonth' | 'futureSeries'>('thisMonth'),
     markInstallment: [false],
@@ -290,8 +292,8 @@ export class TransactionModalComponent {
 
     if (schedule === 'fixed') {
       const months = Math.round(Number(v.recurrenceMonths));
-      if (!Number.isFinite(months) || months < 1 || months > 120) {
-        this.toast.show('Informe quantos meses repetir (entre 1 e 120).', 'error');
+      if (!Number.isFinite(months) || months < VALIDATION_LIMITS.monthsMin || months > VALIDATION_LIMITS.monthsMax) {
+        this.toast.show(`Informe quantos meses repetir (entre ${VALIDATION_LIMITS.monthsMin} e ${VALIDATION_LIMITS.monthsMax}).`, 'error');
         return;
       }
       const markInstallment = flow === 'expense' && v.markInstallment === true;

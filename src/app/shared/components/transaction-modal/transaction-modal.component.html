@@ -48,11 +48,11 @@
             formControlName="description"
             [placeholder]="descriptionPlaceholder()"
             autocomplete="off"
-            maxlength="500"
+            [maxlength]="limits.descriptionMax"
             [disabled]="blockNewWithoutCategories()"
           />
           @if (form.controls.description.touched && form.controls.description.errors?.['maxlength']) {
-            <span class="field__err">Use no máximo 500 caracteres.</span>
+            <span class="field__err">Use no máximo {{ limits.descriptionMax }} caracteres.</span>
           }
         </label>
 
@@ -134,8 +134,8 @@
             <input
               class="field__input"
               type="number"
-              min="1"
-              max="120"
+              [min]="limits.monthsMin"
+              [max]="limits.monthsMax"
               formControlName="recurrenceMonths"
               title="Quantos meses à frente serão gerados de uma vez"
               [disabled]="blockNewWithoutCategories()"
@@ -143,7 +143,7 @@
             @if (
               form.controls.recurrenceMonths.touched && form.controls.recurrenceMonths.invalid
             ) {
-              <span class="field__err">Use um número entre 1 e 120.</span>
+              <span class="field__err">Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.</span>
             }
             <span class="field__hint">
               Gera lançamentos fixos nos meses seguintes automaticamente. O padrão vem de

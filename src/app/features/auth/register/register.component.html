@@ -23,7 +23,7 @@
             formControlName="name"
             placeholder="Seu nome completo"
             autocomplete="name"
-            maxlength="200"
+            [maxlength]="limits.nameMax"
             [attr.aria-invalid]="form.controls.name.touched && form.controls.name.invalid"
           />
         </span>
@@ -31,10 +31,10 @@
           <span class="auth-field__err" role="alert">Informe seu nome.</span>
         }
         @if (form.controls.name.touched && form.controls.name.errors?.['minlength']) {
-          <span class="auth-field__err" role="alert">Use pelo menos 2 caracteres.</span>
+          <span class="auth-field__err" role="alert">Use pelo menos {{ limits.nameMin }} caracteres.</span>
         }
         @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
-          <span class="auth-field__err" role="alert">No máximo 200 caracteres.</span>
+          <span class="auth-field__err" role="alert">No máximo {{ limits.nameMax }} caracteres.</span>
         }
       </label>
 
@@ -97,7 +97,7 @@
           <span class="auth-field__err" role="alert">Informe a senha.</span>
         }
         @if (form.controls.password.touched && form.controls.password.errors?.['minlength']) {
-          <span class="auth-field__err" role="alert">A senha deve ter pelo menos 6 caracteres.</span>
+          <span class="auth-field__err" role="alert">A senha deve ter pelo menos {{ limits.passwordMin }} caracteres.</span>
         }
       </label>
 
