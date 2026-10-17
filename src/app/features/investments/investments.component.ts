@@ -4,8 +4,8 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { LucideAngularModule } from 'lucide-angular';
-import { catchError, combineLatest, of, switchMap } from 'rxjs';
-import { Transaction } from '../../core/models/finances.models';
+import { catchError, distinctUntilChanged, filter, map, merge, of, switchMap, tap } from 'rxjs';
+import { Flow, Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import {
   InvestmentApiService,
@@ -32,6 +32,8 @@ function investmentCategoryStackColors(
     border: `hsla(${hue}, 58%, 32%, 0.95)`,
   };
 }
+
+const INVESTMENT_FLOW: Flow = 'investment';
 
 function isWithdrawal(t: Transaction): boolean {
   return t.amount < 0;
@@ -72,13 +74,18 @@ export class InvestmentsComponent {
   readonly apiMeta = signal<InvestmentMonthViewDto | null>(null);
 
   constructor() {
-    combineLatest([
-      toObservable(this.monthCtx.selectedMonth),
-      toObservable(this.facade.transactions),
-      toObservable(this.facade.categories),
-    ])
+    const monthChanges$ = toObservable(this.monthCtx.selectedMonth).pipe(
+      distinctUntilChanged((a, b) => a.year === b.year && a.month === b.month),
+      tap(() => this.apiMeta.set(null))
+    );
+    const investmentChanges$ = this.facade.dataChanged$.pipe(
+      filter((flow) => flow === INVESTMENT_FLOW),
+      map(() => this.monthCtx.selectedMonth())
+    );
+
+    merge(monthChanges$, investmentChanges$)
       .pipe(
-        switchMap(([ym]) =>
+        switchMap((ym) =>
           this.investmentApi.getMonthView(ym.year, ym.month).pipe(catchError(() => of(null)))
         ),
         takeUntilDestroyed(this.destroyRef)

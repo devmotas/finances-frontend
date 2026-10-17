@@ -115,3 +115,87 @@ describe('FinancesFacadeService - estado de carga', () => {
     expect(facade.isMonthDataPending()).toBeFalse();
   });
 });
+
+describe('FinancesFacadeService - avisos de alteração', () => {
+  let categoryApi: jasmine.SpyObj<CategoryApiService>;
+  let transactionApi: jasmine.SpyObj<TransactionApiService>;
+  let facade: FinancesFacadeService;
+  let changedFlows: string[];
+
+  const investmentCategory = { id: 4, name: 'Tesouro', flow: 'investment' } as Category;
+  const contribution = {
+    id: 10,
+    categoryId: 4,
+    description: '',
+    amount: 500,
+    date: '2026-04-10',
+    schedule: 'variable',
+    flow: 'investment',
+  } as Transaction;
+
+  beforeEach(() => {
+    categoryApi = jasmine.createSpyObj<CategoryApiService>('CategoryApiService', [
+      'getAll',
+      'update',
+    ]);
+    transactionApi = jasmine.createSpyObj<TransactionApiService>('TransactionApiService', [
+      'getByMonth',
+      'create',
+      'delete',
+    ]);
+    categoryApi.getAll.and.returnValue(of([investmentCategory]));
+    transactionApi.getByMonth.and.returnValue(of([contribution]));
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CategoryApiService, useValue: categoryApi },
+        { provide: TransactionApiService, useValue: transactionApi },
+        { provide: AuthTokenService, useValue: { hasToken: signal(false) } },
+        { provide: RecurrenceApiService, useValue: {} },
+        { provide: UserApiService, useValue: {} },
+        { provide: UserProfileService, useValue: {} },
+      ],
+    });
+    facade = TestBed.inject(FinancesFacadeService);
+    facade.reloadCurrentMonth();
+    changedFlows = [];
+    facade.dataChanged$.subscribe((flow) => changedFlows.push(flow));
+  });
+
+  it('avisa o fluxo do lançamento criado depois da resposta', () => {
+    const response = new Subject<Transaction>();
+    transactionApi.create.and.returnValue(response);
+
+    facade
+      .addTransaction({ categoryId: 4, amount: 500, date: '2026-04-10', schedule: 'variable' })
+      .subscribe();
+    expect(changedFlows).toEqual([]);
+
+    response.next(contribution);
+    expect(changedFlows).toEqual(['investment']);
+  });
+
+  it('avisa o fluxo do lançamento excluído', () => {
+    transactionApi.delete.and.returnValue(of(undefined) as never);
+
+    facade.deleteTransaction(contribution.id).subscribe();
+
+    expect(changedFlows).toEqual(['investment']);
+  });
+
+  it('avisa o fluxo da categoria alterada', () => {
+    categoryApi.update.and.returnValue(of(investmentCategory));
+
+    facade.updateCategory(investmentCategory).subscribe();
+
+    expect(changedFlows).toEqual(['investment']);
+  });
+
+  it('não avisa nada quando a requisição falha', () => {
+    transactionApi.delete.and.returnValue(throwError(() => new Error('offline')));
+
+    facade.deleteTransaction(contribution.id).subscribe({ error: () => undefined });
+
+    expect(changedFlows).toEqual([]);
+  });
+});

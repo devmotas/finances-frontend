@@ -58,10 +58,12 @@ export class FinancesFacadeService {
   private readonly _lastLoadFailed = signal(false);
   private readonly _loadedMonth = signal<YearMonth | null>(null);
   private readonly reloadRequests$ = new Subject<void>();
+  private readonly changedFlows$ = new Subject<Flow>();
 
   readonly categories = computed(() => this._categories());
   readonly transactions = computed(() => this._transactions());
   readonly loadState = this._loadState.asReadonly();
+  readonly dataChanged$ = this.changedFlows$.asObservable();
   readonly isLoading = computed(() => this._loadState() === LOAD_STATE.loading);
   readonly hasLoadError = this._lastLoadFailed.asReadonly();
   readonly isMonthDataPending = computed(
@@ -181,7 +183,10 @@ export class FinancesFacadeService {
 
   addCategory(dto: CategoryCreateDto) {
     return this.categoryApi.create(dto).pipe(
-      tap((created) => this._categories.update((list) => [...list, created]))
+      tap((created) => {
+        this._categories.update((list) => [...list, created]);
+        this.notifyChange(created.flow);
+      })
     );
   }
 
@@ -193,29 +198,36 @@ export class FinancesFacadeService {
       openingBalanceAmount: cat.flow === 'investment' ? (cat.openingBalanceAmount ?? 0) : 0,
     };
     return this.categoryApi.update(cat.id, dto).pipe(
-      tap((updated) =>
-        this._categories.update((list) => list.map((c) => (c.id === updated.id ? updated : c)))
-      )
+      tap((updated) => {
+        this._categories.update((list) => list.map((c) => (c.id === updated.id ? updated : c)));
+        this.notifyChange(updated.flow);
+      })
     );
   }
 
   deleteCategory(id: number) {
+    const flow = this.getCategory(id)?.flow;
     return this.categoryApi.delete(id).pipe(
       tap(() => {
         this._categories.update((list) => list.filter((c) => c.id !== id));
         this._transactions.update((list) => list.filter((t) => t.categoryId !== id));
+        this.notifyChange(flow);
       })
     );
   }
 
   addTransaction(dto: TransactionCreateDto) {
     return this.transactionApi.create(dto).pipe(
-      tap((created) => this._transactions.update((list) => [...list, created]))
+      tap((created) => {
+        this._transactions.update((list) => [...list, created]);
+        this.notifyChange(created.flow);
+      })
     );
   }
 
   createRecurrence(dto: RecurrenceCreateDto) {
-    return this.recurrenceApi.create(dto).pipe(tap(() => this.reloadCurrentMonth()));
+    const flow = this.getCategory(dto.categoryId)?.flow;
+    return this.recurrenceApi.create(dto).pipe(tap(() => this.afterTransactionChange(flow)));
   }
 
   updateTransaction(t: Transaction, options?: { applyToFutureSeries?: boolean }) {
@@ -228,13 +240,23 @@ export class FinancesFacadeService {
     };
     return this.transactionApi
       .update(t.id, dto, options?.applyToFutureSeries === true)
-      .pipe(tap(() => this.reloadCurrentMonth()));
+      .pipe(tap(() => this.afterTransactionChange(t.flow)));
   }
 
   deleteTransaction(id: number, options?: { applyToFutureSeries?: boolean }) {
+    const flow = this._transactions().find((t) => t.id === id)?.flow;
     return this.transactionApi
       .delete(id, options?.applyToFutureSeries === true)
-      .pipe(tap(() => this.reloadCurrentMonth()));
+      .pipe(tap(() => this.afterTransactionChange(flow)));
+  }
+
+  private afterTransactionChange(flow: Flow | undefined): void {
+    this.reloadCurrentMonth();
+    this.notifyChange(flow);
+  }
+
+  private notifyChange(flow: Flow | undefined): void {
+    if (flow) this.changedFlows$.next(flow);
   }
 
   transactionsForCategoryInMonth(categoryId: number): Transaction[] {
