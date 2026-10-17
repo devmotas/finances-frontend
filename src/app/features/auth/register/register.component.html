@@ -145,7 +145,12 @@
         }
       </label>
 
-      <button type="submit" class="auth-btn auth-btn--primary">
+      <button
+        type="submit"
+        class="auth-btn auth-btn--primary"
+        [appBusyButton]="isSubmitting()"
+        [busyLabel]="submittingLabel"
+      >
         <span class="auth-btn__icon" aria-hidden="true">
           <lucide-icon name="user-plus" [size]="18" [strokeWidth]="2"></lucide-icon>
         </span>

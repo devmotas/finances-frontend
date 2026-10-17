@@ -6,6 +6,8 @@
 
   @if (facade.hasLoadError()) {
     <app-month-load-error />
+  } @else if (facade.isMonthDataPending()) {
+    <app-month-loading />
   } @else {
     <div class="cards">
       <article class="card card--in">

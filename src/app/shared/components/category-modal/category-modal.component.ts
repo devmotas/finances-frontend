@@ -1,5 +1,6 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, ElementRef, HostListener, effect, inject, input, output } from '@angular/core';
+import { Component, ElementRef, HostListener, effect, inject, input, output, signal } from '@angular/core';
+import { finalize } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { Category, ExpenseGroup, Flow } from '../../../core/models/finances.models';
@@ -7,10 +8,22 @@ import { FinancesFacadeService } from '../../../core/services/finances-facade.se
 import { ToastService } from '../../../core/services/toast.service';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
 import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
+import { trackBusy } from '../../../core/utils/track-busy';
+import { BusyButtonComponent } from '../busy-button/busy-button.component';
+import { BUSY_LABEL } from '../busy-button/busy-labels';
+
+const CATEGORY_FEEDBACK = {
+  created: 'Categoria criada.',
+  updated: 'Categoria atualizada.',
+  deleted: 'Categoria excluída.',
+  createFailed: 'Não foi possível criar a categoria.',
+  updateFailed: 'Não foi possível atualizar a categoria.',
+  deleteFailed: 'Não foi possível excluir a categoria.',
+} as const;
 
 @Component({
   selector: 'app-category-modal',
-  imports: [ReactiveFormsModule, LucideAngularModule, CurrencyPipe],
+  imports: [ReactiveFormsModule, LucideAngularModule, CurrencyPipe, BusyButtonComponent],
   templateUrl: './category-modal.component.html',
   styleUrl: './category-modal.component.scss',
 })
@@ -26,6 +39,9 @@ export class CategoryModalComponent {
   readonly closed = output<void>();
 
   editingId: number | null = null;
+  readonly busyLabel = BUSY_LABEL;
+  readonly isSaving = signal(false);
+  readonly deletingId = signal<number | null>(null);
 
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(VALIDATION_LIMITS.categoryNameMax)]],
@@ -105,6 +121,7 @@ export class CategoryModalComponent {
   }
 
   save(): void {
+    if (this.isSaving()) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -126,14 +143,10 @@ export class CategoryModalComponent {
           expenseGroup: flow === 'expense' ? group : undefined,
           openingBalanceAmount,
         })
+        .pipe(trackBusy(this.isSaving))
         .subscribe({
-          next: () => {
-            this.toast.show('Categoria atualizada.', 'success');
-            this.cancelEdit();
-          },
-          error: (err: unknown) => {
-            this.toast.show(httpErrorMessage(err, 'Não foi possível atualizar.'), 'error');
-          },
+          next: () => this.finishSave(CATEGORY_FEEDBACK.updated),
+          error: (err: unknown) => this.showError(err, CATEGORY_FEEDBACK.updateFailed),
         });
     } else {
       this.facade
@@ -143,28 +156,36 @@ export class CategoryModalComponent {
           expenseGroup: flow === 'expense' ? group : undefined,
           openingBalanceAmount,
         })
+        .pipe(trackBusy(this.isSaving))
         .subscribe({
-          next: () => {
-            this.toast.show('Categoria criada.', 'success');
-            this.cancelEdit();
-          },
-          error: (err: unknown) => {
-            this.toast.show(httpErrorMessage(err, 'Não foi possível criar.'), 'error');
-          },
+          next: () => this.finishSave(CATEGORY_FEEDBACK.created),
+          error: (err: unknown) => this.showError(err, CATEGORY_FEEDBACK.createFailed),
         });
     }
   }
 
   remove(c: Category): void {
+    if (this.deletingId() !== null) return;
     if (!confirm(`Excluir a categoria "${c.name}"?`)) return;
-    this.facade.deleteCategory(c.id).subscribe({
-      next: () => {
-        if (this.editingId === c.id) this.cancelEdit();
-        this.toast.show('Categoria excluída.', 'success');
-      },
-      error: (err: unknown) => {
-        this.toast.show(httpErrorMessage(err, 'Não foi possível excluir.'), 'error');
-      },
-    });
+    this.deletingId.set(c.id);
+    this.facade
+      .deleteCategory(c.id)
+      .pipe(finalize(() => this.deletingId.set(null)))
+      .subscribe({
+        next: () => {
+          if (this.editingId === c.id) this.cancelEdit();
+          this.toast.show(CATEGORY_FEEDBACK.deleted, 'success');
+        },
+        error: (err: unknown) => this.showError(err, CATEGORY_FEEDBACK.deleteFailed),
+      });
+  }
+
+  private finishSave(message: string): void {
+    this.toast.show(message, 'success');
+    this.cancelEdit();
+  }
+
+  private showError(err: unknown, fallback: string): void {
+    this.toast.show(httpErrorMessage(err, fallback), 'error');
   }
 }

@@ -102,6 +102,29 @@ a:hover {
   color: var(--fin-primary-hover);
 }
 
+.fin-spinner {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: var(--fin-radius-full);
+  animation: fin-spin 0.7s linear infinite;
+}
+
+.fin-spinner--lg {
+  width: 2rem;
+  height: 2rem;
+  border-width: 3px;
+}
+
+@keyframes fin-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .auth-field--invalid .auth-field__control {
   border-color: var(--fin-expense);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--fin-expense) 18%, transparent);

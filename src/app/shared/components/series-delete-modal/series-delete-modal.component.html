@@ -12,7 +12,7 @@
         <h2 id="series-delete-title" class="modal__title">
           {{ isSeries() ? 'Excluir lançamento da série' : 'Excluir lançamento' }}
         </h2>
-        <button type="button" class="modal__x" (click)="cancel()" aria-label="Fechar">
+        <button type="button" class="modal__x" (click)="cancel()" [disabled]="isDeleting()" aria-label="Fechar">
           <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
         </button>
       </div>
@@ -27,18 +27,41 @@
       }
 
       <div class="modal__actions">
-        <button type="button" class="btn btn--ghost" data-autofocus (click)="cancel()">
+        <button type="button" class="btn btn--ghost" data-autofocus [disabled]="isDeleting()" (click)="cancel()">
           Cancelar
         </button>
         @if (isSeries()) {
-          <button type="button" class="btn btn--secondary" (click)="deleteThisMonth()">
+          <button
+            type="button"
+            class="btn btn--secondary"
+            [appBusyButton]="isDeletingScope(scope.thisMonth)"
+            [busyLabel]="deletingLabel"
+            [disabled]="isDeleting()"
+            (click)="deleteThisMonth()"
+          >
             Só este mês
           </button>
-          <button type="button" class="btn btn--danger" (click)="deleteThisAndFuture()">
+          <button
+            type="button"
+            class="btn btn--danger"
+            [appBusyButton]="isDeletingScope(scope.thisAndFuture)"
+            [busyLabel]="deletingLabel"
+            [disabled]="isDeleting()"
+            (click)="deleteThisAndFuture()"
+          >
             Este e os próximos
           </button>
         } @else {
-          <button type="button" class="btn btn--danger" (click)="deleteThisMonth()">Excluir</button>
+          <button
+            type="button"
+            class="btn btn--danger"
+            [appBusyButton]="isDeletingScope(scope.thisMonth)"
+            [busyLabel]="deletingLabel"
+            [disabled]="isDeleting()"
+            (click)="deleteThisMonth()"
+          >
+            Excluir
+          </button>
         }
       </div>
     </div>

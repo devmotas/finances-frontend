@@ -2,7 +2,7 @@
   <div class="page__head">
     <div>
       <h1 class="page__title">Entradas</h1>
-      @if (!facade.hasLoadError()) {
+      @if (facade.isMonthDataReady()) {
         <p class="page__total page__total--in">
           Total:
           {{ total() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
@@ -14,8 +14,10 @@
         <button
           type="button"
           class="btn btn--ghost export-menu__trigger"
-          (click)="toggleExport($event)"
-          [attr.aria-expanded]="exportOpen()"
+          [appBusyButton]="reportExport.isExporting()"
+          [busyLabel]="busyLabel.exporting"
+          (click)="reportExport.toggleMenu($event)"
+          [attr.aria-expanded]="reportExport.isMenuOpen()"
           title="Exportar relatório"
         >
           <lucide-icon name="download" [size]="18" [strokeWidth]="2"></lucide-icon>
@@ -25,25 +27,25 @@
             [size]="14"
             [strokeWidth]="2.5"
             class="export-menu__chevron"
-            [class.export-menu__chevron--open]="exportOpen()"
+            [class.export-menu__chevron--open]="reportExport.isMenuOpen()"
           ></lucide-icon>
         </button>
-        @if (exportOpen()) {
+        @if (reportExport.isMenuOpen()) {
           <div class="export-menu__panel" (click)="$event.stopPropagation()">
             <label class="export-menu__field">
               <span class="export-menu__label">Período</span>
-              <select class="export-menu__select" [value]="exportPeriod()" (change)="onExportPeriodChange($event)">
+              <select class="export-menu__select" [value]="reportExport.period()" (change)="reportExport.onPeriodChange($event)">
                 <option value="month">Mês atual</option>
                 <option value="quarter">Trimestre atual</option>
                 <option value="year">Ano inteiro</option>
               </select>
             </label>
             <div class="export-menu__actions">
-              <button type="button" class="btn btn--ghost export-menu__btn" (click)="exportReport('csv')">
+              <button type="button" class="btn btn--ghost export-menu__btn" (click)="reportExport.export('csv')">
                 <lucide-icon name="download" [size]="16" [strokeWidth]="2"></lucide-icon>
                 CSV
               </button>
-              <button type="button" class="btn btn--ghost export-menu__btn" (click)="exportReport('pdf')">
+              <button type="button" class="btn btn--ghost export-menu__btn" (click)="reportExport.export('pdf')">
                 <lucide-icon name="download" [size]="16" [strokeWidth]="2"></lucide-icon>
                 PDF
               </button>
@@ -68,6 +70,8 @@
 
   @if (facade.hasLoadError()) {
     <app-month-load-error />
+  } @else if (facade.isMonthDataPending()) {
+    <app-month-loading />
   } @else {
     <div class="chips" role="tablist" aria-label="Filtrar por categoria">
       <button
@@ -163,6 +167,7 @@
   [visible]="deletion.isOpen()"
   [isSeries]="deletion.isSeries()"
   [itemLabel]="deletion.itemLabel()"
+  [deletingScope]="deletion.deletingScope()"
   (confirmed)="deletion.confirm($event)"
   (cancelled)="deletion.cancel()"
 />

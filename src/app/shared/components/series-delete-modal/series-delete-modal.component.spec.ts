@@ -79,4 +79,19 @@ describe('SeriesDeleteModalComponent', () => {
     button('Excluir').click();
     expect(confirmed).toEqual([SERIES_DELETE_SCOPE.thisMonth]);
   });
+
+  it('durante a exclusão desabilita as ações e não permite cancelar', () => {
+    setup(true);
+    fixture.componentRef.setInput('deletingScope', SERIES_DELETE_SCOPE.thisAndFuture);
+    fixture.detectChanges();
+
+    const buttons = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.modal__actions button')
+    );
+    expect(buttons.every((b) => b.disabled)).toBeTrue();
+    expect(buttons[2].getAttribute('aria-busy')).toBe('true');
+
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    expect(cancelled).toBe(0);
+  });
 });

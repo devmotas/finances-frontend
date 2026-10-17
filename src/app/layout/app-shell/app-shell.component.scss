@@ -10,6 +10,38 @@
   z-index: var(--fin-shell-sticky-z, 100);
 }
 
+.shell__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 3px;
+  overflow: hidden;
+  background: var(--fin-primary-muted);
+  pointer-events: none;
+}
+
+.shell__progress-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: var(--fin-primary);
+  border-radius: var(--fin-radius-full);
+  animation: shell-progress-slide 1.1s ease-in-out infinite;
+}
+
+@keyframes shell-progress-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
 .shell__header {
   display: flex;
   flex-wrap: wrap;

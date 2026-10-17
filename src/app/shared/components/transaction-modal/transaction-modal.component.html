@@ -164,7 +164,13 @@
 
         <div class="modal__actions">
           <button type="button" class="btn btn--secondary" (click)="close()">Cancelar</button>
-          <button type="submit" class="btn btn--primary" [disabled]="blockNewWithoutCategories()">
+          <button
+            type="submit"
+            class="btn btn--primary"
+            [appBusyButton]="isSaving()"
+            [busyLabel]="savingLabel"
+            [disabled]="blockNewWithoutCategories()"
+          >
             Salvar
           </button>
         </div>

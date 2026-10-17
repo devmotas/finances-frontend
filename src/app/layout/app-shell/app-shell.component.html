@@ -1,5 +1,10 @@
 <div class="shell">
   <div class="shell__sticky">
+    @if (pendingRequests.hasPending()) {
+      <div class="shell__progress" role="progressbar" aria-label="Comunicando com o servidor">
+        <span class="shell__progress-bar"></span>
+      </div>
+    }
     <header class="shell__header">
       <div class="shell__brand">
         <span class="shell__logo" aria-hidden="true">

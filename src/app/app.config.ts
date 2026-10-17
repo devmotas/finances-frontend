@@ -13,6 +13,7 @@ import { LucideAngularModule } from 'lucide-angular';
 
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
+import { pendingRequestsInterceptor } from './core/interceptors/pending-requests.interceptor';
 
 import {
   BarController,
@@ -34,7 +35,7 @@ registerLocaleData(localePt);
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideHttpClient(withInterceptors([apiBaseUrlInterceptor, authInterceptor])),
+    provideHttpClient(withInterceptors([pendingRequestsInterceptor, apiBaseUrlInterceptor, authInterceptor])),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideCharts({
       registerables: [

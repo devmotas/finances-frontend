@@ -20,6 +20,7 @@ import { SeriesDeleteModalComponent } from '../../shared/components/series-delet
 import { TransactionDeletion } from '../../shared/components/series-delete-modal/transaction-deletion';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
+import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
 
 function investmentCategoryStackColors(
   index: number,
@@ -46,6 +47,7 @@ function isWithdrawal(t: Transaction): boolean {
     TransactionModalComponent,
     SeriesDeleteModalComponent,
     MonthLoadErrorComponent,
+    MonthLoadingComponent,
   ],
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.scss',
@@ -96,9 +98,9 @@ export class InvestmentsComponent {
 
   readonly monthInvested = computed(() => this.facade.monthTotals().totalInvestments);
 
-  readonly positionBeforeMonth = computed(() => this.apiMeta()?.positionBeforeMonth ?? 0);
+  readonly positionBeforeMonth = computed(() => this.apiMeta()?.positionBeforeMonth ?? null);
 
-  readonly positionThroughMonthEnd = computed(() => this.apiMeta()?.positionThroughMonthEnd ?? 0);
+  readonly positionThroughMonthEnd = computed(() => this.apiMeta()?.positionThroughMonthEnd ?? null);
 
   readonly chartLabels = computed(() => {
     const s = this.apiMeta()?.monthlySeries ?? [];

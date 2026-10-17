@@ -1,0 +1,20 @@
+:host {
+  gap: 0.5rem;
+}
+
+:host(:disabled) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+:host([aria-busy='true']) {
+  cursor: progress;
+}
+
+.busy-button__content {
+  display: contents;
+}
+
+.busy-button__content--hidden {
+  display: none;
+}

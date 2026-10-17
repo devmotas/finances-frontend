@@ -86,4 +86,32 @@ describe('FinancesFacadeService - estado de carga', () => {
     expect(facade.hasLoadError()).toBeFalse();
     expect(facade.categories()).toEqual([someCategory]);
   });
+
+  it('indica dados do mês pendentes até a primeira carga terminar', () => {
+    const slowCategories = new Subject<Category[]>();
+    categoryApi.getAll.and.returnValue(slowCategories);
+    transactionApi.getByMonth.and.returnValue(of([] as Transaction[]));
+
+    facade.reloadCurrentMonth();
+    expect(facade.isMonthDataPending()).toBeTrue();
+    expect(facade.isMonthDataReady()).toBeFalse();
+
+    slowCategories.next([someCategory]);
+    slowCategories.complete();
+
+    expect(facade.isMonthDataPending()).toBeFalse();
+    expect(facade.isMonthDataReady()).toBeTrue();
+  });
+
+  it('não volta a pendente ao recarregar o mesmo mês já exibido', () => {
+    categoryApi.getAll.and.returnValue(of([someCategory]));
+    transactionApi.getByMonth.and.returnValue(of([] as Transaction[]));
+    facade.reloadCurrentMonth();
+
+    categoryApi.getAll.and.returnValue(new Subject<Category[]>());
+    facade.reloadCurrentMonth();
+
+    expect(facade.isLoading()).toBeTrue();
+    expect(facade.isMonthDataPending()).toBeFalse();
+  });
 });

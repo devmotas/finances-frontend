@@ -9,12 +9,28 @@ import { ToastService } from '../../core/services/toast.service';
 import { matchPasswordGroupValidator } from '../../shared/validators/match-password-group.validator';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
 import { VALIDATION_LIMITS } from '../../core/models/validation-limits';
+import { trackBusy } from '../../core/utils/track-busy';
+import { BusyButtonComponent } from '../../shared/components/busy-button/busy-button.component';
+import { BUSY_LABEL } from '../../shared/components/busy-button/busy-labels';
+
+const SETTINGS_FEEDBACK = {
+  loadFailed: 'Não foi possível carregar suas configurações.',
+  invalidPrefs: 'Verifique os valores informados.',
+  prefsSaved: 'Preferências salvas.',
+  prefsFailed: 'Não foi possível salvar as preferências.',
+  invalidName: 'Verifique o nome informado.',
+  profileSaved: 'Perfil atualizado.',
+  profileFailed: 'Não foi possível atualizar o perfil.',
+  invalidPasswords: 'Verifique as senhas informadas.',
+  passwordChanged: 'Senha alterada. Faça login novamente com a nova senha.',
+  passwordFailed: 'Não foi possível alterar a senha.',
+} as const;
 
 type SettingsTab = 'prefs' | 'profile';
 
 @Component({
   selector: 'app-settings',
-  imports: [ReactiveFormsModule, LucideAngularModule],
+  imports: [ReactiveFormsModule, LucideAngularModule, BusyButtonComponent],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
 })
@@ -27,6 +43,7 @@ export class SettingsComponent {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
 
+  readonly busyLabel = BUSY_LABEL;
   readonly activeTab = signal<SettingsTab>('prefs');
   readonly initialLoading = signal(true);
   readonly prefsSaving = signal(false);
@@ -79,7 +96,7 @@ export class SettingsComponent {
       },
       error: (err: unknown) => {
         this.initialLoading.set(false);
-        this.toast.show(httpErrorMessage(err, 'Não foi possível carregar suas configurações.'), 'error');
+        this.toast.show(httpErrorMessage(err, SETTINGS_FEEDBACK.loadFailed), 'error');
       },
     });
   }
@@ -91,74 +108,67 @@ export class SettingsComponent {
   savePrefs(): void {
     this.prefsForm.markAllAsTouched();
     if (this.prefsForm.invalid) {
-      this.toast.show('Verifique os valores informados.', 'error');
+      this.toast.show(SETTINGS_FEEDBACK.invalidPrefs, 'error');
       return;
     }
     const defaultRecurrenceMonths = this.prefsForm.controls.defaultRecurrenceMonths.getRawValue();
     const emergencyFundTargetMonths = this.prefsForm.controls.emergencyFundTargetMonths.getRawValue();
-    this.prefsSaving.set(true);
     this.userApi
       .patchMe({ defaultRecurrenceMonths, emergencyFundTargetMonths })
+      .pipe(trackBusy(this.prefsSaving))
       .subscribe({
         next: (u) => {
-          this.prefsSaving.set(false);
           const m = u.defaultRecurrenceMonths ?? defaultRecurrenceMonths;
           const e = u.emergencyFundTargetMonths ?? emergencyFundTargetMonths;
           this.prefsForm.patchValue({ defaultRecurrenceMonths: m, emergencyFundTargetMonths: e });
           this.userProfile.setFromUser(u);
-          this.toast.show('Preferências salvas.', 'success');
+          this.toast.show(SETTINGS_FEEDBACK.prefsSaved, 'success');
         },
-        error: (err: unknown) => {
-          this.prefsSaving.set(false);
-          this.toast.show(httpErrorMessage(err, 'Não foi possível salvar.'), 'error');
-        },
+        error: (err: unknown) => this.showError(err, SETTINGS_FEEDBACK.prefsFailed),
       });
   }
 
   saveProfile(): void {
     this.profileForm.markAllAsTouched();
     if (this.profileForm.invalid) {
-      this.toast.show('Verifique o nome informado.', 'error');
+      this.toast.show(SETTINGS_FEEDBACK.invalidName, 'error');
       return;
     }
     const { name } = this.profileForm.getRawValue();
-    this.profileSaving.set(true);
-    this.userApi.patchMe({ name: name.trim() }).subscribe({
+    this.userApi.patchMe({ name: name.trim() }).pipe(trackBusy(this.profileSaving)).subscribe({
       next: (u) => {
-        this.profileSaving.set(false);
         this.profileForm.patchValue({ name: u.name });
         this.accountEmail.set(u.email ?? '');
         this.userProfile.setFromUser(u);
-        this.toast.show('Perfil atualizado.', 'success');
+        this.toast.show(SETTINGS_FEEDBACK.profileSaved, 'success');
       },
-      error: (err: unknown) => {
-        this.profileSaving.set(false);
-        this.toast.show(httpErrorMessage(err, 'Não foi possível atualizar o perfil.'), 'error');
-      },
+      error: (err: unknown) => this.showError(err, SETTINGS_FEEDBACK.profileFailed),
     });
   }
 
   savePassword(): void {
     this.passwordForm.markAllAsTouched();
     if (this.passwordForm.invalid) {
-      this.toast.show('Verifique as senhas informadas.', 'error');
+      this.toast.show(SETTINGS_FEEDBACK.invalidPasswords, 'error');
       return;
     }
     const { currentPassword, newPassword } = this.passwordForm.getRawValue();
-    this.passwordSaving.set(true);
-    this.userApi.changePassword({ currentPassword, newPassword }).subscribe({
-      next: () => {
-        this.passwordSaving.set(false);
-        this.passwordForm.reset();
-        this.auth.logout();
-        this.toast.show('Senha alterada. Faça login novamente com a nova senha.', 'success');
-        void this.router.navigateByUrl('/login');
-      },
-      error: (err: unknown) => {
-        this.passwordSaving.set(false);
-        this.toast.show(httpErrorMessage(err, 'Não foi possível alterar a senha.'), 'error');
-      },
-    });
+    this.userApi
+      .changePassword({ currentPassword, newPassword })
+      .pipe(trackBusy(this.passwordSaving))
+      .subscribe({
+        next: () => {
+          this.passwordForm.reset();
+          this.auth.logout();
+          this.toast.show(SETTINGS_FEEDBACK.passwordChanged, 'success');
+          void this.router.navigateByUrl('/login');
+        },
+        error: (err: unknown) => this.showError(err, SETTINGS_FEEDBACK.passwordFailed),
+      });
+  }
+
+  private showError(err: unknown, fallback: string): void {
+    this.toast.show(httpErrorMessage(err, fallback), 'error');
   }
 
   togglePasswordVisibility(): void {

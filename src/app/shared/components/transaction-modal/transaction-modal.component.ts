@@ -5,6 +5,7 @@ import {
   inject,
   input,
   output,
+  signal,
 } from '@angular/core';
 import {
   AbstractControl,
@@ -22,6 +23,35 @@ import { UserProfileService } from '../../../core/services/user-profile.service'
 import { formatNumberToBrlInput, parseBrlToNumber } from '../../../core/utils/brl-parse';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
 import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
+import { trackBusy } from '../../../core/utils/track-busy';
+import { BusyButtonComponent } from '../busy-button/busy-button.component';
+import { BUSY_LABEL } from '../busy-button/busy-labels';
+
+type EntryKind = 'income' | 'expense' | 'contribution' | 'withdrawal';
+
+const SAVED_MESSAGE: Record<EntryKind, { created: string; updated: string }> = {
+  income: { created: 'Entrada registrada.', updated: 'Entrada atualizada.' },
+  expense: { created: 'Saída registrada.', updated: 'Saída atualizada.' },
+  contribution: { created: 'Aporte registrado.', updated: 'Aporte atualizado.' },
+  withdrawal: { created: 'Resgate registrado.', updated: 'Resgate atualizado.' },
+};
+
+const TX_FEEDBACK = {
+  missingCategory: 'Crie uma categoria antes de salvar o lançamento.',
+  invalidForm: 'Verifique os campos do formulário.',
+  invalidAmount: 'Valor inválido.',
+  invalidCategory: 'Categoria inválida.',
+  confirmEdit: 'Deseja salvar as alterações?',
+  seriesCreated: 'Série fixa criada.',
+  createFailed: 'Não foi possível salvar o lançamento.',
+  updateFailed: 'Não foi possível atualizar o lançamento.',
+  seriesFailed: 'Não foi possível criar a série fixa.',
+} as const;
+
+function entryKind(flow: Flow, signedAmount: number): EntryKind {
+  if (flow === 'investment') return signedAmount < 0 ? 'withdrawal' : 'contribution';
+  return flow;
+}
 
 function defaultDateForSelectedMonth(sel: { year: number; month: number }): string {
   const now = new Date();
@@ -42,7 +72,7 @@ function amountValidator(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-transaction-modal',
-  imports: [ReactiveFormsModule, LucideAngularModule],
+  imports: [ReactiveFormsModule, LucideAngularModule, BusyButtonComponent],
   templateUrl: './transaction-modal.component.html',
   styleUrl: './transaction-modal.component.scss',
 })
@@ -53,6 +83,8 @@ export class TransactionModalComponent {
   private readonly monthCtx = inject(MonthContextService);
   private readonly toast = inject(ToastService);
   private readonly userProfile = inject(UserProfileService);
+  readonly savingLabel = BUSY_LABEL.saving;
+  readonly isSaving = signal(false);
 
   readonly visible = input(false);
   readonly flow = input.required<Flow>();
@@ -208,19 +240,20 @@ export class TransactionModalComponent {
   }
 
   save(): void {
+    if (this.isSaving()) return;
     if (this.blockNewWithoutCategories()) {
-      this.toast.show('Crie uma categoria antes de salvar o lançamento.', 'error');
+      this.toast.show(TX_FEEDBACK.missingCategory, 'error');
       return;
     }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.toast.show('Verifique os campos do formulário.', 'error');
+      this.toast.show(TX_FEEDBACK.invalidForm, 'error');
       return;
     }
     const v = this.form.getRawValue();
     const amount = parseBrlToNumber(String(v.amount ?? ''));
     if (amount === null || amount <= 0) {
-      this.toast.show('Valor inválido.', 'error');
+      this.toast.show(TX_FEEDBACK.invalidAmount, 'error');
       return;
     }
     const flow = this.flow();
@@ -236,13 +269,9 @@ export class TransactionModalComponent {
       }
     }
     const categoryId = Number(v.categoryId);
-    if (!Number.isFinite(categoryId)) {
-      this.toast.show('Categoria inválida.', 'error');
-      return;
-    }
-    const cat = this.facade.getCategory(categoryId);
+    const cat = Number.isFinite(categoryId) ? this.facade.getCategory(categoryId) : undefined;
     if (!cat || cat.flow !== flow) {
-      this.toast.show('Categoria inválida.', 'error');
+      this.toast.show(TX_FEEDBACK.invalidCategory, 'error');
       return;
     }
 
@@ -251,9 +280,10 @@ export class TransactionModalComponent {
       schedule = 'variable';
     }
     const description = (v.description ?? '').trim() || null;
+    const savedMessage = SAVED_MESSAGE[entryKind(flow, amountToSend)];
 
     if (ed) {
-      if (!confirm('Deseja salvar as alterações?')) {
+      if (!confirm(TX_FEEDBACK.confirmEdit)) {
         return;
       }
       const applyToFutureSeries =
@@ -272,20 +302,10 @@ export class TransactionModalComponent {
           },
           { applyToFutureSeries }
         )
+        .pipe(trackBusy(this.isSaving))
         .subscribe({
-          next: () => {
-            const ok =
-              flow === 'investment' && amountToSend < 0
-                ? 'Resgate atualizado.'
-                : flow === 'investment' && amountToSend > 0
-                  ? 'Aporte atualizado.'
-                  : 'Lançamento atualizado.';
-            this.toast.show(ok, 'success');
-            this.close();
-          },
-          error: (err: unknown) => {
-            this.toast.show(httpErrorMessage(err, 'Não foi possível atualizar.'), 'error');
-          },
+          next: () => this.finishWithSuccess(savedMessage.updated),
+          error: (err: unknown) => this.showError(err, TX_FEEDBACK.updateFailed),
         });
       return;
     }
@@ -297,7 +317,6 @@ export class TransactionModalComponent {
         return;
       }
       const markInstallment = flow === 'expense' && v.markInstallment === true;
-      const installmentTotal = markInstallment ? months : undefined;
       this.facade
         .createRecurrence({
           categoryId,
@@ -305,42 +324,31 @@ export class TransactionModalComponent {
           amount,
           startDate: v.date!,
           months,
-          installmentTotal: installmentTotal ?? undefined,
+          installmentTotal: markInstallment ? months : undefined,
         })
+        .pipe(trackBusy(this.isSaving))
         .subscribe({
-          next: () => {
-            this.toast.show('Série fixa criada com sucesso.', 'success');
-            this.close();
-          },
-          error: (err: unknown) => {
-            this.toast.show(httpErrorMessage(err, 'Não foi possível salvar a série.'), 'error');
-          },
+          next: () => this.finishWithSuccess(TX_FEEDBACK.seriesCreated),
+          error: (err: unknown) => this.showError(err, TX_FEEDBACK.seriesFailed),
         });
       return;
     }
 
-    const dto = {
-      categoryId,
-      description,
-      amount: amountToSend,
-      date: v.date!,
-      schedule,
-    };
+    this.facade
+      .addTransaction({ categoryId, description, amount: amountToSend, date: v.date!, schedule })
+      .pipe(trackBusy(this.isSaving))
+      .subscribe({
+        next: () => this.finishWithSuccess(savedMessage.created),
+        error: (err: unknown) => this.showError(err, TX_FEEDBACK.createFailed),
+      });
+  }
 
-    this.facade.addTransaction(dto).subscribe({
-      next: () => {
-        const ok =
-          flow === 'investment' && amountToSend < 0
-            ? 'Resgate registrado.'
-            : flow === 'investment' && amountToSend > 0
-              ? 'Aporte registrado.'
-              : 'Lançamento salvo.';
-        this.toast.show(ok, 'success');
-        this.close();
-      },
-      error: (err: unknown) => {
-        this.toast.show(httpErrorMessage(err, 'Não foi possível salvar.'), 'error');
-      },
-    });
+  private finishWithSuccess(message: string): void {
+    this.toast.show(message, 'success');
+    this.close();
+  }
+
+  private showError(err: unknown, fallback: string): void {
+    this.toast.show(httpErrorMessage(err, fallback), 'error');
   }
 }

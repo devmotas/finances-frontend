@@ -13,6 +13,7 @@ import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
+import { PendingRequestsService } from '../../core/services/pending-requests.service';
 import { ToastService } from '../../core/services/toast.service';
 
 export interface ShellNavItem {
@@ -38,6 +39,7 @@ export class AppShellComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  readonly pendingRequests = inject(PendingRequestsService);
 
   readonly navItems: readonly ShellNavItem[] = [
     {

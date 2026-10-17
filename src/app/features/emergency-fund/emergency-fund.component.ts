@@ -19,10 +19,12 @@ import {
 } from '../../core/services/finance-summary-api.service';
 import { MonthContextService } from '../../core/services/month-context.service';
 import { UserProfileService } from '../../core/services/user-profile.service';
+import { VALIDATION_LIMITS } from '../../core/models/validation-limits';
+import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
 
 @Component({
   selector: 'app-emergency-fund',
-  imports: [CurrencyPipe, DecimalPipe, LucideAngularModule],
+  imports: [CurrencyPipe, DecimalPipe, LucideAngularModule, MonthLoadingComponent],
   templateUrl: './emergency-fund.component.html',
   styleUrl: './emergency-fund.component.scss',
 })
@@ -40,7 +42,7 @@ export class EmergencyFundComponent {
     const s = this.summary();
     const fromApi = s?.emergencyFundTargetMonths;
     if (typeof fromApi === 'number' && Number.isFinite(fromApi) && fromApi > 0) {
-      return Math.min(120, Math.max(1, Math.round(fromApi)));
+      return Math.min(VALIDATION_LIMITS.monthsMax, Math.max(VALIDATION_LIMITS.monthsMin, Math.round(fromApi)));
     }
     return this.userProfile.emergencyFundTargetMonths();
   });
@@ -79,7 +81,10 @@ export class EmergencyFundComponent {
         }),
         filter(([, has]) => has),
         map(([ym]) => ym),
-        tap(() => this.loadFailed.set(false)),
+        tap(() => {
+          this.summary.set(null);
+          this.loadFailed.set(false);
+        }),
         switchMap((ym) =>
           this.summaryApi.get(ym.year, ym.month).pipe(
             catchError(() => {

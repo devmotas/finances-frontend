@@ -1,4 +1,4 @@
-import { of } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -51,5 +51,35 @@ describe('TransactionDeletion', () => {
     deletion.confirm(SERIES_DELETE_SCOPE.thisAndFuture);
 
     expect(facade.deleteTransaction).toHaveBeenCalledOnceWith(8, { applyToFutureSeries: false });
+  });
+
+  it('mantém o modal aberto e indica o escopo enquanto a exclusão está em andamento', () => {
+    const response = new Subject<void>();
+    facade.deleteTransaction.and.returnValue(response as never);
+    deletion.request(seriesTx);
+
+    deletion.confirm(SERIES_DELETE_SCOPE.thisAndFuture);
+    deletion.confirm(SERIES_DELETE_SCOPE.thisAndFuture);
+    deletion.cancel();
+
+    expect(deletion.isOpen()).toBeTrue();
+    expect(deletion.deletingScope()).toBe(SERIES_DELETE_SCOPE.thisAndFuture);
+    expect(facade.deleteTransaction).toHaveBeenCalledTimes(1);
+
+    response.next();
+    response.complete();
+
+    expect(deletion.isOpen()).toBeFalse();
+    expect(deletion.deletingScope()).toBeNull();
+  });
+
+  it('reabilita o modal quando a exclusão falha', () => {
+    facade.deleteTransaction.and.returnValue(throwError(() => new Error('offline')) as never);
+    deletion.request(singleTx);
+
+    deletion.confirm(SERIES_DELETE_SCOPE.thisMonth);
+
+    expect(deletion.isOpen()).toBeTrue();
+    expect(deletion.deletingScope()).toBeNull();
   });
 });

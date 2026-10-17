@@ -8,7 +8,10 @@
 
   @if (initialLoading()) {
     <div class="panel panel--muted">
-      <p class="muted">Carregando…</p>
+      <p class="muted" role="status">
+        <span class="fin-spinner" aria-hidden="true"></span>
+        Carregando…
+      </p>
     </div>
   } @else {
     <div class="tabs" role="tablist" aria-label="Seções de configurações">
@@ -83,9 +86,9 @@
             </span>
           </label>
           <div class="form__actions">
-            <button type="submit" class="btn btn--primary" [disabled]="prefsSaving()">
-              {{ prefsSaving() ? 'Salvando…' : 'Salvar' }}
-            </button>
+            <button type="submit" class="btn btn--primary" [appBusyButton]="prefsSaving()" [busyLabel]="busyLabel.saving">
+                Salvar
+              </button>
           </div>
         </form>
       </div>
@@ -115,8 +118,8 @@
               <span class="field__hint">O e-mail da conta não pode ser alterado por aqui.</span>
             </div>
             <div class="form__actions">
-              <button type="submit" class="btn btn--primary" [disabled]="profileSaving()">
-                {{ profileSaving() ? 'Salvando…' : 'Salvar perfil' }}
+              <button type="submit" class="btn btn--primary" [appBusyButton]="profileSaving()" [busyLabel]="busyLabel.saving">
+                Salvar perfil
               </button>
             </div>
           </form>
@@ -199,8 +202,8 @@
             </label>
             <p class="field__hint">A nova senha precisa ter pelo menos {{ limits.passwordMin }} caracteres, como no cadastro.</p>
             <div class="form__actions">
-              <button type="submit" class="btn btn--primary" [disabled]="passwordSaving()">
-                {{ passwordSaving() ? 'Alterando…' : 'Alterar senha' }}
+              <button type="submit" class="btn btn--primary" [appBusyButton]="passwordSaving()" [busyLabel]="busyLabel.changingPassword">
+                Alterar senha
               </button>
             </div>
           </form>

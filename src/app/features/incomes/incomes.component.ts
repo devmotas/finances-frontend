@@ -4,19 +4,18 @@ import { LucideAngularModule } from 'lucide-angular';
 import { Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
-import {
-  ReportFormat,
-  ReportPeriod,
-  ReportsApiService,
-} from '../../core/services/reports-api.service';
+import { ReportsApiService } from '../../core/services/reports-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { httpErrorMessage } from '../../core/utils/http-error.util';
 import { isSeriesTransaction } from '../../core/utils/transaction-series';
 import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
 import { SeriesDeleteModalComponent } from '../../shared/components/series-delete-modal/series-delete-modal.component';
 import { TransactionDeletion } from '../../shared/components/series-delete-modal/transaction-deletion';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
+import { BusyButtonComponent } from '../../shared/components/busy-button/busy-button.component';
+import { BUSY_LABEL } from '../../shared/components/busy-button/busy-labels';
+import { ReportExport } from '../../shared/report-export/report-export';
+import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
 
 @Component({
   selector: 'app-incomes',
@@ -27,6 +26,8 @@ import { MonthLoadErrorComponent } from '../../shared/components/month-load-erro
     TransactionModalComponent,
     SeriesDeleteModalComponent,
     MonthLoadErrorComponent,
+    MonthLoadingComponent,
+    BusyButtonComponent,
   ],
   templateUrl: './incomes.component.html',
   styleUrl: './incomes.component.scss',
@@ -38,11 +39,12 @@ export class IncomesComponent implements OnInit {
     itemLabel: () => 'esta entrada',
     deletedMessage: () => 'Entrada excluída.',
   });
-  private readonly monthCtx = inject(MonthContextService);
-  private readonly reportsApi = inject(ReportsApiService);
-
-  readonly exportPeriod = signal<ReportPeriod>('month');
-  readonly exportOpen = signal(false);
+  readonly reportExport = new ReportExport(
+    inject(ReportsApiService),
+    inject(MonthContextService),
+    this.toast
+  );
+  readonly busyLabel = BUSY_LABEL;
 
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
@@ -94,40 +96,9 @@ export class IncomesComponent implements OnInit {
     this.filterCategoryId.update((cur) => (cur === id ? null : id));
   }
 
-  toggleExport(e: MouseEvent): void {
-    e.stopPropagation();
-    this.exportOpen.update((v) => !v);
-  }
-
   @HostListener('document:click')
-  closeExport(): void {
-    this.exportOpen.set(false);
-  }
-
-  onExportPeriodChange(e: Event): void {
-    const v = (e.target as HTMLSelectElement).value as ReportPeriod;
-    this.exportPeriod.set(v);
-  }
-
-  exportReport(format: ReportFormat): void {
-    this.exportOpen.set(false);
-    const { year, month } = this.monthCtx.selectedMonth();
-    const period = this.exportPeriod();
-    this.reportsApi.download(format, year, period, month).subscribe({
-      next: ({ blob, filename }) => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        a.rel = 'noopener';
-        a.click();
-        URL.revokeObjectURL(url);
-        this.toast.show('Download iniciado.', 'success');
-      },
-      error: (err: unknown) => {
-        this.toast.show(httpErrorMessage(err, 'Não foi possível exportar.'), 'error');
-      },
-    });
+  closeExportMenu(): void {
+    this.reportExport.closeMenu();
   }
 
   openNewTx(): void {

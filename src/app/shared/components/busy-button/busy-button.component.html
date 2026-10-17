@@ -1,0 +1,7 @@
+@if (busy()) {
+  <span class="fin-spinner" aria-hidden="true"></span>
+  <span>{{ busyLabel() }}</span>
+}
+<span class="busy-button__content" [class.busy-button__content--hidden]="busy()">
+  <ng-content />
+</span>

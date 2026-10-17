@@ -83,12 +83,6 @@
       <p class="ef-empty__hint">Confira se a API está no ar e se você está autenticado.</p>
     </div>
   } @else {
-    <div class="ef-empty panel">
-      <span class="ef-empty__icon" aria-hidden="true">
-        <lucide-icon name="piggy-bank" [size]="40" [strokeWidth]="1.75"></lucide-icon>
-      </span>
-      <p class="ef-empty__title">Carregando…</p>
-      <p class="ef-empty__hint">Aguarde um instante.</p>
-    </div>
+    <app-month-loading />
   }
 </div>

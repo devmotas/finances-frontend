@@ -25,15 +25,20 @@ import { LOAD_STATE, LoadState } from '../models/load-state.model';
 import { computeMonthTotals, filterTransactionsByMonth } from '../utils/finance-calculations';
 import { AuthTokenService } from './auth-token.service';
 import { CategoryApiService } from './category-api.service';
-import { MonthContextService } from './month-context.service';
+import { MonthContextService, YearMonth } from './month-context.service';
 import { RecurrenceApiService, RecurrenceCreateDto } from './recurrence-api.service';
 import { TransactionApiService } from './transaction-api.service';
 import { UserApiService } from './user-api.service';
 import { UserProfileService } from './user-profile.service';
 
 interface MonthPayload {
+  readonly month: YearMonth;
   readonly categories: Category[];
   readonly transactions: Transaction[];
+}
+
+function isSameMonth(a: YearMonth | null, b: YearMonth): boolean {
+  return a !== null && a.year === b.year && a.month === b.month;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -51,6 +56,7 @@ export class FinancesFacadeService {
   private readonly _transactions = signal<Transaction[]>([]);
   private readonly _loadState = signal<LoadState>(LOAD_STATE.loading);
   private readonly _lastLoadFailed = signal(false);
+  private readonly _loadedMonth = signal<YearMonth | null>(null);
   private readonly reloadRequests$ = new Subject<void>();
 
   readonly categories = computed(() => this._categories());
@@ -58,6 +64,10 @@ export class FinancesFacadeService {
   readonly loadState = this._loadState.asReadonly();
   readonly isLoading = computed(() => this._loadState() === LOAD_STATE.loading);
   readonly hasLoadError = this._lastLoadFailed.asReadonly();
+  readonly isMonthDataPending = computed(
+    () => !isSameMonth(this._loadedMonth(), this.monthCtx.selectedMonth())
+  );
+  readonly isMonthDataReady = computed(() => !this.hasLoadError() && !this.isMonthDataPending());
 
   readonly monthTransactions = computed(() => {
     const { year, month } = this.monthCtx.selectedMonth();
@@ -113,11 +123,12 @@ export class FinancesFacadeService {
   }
 
   private loadMonthPayload$(): Observable<MonthPayload | null> {
-    const { year, month } = this.monthCtx.selectedMonth();
+    const selected = this.monthCtx.selectedMonth();
     this._loadState.set(LOAD_STATE.loading);
     return forkJoin({
+      month: of(selected),
       categories: this.categoryApi.getAll(),
-      transactions: this.transactionApi.getByMonth(year, month),
+      transactions: this.transactionApi.getByMonth(selected.year, selected.month),
     }).pipe(catchError(() => of(null)));
   }
 
@@ -132,6 +143,7 @@ export class FinancesFacadeService {
   private markLoaded(payload: MonthPayload): void {
     this._categories.set(payload.categories);
     this._transactions.set(payload.transactions);
+    this._loadedMonth.set(payload.month);
     this._loadState.set(LOAD_STATE.ok);
     this._lastLoadFailed.set(false);
   }
@@ -148,6 +160,7 @@ export class FinancesFacadeService {
   resetState(): void {
     this._categories.set([]);
     this._transactions.set([]);
+    this._loadedMonth.set(null);
     this._loadState.set(LOAD_STATE.loading);
     this._lastLoadFailed.set(false);
   }

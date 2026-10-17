@@ -23,7 +23,7 @@
         </button>
       </div>
     </div>
-    @if (!facade.hasLoadError()) {
+    @if (facade.isMonthDataReady()) {
       <p class="page__stats" role="group" aria-label="Resumo de investimentos no mês selecionado">
         <span
           class="page__stat"
@@ -40,9 +40,13 @@
           title="Soma dos saldos iniciais nas categorias de investimento mais todos os aportes com data anterior ao primeiro dia do mês selecionado."
         >
           <span class="page__stat-label">Patrimônio antes do mês</span>
-          <span class="page__stat-value page__stat-value--acc">{{
-            positionBeforeMonth() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-          }}</span>
+          <span class="page__stat-value page__stat-value--acc">
+            @if (positionBeforeMonth() !== null) {
+              {{ positionBeforeMonth() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            } @else {
+              —
+            }
+          </span>
         </span>
         <span class="page__stat-sep" aria-hidden="true"></span>
         <span
@@ -50,9 +54,13 @@
           title="Patrimônio antes do mês mais os aportes registrados até o último dia do mês selecionado."
         >
           <span class="page__stat-label">Patrimônio no fim do mês</span>
-          <span class="page__stat-value page__stat-value--total">{{
-            positionThroughMonthEnd() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-          }}</span>
+          <span class="page__stat-value page__stat-value--total">
+            @if (positionThroughMonthEnd() !== null) {
+              {{ positionThroughMonthEnd() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            } @else {
+              —
+            }
+          </span>
         </span>
       </p>
     }
@@ -60,6 +68,8 @@
 
   @if (facade.hasLoadError()) {
     <app-month-load-error />
+  } @else if (facade.isMonthDataPending()) {
+    <app-month-loading />
   } @else {
     @if (hasChartSeries()) {
       <section class="chart-panel panel" aria-labelledby="inv-chart-title">
@@ -206,6 +216,7 @@
   [visible]="deletion.isOpen()"
   [isSeries]="deletion.isSeries()"
   [itemLabel]="deletion.itemLabel()"
+  [deletingScope]="deletion.deletingScope()"
   (confirmed)="deletion.confirm($event)"
   (cancelled)="deletion.cancel()"
 />

@@ -24,6 +24,7 @@ import { FinancesFacadeService } from '../../core/services/finances-facade.servi
 import { MonthContextService } from '../../core/services/month-context.service';
 import { categoryMap } from '../../core/utils/finance-calculations';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
+import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
 
 const ROW_LABELS = [
   'Entradas',
@@ -189,7 +190,7 @@ function buildStackedBarData(
 
 @Component({
   selector: 'app-overview',
-  imports: [CurrencyPipe, LucideAngularModule, BaseChartDirective, MonthLoadErrorComponent],
+  imports: [CurrencyPipe, LucideAngularModule, BaseChartDirective, MonthLoadErrorComponent, MonthLoadingComponent],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.scss',
 })
@@ -304,6 +305,7 @@ export class OverviewComponent {
         }),
         filter(([, has]) => has),
         map(([ym]) => ym),
+        tap(() => this.financeSummary.set(null)),
         switchMap((ym) =>
           this.summaryApi.get(ym.year, ym.month).pipe(catchError(() => of(null as FinanceSummaryDto | null)))
         ),
