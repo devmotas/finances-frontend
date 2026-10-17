@@ -2,9 +2,9 @@
   <header class="ef__intro">
     <h1 class="ef__title">Reserva de emergência</h1>
     <p class="ef__sub">
-      O saldo acumulado considera entradas, saídas, investimentos e os saldos iniciais por categoria de
-      investimento. A barra
-      usa quantos meses de despesa do mês da barra superior esse conjunto cobre.
+      A reserva soma o saldo em caixa (entradas − saídas − aportes) ao valor investido (saldos iniciais
+      das categorias de investimento + aportes). A barra usa quantos meses de despesa do mês da barra
+      superior esse conjunto cobre.
     </p>
   </header>
 
@@ -17,22 +17,21 @@
       </article>
 
       <article class="ef-card">
-        <h2 class="ef-card__label">Saldo acumulado</h2>
+        <h2 class="ef-card__label">Saldo em caixa</h2>
         <p class="ef-card__value" [class.ef-card__value--pos]="s.accumulatedBalance >= 0" [class.ef-card__value--neg]="s.accumulatedBalance < 0">
           {{ s.accumulatedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
         </p>
         <p class="ef-card__hint">
-          Receitas − despesas − aportes + saldos iniciais nas categorias de investimento (até o fim do mês
-          selecionado)
+          Entradas − saídas − aportes em investimentos, desde o início até o fim do mês selecionado
         </p>
       </article>
 
       <article class="ef-card">
-        <h2 class="ef-card__label">Aportes em investimentos (acumulado)</h2>
+        <h2 class="ef-card__label">Investido</h2>
         <p class="ef-card__value ef-card__value--inv">
-          {{ s.cumulativeInvestmentContributions | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          {{ s.investedPosition | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
         </p>
-        <p class="ef-card__hint">Soma histórica de lançamentos com fluxo investimento (aportes positivos e resgates negativos)</p>
+        <p class="ef-card__hint">Saldo inicial das categorias de investimento + aportes − resgates</p>
       </article>
 
       <article class="ef-card ef-card--highlight">
@@ -41,7 +40,7 @@
           {{ s.totalEmergencyReserve | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
         </p>
         <p class="ef-card__hint">
-          Saldo acumulado + aportes (= receitas − despesas + saldos iniciais por categoria de investimento)
+          Saldo em caixa + investido
         </p>
       </article>
     </div>

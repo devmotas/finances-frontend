@@ -9,6 +9,7 @@ export interface FinanceSummaryDto {
   openingBalanceAmount: number;
   monthExpenseTotal: number;
   cumulativeInvestmentContributions: number;
+  investedPosition: number;
   totalEmergencyReserve: number;
   emergencyFundTargetMonths: number;
   monthsOfReserveCovered: number | null;
