@@ -22,14 +22,6 @@ export const routes: Routes = [
       import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
   },
   {
-    path: 'esqueci-senha',
-    canActivate: [loginPageGuard],
-    loadComponent: () =>
-      import('./features/auth/forgot-password/forgot-password.component').then(
-        (m) => m.ForgotPasswordComponent
-      ),
-  },
-  {
     path: 'app',
     canActivate: [authGuard],
     component: AppShellComponent,
