@@ -39,11 +39,15 @@
 }
 
 .tx-list__item--ess {
-  border-left-color: var(--fin-essential);
+  --flow-ink: var(--fin-essential);
 }
 
 .tx-list__item--ne {
-  border-left-color: var(--fin-expense);
+  --flow-ink: var(--fin-expense);
+}
+
+.tx-list__amount--ess {
+  color: var(--fin-essential);
 }
 
 .tx-list__amount--out {

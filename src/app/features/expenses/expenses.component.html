@@ -133,13 +133,13 @@
                         <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
                       </span>
                     }
-                    <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                    <span class="tx-list__badge">
                       {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
                     </span>
                   </span>
                 </div>
                 <div class="tx-list__side">
-                  <span class="tx-list__amount tx-list__amount--out">{{
+                  <span class="tx-list__amount tx-list__amount--ess">{{
                     t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
                   }}</span>
                   <div class="tx-list__actions">
@@ -193,7 +193,7 @@
                         <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
                       </span>
                     }
-                    <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                    <span class="tx-list__badge">
                       {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
                     </span>
                   </span>

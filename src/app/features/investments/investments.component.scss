@@ -150,7 +150,7 @@
   border: 1px solid var(--fin-border);
   border-left-width: 4px;
   border-left-style: solid;
-  background: rgba(248, 250, 252, 0.65);
+  background: var(--fin-bg-muted);
 }
 
 .inv-cat-totals__name {
@@ -279,7 +279,7 @@
 
 .panel {
   background: var(--fin-surface);
-  border: 1px dashed var(--fin-border-strong);
+  border: 1px solid var(--fin-border);
   border-radius: var(--fin-radius);
   min-height: 200px;
   padding: 1rem;
@@ -287,11 +287,6 @@
   transition:
     border-color var(--fin-transition),
     box-shadow var(--fin-transition);
-}
-
-.panel:has(.tx-list) {
-  border-style: solid;
-  border-color: var(--fin-border);
 }
 
 .panel:hover {
@@ -335,8 +330,9 @@
   padding: 0.875rem 1rem;
   background: var(--fin-bg-muted);
   border-radius: var(--fin-radius-sm);
+  --flow-ink: var(--fin-investment);
   border: 1px solid var(--fin-border);
-  border-left: 4px solid var(--fin-investment);
+  border-left: 4px solid var(--flow-ink);
   transition:
     background var(--fin-transition-fast),
     box-shadow var(--fin-transition-fast),
@@ -346,7 +342,7 @@
 .tx-list__item:hover {
   background: var(--fin-surface);
   box-shadow: var(--fin-shadow);
-  border-color: var(--fin-border-strong);
+  border-color: var(--fin-border-strong) var(--fin-border-strong) var(--fin-border-strong) var(--flow-ink);
 }
 
 .tx-list__main {
@@ -400,12 +396,6 @@
   border: 1px solid var(--fin-border);
   color: var(--fin-text-muted);
   font-weight: var(--fin-weight-medium);
-}
-
-.tx-list__badge--var {
-  border-color: color-mix(in srgb, var(--fin-investment) 40%, transparent);
-  color: var(--fin-investment);
-  background: var(--fin-investment-soft);
 }
 
 .tx-list__side {

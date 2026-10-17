@@ -171,7 +171,7 @@
                   @if (t.amount < 0) {
                     <span class="tx-list__badge tx-list__badge--resgate">Resgate</span>
                   }
-                  <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                  <span class="tx-list__badge">
                     {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
                   </span>
                 </span>
