@@ -37,12 +37,6 @@ export interface TransactionCreateDto {
   schedule: Schedule;
 }
 
-export interface AppState {
-  schemaVersion: number;
-  categories: Category[];
-  transactions: Transaction[];
-}
-
 export interface MonthTotals {
   totalIncome: number;
   totalEssential: number;

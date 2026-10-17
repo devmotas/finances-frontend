@@ -76,15 +76,7 @@ export class FinancesFacadeService {
 
   readonly monthTotals = computed((): MonthTotals => {
     const { year, month } = this.monthCtx.selectedMonth();
-    return computeMonthTotals(
-      {
-        schemaVersion: 1,
-        categories: this._categories(),
-        transactions: this._transactions(),
-      },
-      year,
-      month
-    );
+    return computeMonthTotals(this._categories(), this._transactions(), year, month);
   });
 
   constructor() {

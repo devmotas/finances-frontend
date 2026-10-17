@@ -1,9 +1,4 @@
-import {
-  AppState,
-  Category,
-  MonthTotals,
-  Transaction,
-} from '../models/finances.models';
+import { Category, MonthTotals, Transaction } from '../models/finances.models';
 
 export function transactionInMonth(t: Transaction, year: number, month: number): boolean {
   const d = parseISODate(t.date);
@@ -28,11 +23,11 @@ export function categoryMap(categories: Category[]): Map<number, Category> {
 }
 
 export function computeMonthTotals(
-  state: AppState,
+  categories: Category[],
+  transactions: Transaction[],
   year: number,
   month: number
 ): MonthTotals {
-  const { categories, transactions } = state;
   const cats = categoryMap(categories);
   const monthTx = filterTransactionsByMonth(transactions, year, month);
 

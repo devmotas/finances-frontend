@@ -4,12 +4,12 @@ import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { LucideAngularModule } from 'lucide-angular';
-import { catchError, combineLatest, map, of, switchMap } from 'rxjs';
+import { catchError, combineLatest, of, switchMap } from 'rxjs';
 import { Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import {
   InvestmentApiService,
-  NormalizedInvestmentMonthView,
+  InvestmentMonthViewDto,
 } from '../../core/services/investment-api.service';
 import { MonthContextService } from '../../core/services/month-context.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -69,7 +69,7 @@ export class InvestmentsComponent {
   readonly txInvestmentIntent = signal<'aporte' | 'resgate'>('aporte');
   readonly filterCategoryId = signal<number | null>(null);
 
-  readonly apiMeta = signal<NormalizedInvestmentMonthView | null>(null);
+  readonly apiMeta = signal<InvestmentMonthViewDto | null>(null);
 
   constructor() {
     combineLatest([
@@ -79,10 +79,7 @@ export class InvestmentsComponent {
     ])
       .pipe(
         switchMap(([ym]) =>
-          this.investmentApi.getMonthView(ym.year, ym.month).pipe(
-            map((raw) => this.investmentApi.normalizeMonthView(raw)),
-            catchError(() => of(null))
-          )
+          this.investmentApi.getMonthView(ym.year, ym.month).pipe(catchError(() => of(null)))
         ),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -98,9 +95,9 @@ export class InvestmentsComponent {
 
   readonly monthInvested = computed(() => this.facade.monthTotals().totalInvestments);
 
-  readonly positionBeforeMonth = computed(() => this.apiMeta()?.positionBeforeMonth ?? null);
+  readonly positionBeforeMonth = computed(() => this.apiMeta()?.summary.positionBeforeMonth ?? null);
 
-  readonly positionThroughMonthEnd = computed(() => this.apiMeta()?.positionThroughMonthEnd ?? null);
+  readonly positionThroughMonthEnd = computed(() => this.apiMeta()?.summary.positionThroughMonthEnd ?? null);
 
   readonly chartLabels = computed(() => {
     const s = this.apiMeta()?.monthlySeries ?? [];
