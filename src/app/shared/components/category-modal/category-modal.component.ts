@@ -156,13 +156,6 @@ export class CategoryModalComponent {
   }
 
   remove(c: Category): void {
-    if (!this.facade.canDeleteCategory(c.id)) {
-      this.toast.show(
-        'Não é possível excluir: existem lançamentos usando esta categoria neste mês (ou o servidor pode bloquear se houver em outros meses).',
-        'error'
-      );
-      return;
-    }
     if (!confirm(`Excluir a categoria "${c.name}"?`)) return;
     this.facade.deleteCategory(c.id).subscribe({
       next: () => {

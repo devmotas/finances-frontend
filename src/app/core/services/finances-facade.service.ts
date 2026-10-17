@@ -171,10 +171,6 @@ export class FinancesFacadeService {
     return this._categories().find((c) => c.id === id);
   }
 
-  canDeleteCategory(id: number): boolean {
-    return !this._transactions().some((t) => t.categoryId === id);
-  }
-
   addCategory(dto: CategoryCreateDto) {
     return this.categoryApi.create(dto).pipe(
       tap((created) => this._categories.update((list) => [...list, created]))
