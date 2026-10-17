@@ -20,6 +20,7 @@ import {
   SeriesDeleteModalComponent,
 } from '../../shared/components/series-delete-modal/series-delete-modal.component';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
+import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 
 function investmentCategoryStackColors(
   index: number,
@@ -41,6 +42,7 @@ function investmentCategoryStackColors(
     CategoryModalComponent,
     TransactionModalComponent,
     SeriesDeleteModalComponent,
+    MonthLoadErrorComponent,
   ],
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.scss',

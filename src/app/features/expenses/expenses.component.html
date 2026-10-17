@@ -66,146 +66,150 @@
     </div>
   </div>
 
-  <div class="chips" role="tablist" aria-label="Filtrar por categoria">
-    <button
-      type="button"
-      class="chip chip--system"
-      [class.chip--active]="filterCategoryId() === null"
-      (click)="selectAllFilter()"
-    >
-      Todas
-    </button>
-    @for (c of categories(); track c.id) {
+  @if (facade.hasLoadError()) {
+    <app-month-load-error />
+  } @else {
+    <div class="chips" role="tablist" aria-label="Filtrar por categoria">
       <button
         type="button"
-        class="chip"
-        [class.chip--active]="filterCategoryId() === c.id"
-        (click)="toggleCategoryFilter(c.id)"
+        class="chip chip--system"
+        [class.chip--active]="filterCategoryId() === null"
+        (click)="selectAllFilter()"
       >
-        {{ c.name }}
+        Todas
       </button>
-    }
-  </div>
-
-  <section class="section">
-    <div class="section__head">
-      <h2 class="section__title">Essenciais</h2>
-      <span class="section__total section__total--ess">{{
-        totalEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-      }}</span>
-    </div>
-    <div class="panel">
-      @if (essentialList().length === 0) {
-        <div class="empty">
-          <p class="empty__title">Nenhuma despesa registrada</p>
-          @if (categories().length === 0) {
-            <p class="empty__hint">
-              Use <strong>Categoria</strong> para criar categorias; depois use o botão
-              <strong>Saída</strong> (ícone +).
-            </p>
-          }
-        </div>
-      } @else {
-        <ul class="tx-list">
-          @for (t of essentialList(); track t.id) {
-            <li class="tx-list__item tx-list__item--ess">
-              <div class="tx-list__main">
-                <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                @if (t.description.trim()) {
-                  <span class="tx-list__desc">{{ t.description }}</span>
-                }
-                <span class="tx-list__badges">
-                  @if (txHasRecurrence(t)) {
-                    <span
-                      class="tx-list__serie"
-                      title="Parte de uma série recorrente"
-                      aria-label="Recorrente"
-                    >
-                      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
-                    </span>
-                  }
-                  <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
-                    {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
-                  </span>
-                </span>
-              </div>
-              <div class="tx-list__side">
-                <span class="tx-list__amount tx-list__amount--out">{{
-                  t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-                }}</span>
-                <div class="tx-list__actions">
-                  <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
-                  <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            </li>
-          }
-        </ul>
+      @for (c of categories(); track c.id) {
+        <button
+          type="button"
+          class="chip"
+          [class.chip--active]="filterCategoryId() === c.id"
+          (click)="toggleCategoryFilter(c.id)"
+        >
+          {{ c.name }}
+        </button>
       }
     </div>
-  </section>
 
-  <section class="section">
-    <div class="section__head">
-      <h2 class="section__title">Não essenciais</h2>
-      <span class="section__total section__total--ne">{{
-        totalNonEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-      }}</span>
-    </div>
-    <div class="panel">
-      @if (nonEssentialList().length === 0) {
-        <div class="empty">
-          <p class="empty__title">Nenhuma despesa registrada</p>
-          @if (categories().length === 0) {
-            <p class="empty__hint">
-              Use <strong>Categoria</strong> para criar categorias; depois use o botão
-              <strong>Saída</strong> (ícone +).
-            </p>
-          }
-        </div>
-      } @else {
-        <ul class="tx-list">
-          @for (t of nonEssentialList(); track t.id) {
-            <li class="tx-list__item tx-list__item--ne">
-              <div class="tx-list__main">
-                <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                @if (t.description.trim()) {
-                  <span class="tx-list__desc">{{ t.description }}</span>
-                }
-                <span class="tx-list__badges">
-                  @if (txHasRecurrence(t)) {
-                    <span
-                      class="tx-list__serie"
-                      title="Parte de uma série recorrente"
-                      aria-label="Recorrente"
-                    >
-                      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
-                    </span>
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Essenciais</h2>
+        <span class="section__total section__total--ess">{{
+          totalEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+        }}</span>
+      </div>
+      <div class="panel">
+        @if (essentialList().length === 0) {
+          <div class="empty">
+            <p class="empty__title">Nenhuma despesa registrada</p>
+            @if (categories().length === 0) {
+              <p class="empty__hint">
+                Use <strong>Categoria</strong> para criar categorias; depois use o botão
+                <strong>Saída</strong> (ícone +).
+              </p>
+            }
+          </div>
+        } @else {
+          <ul class="tx-list">
+            @for (t of essentialList(); track t.id) {
+              <li class="tx-list__item tx-list__item--ess">
+                <div class="tx-list__main">
+                  <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
+                  @if (t.description.trim()) {
+                    <span class="tx-list__desc">{{ t.description }}</span>
                   }
-                  <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
-                    {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                  <span class="tx-list__badges">
+                    @if (txHasRecurrence(t)) {
+                      <span
+                        class="tx-list__serie"
+                        title="Parte de uma série recorrente"
+                        aria-label="Recorrente"
+                      >
+                        <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
+                      </span>
+                    }
+                    <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                      {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                    </span>
                   </span>
-                </span>
-              </div>
-              <div class="tx-list__side">
-                <span class="tx-list__amount tx-list__amount--out">{{
-                  t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-                }}</span>
-                <div class="tx-list__actions">
-                  <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
-                  <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
-                    Excluir
-                  </button>
                 </div>
-              </div>
-            </li>
-          }
-        </ul>
-      }
-    </div>
-  </section>
+                <div class="tx-list__side">
+                  <span class="tx-list__amount tx-list__amount--out">{{
+                    t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                  }}</span>
+                  <div class="tx-list__actions">
+                    <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
+                    <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section__head">
+        <h2 class="section__title">Não essenciais</h2>
+        <span class="section__total section__total--ne">{{
+          totalNonEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+        }}</span>
+      </div>
+      <div class="panel">
+        @if (nonEssentialList().length === 0) {
+          <div class="empty">
+            <p class="empty__title">Nenhuma despesa registrada</p>
+            @if (categories().length === 0) {
+              <p class="empty__hint">
+                Use <strong>Categoria</strong> para criar categorias; depois use o botão
+                <strong>Saída</strong> (ícone +).
+              </p>
+            }
+          </div>
+        } @else {
+          <ul class="tx-list">
+            @for (t of nonEssentialList(); track t.id) {
+              <li class="tx-list__item tx-list__item--ne">
+                <div class="tx-list__main">
+                  <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
+                  @if (t.description.trim()) {
+                    <span class="tx-list__desc">{{ t.description }}</span>
+                  }
+                  <span class="tx-list__badges">
+                    @if (txHasRecurrence(t)) {
+                      <span
+                        class="tx-list__serie"
+                        title="Parte de uma série recorrente"
+                        aria-label="Recorrente"
+                      >
+                        <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
+                      </span>
+                    }
+                    <span class="tx-list__badge" [class.tx-list__badge--var]="t.schedule === 'variable'">
+                      {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
+                    </span>
+                  </span>
+                </div>
+                <div class="tx-list__side">
+                  <span class="tx-list__amount tx-list__amount--out">{{
+                    t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                  }}</span>
+                  <div class="tx-list__actions">
+                    <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
+                    <button type="button" class="link-btn link-btn--danger" (click)="removeTx(t)">
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
+  }
 </div>
 
 <app-category-modal

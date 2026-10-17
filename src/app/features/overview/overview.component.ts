@@ -23,6 +23,7 @@ import {
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
 import { categoryMap } from '../../core/utils/finance-calculations';
+import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 
 const ROW_LABELS = [
   'Entradas',
@@ -188,7 +189,7 @@ function buildStackedBarData(
 
 @Component({
   selector: 'app-overview',
-  imports: [CurrencyPipe, LucideAngularModule, BaseChartDirective],
+  imports: [CurrencyPipe, LucideAngularModule, BaseChartDirective, MonthLoadErrorComponent],
   templateUrl: './overview.component.html',
   styleUrl: './overview.component.scss',
 })

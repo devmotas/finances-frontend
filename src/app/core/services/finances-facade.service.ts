@@ -7,6 +7,7 @@ import {
   filter,
   forkJoin,
   map,
+  Observable,
   of,
   switchMap,
   take,
@@ -20,6 +21,7 @@ import {
   Transaction,
   TransactionCreateDto,
 } from '../models/finances.models';
+import { LOAD_STATE, LoadState } from '../models/load-state.model';
 import { computeMonthTotals, filterTransactionsByMonth } from '../utils/finance-calculations';
 import { AuthTokenService } from './auth-token.service';
 import { CategoryApiService } from './category-api.service';
@@ -28,6 +30,11 @@ import { RecurrenceApiService, RecurrenceCreateDto } from './recurrence-api.serv
 import { TransactionApiService } from './transaction-api.service';
 import { UserApiService } from './user-api.service';
 import { UserProfileService } from './user-profile.service';
+
+interface MonthPayload {
+  readonly categories: Category[];
+  readonly transactions: Transaction[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class FinancesFacadeService {
@@ -42,9 +49,14 @@ export class FinancesFacadeService {
 
   private readonly _categories = signal<Category[]>([]);
   private readonly _transactions = signal<Transaction[]>([]);
+  private readonly _loadState = signal<LoadState>(LOAD_STATE.loading);
+  private readonly _lastLoadFailed = signal(false);
 
   readonly categories = computed(() => this._categories());
   readonly transactions = computed(() => this._transactions());
+  readonly loadState = this._loadState.asReadonly();
+  readonly isLoading = computed(() => this._loadState() === LOAD_STATE.loading);
+  readonly hasLoadError = this._lastLoadFailed.asReadonly();
 
   readonly monthTransactions = computed(() => {
     const { year, month } = this.monthCtx.selectedMonth();
@@ -92,32 +104,49 @@ export class FinancesFacadeService {
         switchMap(() => this.loadMonthPayload$()),
         takeUntilDestroyed(this.destroyRef)
       )
-      .subscribe((payload: { categories: Category[]; transactions: Transaction[] }) => {
-        this._categories.set(payload.categories);
-        this._transactions.set(payload.transactions);
-      });
+      .subscribe((payload) => this.applyMonthPayload(payload));
   }
 
-  private loadMonthPayload$() {
+  private loadMonthPayload$(): Observable<MonthPayload | null> {
     const { year, month } = this.monthCtx.selectedMonth();
+    this._loadState.set(LOAD_STATE.loading);
     return forkJoin({
-      categories: this.categoryApi.getAll().pipe(catchError(() => of([] as Category[]))),
-      transactions: this.transactionApi
-        .getByMonth(year, month)
-        .pipe(catchError(() => of([] as Transaction[]))),
-    });
+      categories: this.categoryApi.getAll(),
+      transactions: this.transactionApi.getByMonth(year, month),
+    }).pipe(catchError(() => of(null)));
+  }
+
+  private applyMonthPayload(payload: MonthPayload | null): void {
+    if (payload) {
+      this.markLoaded(payload);
+    } else {
+      this.markLoadFailed();
+    }
+  }
+
+  private markLoaded(payload: MonthPayload): void {
+    this._categories.set(payload.categories);
+    this._transactions.set(payload.transactions);
+    this._loadState.set(LOAD_STATE.ok);
+    this._lastLoadFailed.set(false);
+  }
+
+  private markLoadFailed(): void {
+    this._loadState.set(LOAD_STATE.error);
+    this._lastLoadFailed.set(true);
   }
 
   reloadCurrentMonth(): void {
-    this.loadMonthPayload$().pipe(take(1)).subscribe((payload) => {
-      this._categories.set(payload.categories);
-      this._transactions.set(payload.transactions);
-    });
+    this.loadMonthPayload$()
+      .pipe(take(1))
+      .subscribe((payload) => this.applyMonthPayload(payload));
   }
 
   resetState(): void {
     this._categories.set([]);
     this._transactions.set([]);
+    this._loadState.set(LOAD_STATE.loading);
+    this._lastLoadFailed.set(false);
   }
 
   categoriesByFlow(flow: Flow): Category[] {

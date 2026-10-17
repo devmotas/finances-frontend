@@ -17,6 +17,7 @@ import {
   SeriesDeleteModalComponent,
 } from '../../shared/components/series-delete-modal/series-delete-modal.component';
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
+import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 
 @Component({
   selector: 'app-expenses',
@@ -26,6 +27,7 @@ import { TransactionModalComponent } from '../../shared/components/transaction-m
     CategoryModalComponent,
     TransactionModalComponent,
     SeriesDeleteModalComponent,
+    MonthLoadErrorComponent,
   ],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',

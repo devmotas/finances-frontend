@@ -1,0 +1,19 @@
+<div class="load-error" role="alert">
+  <span class="load-error__icon" aria-hidden="true">
+    <lucide-icon name="cloud-off" [size]="40" [strokeWidth]="1.75"></lucide-icon>
+  </span>
+  <p class="load-error__title">Não foi possível carregar os dados deste mês</p>
+  <p class="load-error__hint">
+    O servidor não respondeu. Os valores ficam ocultos até o carregamento dar certo, para não mostrar
+    um mês zerado que não é real.
+  </p>
+  <button
+    type="button"
+    class="load-error__btn"
+    [disabled]="facade.isLoading()"
+    (click)="retry()"
+  >
+    <lucide-icon name="refresh-cw" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+    {{ retryLabel() }}
+  </button>
+</div>

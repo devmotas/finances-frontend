@@ -1,0 +1,64 @@
+@use '../modal-shared' as *;
+
+:host {
+  display: block;
+}
+
+.load-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3rem 1rem;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: var(--fin-radius);
+  box-shadow: var(--fin-shadow);
+  color: var(--fin-text-muted);
+}
+
+.load-error__icon {
+  display: flex;
+  margin-bottom: 0.75rem;
+  color: var(--fin-expense);
+  opacity: 0.7;
+}
+
+.load-error__title {
+  margin: 0 0 0.5rem;
+  font-weight: var(--fin-weight-semibold);
+  font-size: var(--fin-text-lg);
+  color: var(--fin-text-secondary);
+}
+
+.load-error__hint {
+  max-width: 42ch;
+  margin: 0 0 1.25rem;
+  font-size: var(--fin-text-base);
+  line-height: var(--fin-leading-normal);
+}
+
+.load-error__btn {
+  @include btn;
+  @include btn-primary;
+  gap: 0.5rem;
+
+  &:focus-visible {
+    outline: 2px solid var(--fin-primary);
+    outline-offset: 2px;
+  }
+}
+
+@media (max-width: 767px) {
+  .load-error {
+    padding: 2rem 0.75rem;
+  }
+
+  .load-error__title {
+    font-size: var(--fin-text-base);
+  }
+
+  .load-error__hint {
+    font-size: var(--fin-text-sm);
+  }
+}
