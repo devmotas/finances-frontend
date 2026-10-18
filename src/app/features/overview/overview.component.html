@@ -1,7 +1,7 @@
 <div class="overview">
   <header class="overview__intro">
     <h1 class="overview__title">Visão Geral</h1>
-    <p class="overview__sub">Resumo das suas finanças</p>
+    <p class="overview__sub">Como fecha {{ selectedMonthName() }} e o que já está comprometido para o próximo mês</p>
   </header>
 
   @if (facade.hasLoadError()) {
@@ -9,175 +9,223 @@
   } @else if (facade.isMonthDataPending()) {
     <app-month-loading />
   } @else {
-    <div class="cards">
-      <article class="card card--in">
-        <div class="card__accent" aria-hidden="true"></div>
-        <div class="card__body">
-          <span class="card__icon" aria-hidden="true">
-            <lucide-icon name="trending-up" [size]="22" [strokeWidth]="2"></lucide-icon>
+    @if (summary(); as s) {
+      <section class="hero" [attr.aria-label]="'Saldos de ' + selectedMonthName()">
+        <div class="hero__item">
+          <span class="hero__label">
+            <lucide-icon name="wallet" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Saldo do mês
           </span>
-          <h2 class="card__label">Total de Entradas</h2>
-          <p class="card__value card__value--in">
-            {{ totals().totalIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          <p
+            class="hero__value"
+            [class.hero__value--in]="s.monthBalance >= 0"
+            [class.hero__value--out]="s.monthBalance < 0"
+          >
+            {{ s.monthBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          </p>
+          <p class="hero__caption">Entradas − saídas − aportes + resgates de {{ selectedMonthName() }}.</p>
+        </div>
+        <div class="hero__item hero__item--cash">
+          <span class="hero__label">
+            <lucide-icon name="piggy-bank" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Saldo em caixa
+          </span>
+          <p
+            class="hero__value"
+            [class.hero__value--in]="s.cashBalance >= 0"
+            [class.hero__value--out]="s.cashBalance < 0"
+          >
+            {{ s.cashBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          </p>
+          <p class="hero__caption">
+            Dinheiro fora dos investimentos no fim do mês; a sobra de cada mês passa para o seguinte.
           </p>
         </div>
-      </article>
+      </section>
 
-      <article class="card card--ess">
-        <div class="card__accent" aria-hidden="true"></div>
-        <div class="card__body">
-          <span class="card__icon" aria-hidden="true">
-            <lucide-icon name="shield" [size]="22" [strokeWidth]="2"></lucide-icon>
+      <section class="next-month" aria-labelledby="next-month-title">
+        <div class="next-month__head">
+          <span class="next-month__icon" aria-hidden="true">
+            <lucide-icon name="calendar-clock" [size]="22" [strokeWidth]="2"></lucide-icon>
           </span>
-          <h2 class="card__label">Despesas Essenciais</h2>
-          <p class="card__value card__value--ess">
-            {{ totals().totalEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
+          <div>
+            <h2 id="next-month-title" class="next-month__title">{{ nextMonthName() }} já comprometido</h2>
+            <p class="next-month__caption">
+              O que já está lançado para {{ nextMonthName() }}: séries e lançamentos avulsos registrados.
+            </p>
+          </div>
         </div>
-      </article>
-
-      <article class="card card--ne">
-        <div class="card__accent" aria-hidden="true"></div>
-        <div class="card__body">
-          <span class="card__icon" aria-hidden="true">
-            <lucide-icon name="shield-alert" [size]="22" [strokeWidth]="2"></lucide-icon>
-          </span>
-          <h2 class="card__label">Despesas Não Essenciais</h2>
-          <p class="card__value card__value--ne">
-            {{ totals().totalNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
-        </div>
-      </article>
-
-      <article class="card card--out">
-        <div class="card__accent" aria-hidden="true"></div>
-        <div class="card__body">
-          <span class="card__icon" aria-hidden="true">
-            <lucide-icon name="trending-down" [size]="22" [strokeWidth]="2"></lucide-icon>
-          </span>
-          <h2 class="card__label">Total de Despesas</h2>
-          <p class="card__value card__value--out">
-            {{ totals().totalExpenses | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
-        </div>
-      </article>
-
-      <article class="card card--inv">
-        <div class="card__accent card__accent--inv" aria-hidden="true"></div>
-        <div class="card__body">
-          <span class="card__icon" aria-hidden="true">
-            <lucide-icon name="landmark" [size]="22" [strokeWidth]="2"></lucide-icon>
-          </span>
-          <h2 class="card__label">Investimentos no mês</h2>
-          <p class="card__value card__value--inv">
-            {{ totals().totalInvestments | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
-        </div>
-      </article>
-
-      <article class="card card--balance card--wide">
-        <div class="card__accent card__accent--balance" aria-hidden="true"></div>
-        <div class="card__body card__body--split">
-          <div class="card__split-item">
-            <span class="card__icon" aria-hidden="true">
-              <lucide-icon name="wallet" [size]="22" [strokeWidth]="2"></lucide-icon>
-            </span>
-            <h2 class="card__label">Saldo do mês</h2>
-            <p
-              class="card__value"
-              [class.card__value--in]="totals().balance >= 0"
-              [class.card__value--out]="totals().balance < 0"
+        <dl class="next-month__rows">
+          <div class="next-month__row">
+            <dt>Entradas</dt>
+            <dd class="next-month__amount next-month__amount--in">
+              {{ s.nextMonth.committedIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+          <div class="next-month__row">
+            <dt>Essenciais</dt>
+            <dd class="next-month__amount next-month__amount--ess">
+              {{ s.nextMonth.committedEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+          <div class="next-month__row">
+            <dt>Não essenciais</dt>
+            <dd class="next-month__amount next-month__amount--ne">
+              {{ s.nextMonth.committedNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+          <div class="next-month__row">
+            <dt>Investimentos (aportes − resgates)</dt>
+            <dd class="next-month__amount next-month__amount--inv">
+              {{ s.nextMonth.committedInvestment | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+          <div class="next-month__row next-month__row--total">
+            <dt>Saldo em caixa previsto no fim de {{ nextMonthName() }}</dt>
+            <dd
+              class="next-month__amount next-month__amount--total"
+              [class.next-month__amount--in]="s.nextMonth.projectedBalance >= 0"
+              [class.next-month__amount--out]="s.nextMonth.projectedBalance < 0"
             >
-              {{ totals().balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ s.nextMonth.projectedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <h2 class="overview__section-title">{{ selectedMonthName() }} por fluxo</h2>
+      <div class="cards">
+        <article class="card card--in">
+          <div class="card__accent" aria-hidden="true"></div>
+          <div class="card__body">
+            <span class="card__icon" aria-hidden="true">
+              <lucide-icon name="trending-up" [size]="22" [strokeWidth]="2"></lucide-icon>
+            </span>
+            <h3 class="card__label">Entradas</h3>
+            <p class="card__value card__value--in">
+              {{ s.totalIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </p>
           </div>
-          <div class="card__split-item card__split-item--acc">
-            <h2 class="card__label card__label--secondary">Saldo em caixa</h2>
-            <p class="card__caption">
-              Desde o início até o fim deste mês: entradas − saídas − aportes em investimentos. O valor já
-              investido fica na tela de Reserva de emergência.
+        </article>
+
+        <article class="card card--ess">
+          <div class="card__accent" aria-hidden="true"></div>
+          <div class="card__body">
+            <span class="card__icon" aria-hidden="true">
+              <lucide-icon name="shield" [size]="22" [strokeWidth]="2"></lucide-icon>
+            </span>
+            <h3 class="card__label">Essenciais</h3>
+            <p class="card__value card__value--ess">
+              {{ s.totalEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </p>
-            @if (financeSummary(); as fs) {
-              <p
-                class="card__value card__value--acc"
-                [class.card__value--in]="fs.accumulatedBalance >= 0"
-                [class.card__value--out]="fs.accumulatedBalance < 0"
-              >
-                {{ fs.accumulatedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          </div>
+        </article>
+
+        <article class="card card--ne">
+          <div class="card__accent" aria-hidden="true"></div>
+          <div class="card__body">
+            <span class="card__icon" aria-hidden="true">
+              <lucide-icon name="shield-alert" [size]="22" [strokeWidth]="2"></lucide-icon>
+            </span>
+            <h3 class="card__label">Não essenciais</h3>
+            <p class="card__value card__value--ne">
+              {{ s.totalNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </p>
+          </div>
+        </article>
+
+        <article class="card card--inv">
+          <div class="card__accent card__accent--inv" aria-hidden="true"></div>
+          <div class="card__body">
+            <span class="card__icon" aria-hidden="true">
+              <lucide-icon name="landmark" [size]="22" [strokeWidth]="2"></lucide-icon>
+            </span>
+            <h3 class="card__label">Investimento líquido</h3>
+            <p class="card__value card__value--inv">
+              {{ s.netInvested | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </p>
+            @if (s.totalWithdrawals > 0) {
+              <p class="card__caption">
+                Aportes {{ s.totalContributions | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} · resgates
+                {{ s.totalWithdrawals | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
               </p>
-            } @else {
-              <p class="card__value card__value--muted">—</p>
             }
           </div>
-        </div>
-      </article>
-    </div>
+        </article>
+      </div>
+      <p class="expenses-total">
+        Total de saídas (essenciais + não essenciais):
+        <strong class="expenses-total__value">
+          {{ s.totalExpenses | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </strong>
+      </p>
 
-    <div class="summary panel">
-      @if (!hasData()) {
-        <div class="empty">
-          <span class="empty__icon" aria-hidden="true">
-            <lucide-icon name="wallet" [size]="40" [strokeWidth]="1.75"></lucide-icon>
-          </span>
-          <p class="empty__title">Nenhum registro ainda</p>
-          <p class="empty__hint">Adicione entradas e saídas para ver o resumo</p>
-        </div>
-      } @else {
-        <h2 class="summary__title">Resumo do mês</h2>
-        <p class="summary__caption">
-          Proporção por categoria nas quatro primeiras linhas (inclui aportes em investimentos); na última, total de
-          essenciais versus não essenciais. Os valores detalhados estão na tabela abaixo do gráfico.
-        </p>
+      <div class="summary panel">
+        @if (!hasData()) {
+          <div class="empty">
+            <span class="empty__icon" aria-hidden="true">
+              <lucide-icon name="wallet" [size]="40" [strokeWidth]="1.75"></lucide-icon>
+            </span>
+            <p class="empty__title">Nenhum registro ainda</p>
+            <p class="empty__hint">Adicione entradas e saídas para ver o resumo do mês</p>
+          </div>
+        } @else {
+          <h2 class="summary__title">Resumo do mês</h2>
+          <p class="summary__caption">
+            Proporção por categoria nas quatro primeiras linhas (aportes sem descontar resgates); na última, total de
+            essenciais versus não essenciais. Os valores detalhados estão na tabela abaixo do gráfico.
+          </p>
 
-        <div class="overview-chart">
-          <canvas
-            baseChart
-            role="img"
-            [attr.aria-label]="chartSummaryLabel()"
-            [data]="overviewChartData()"
-            [options]="overviewChartOptions"
-            [type]="overviewChartType"
-          ></canvas>
-        </div>
+          <div class="overview-chart">
+            <canvas
+              baseChart
+              role="img"
+              [attr.aria-label]="chartSummaryLabel()"
+              [data]="overviewChartData()"
+              [options]="overviewChartOptions"
+              [type]="overviewChartType"
+            ></canvas>
+          </div>
 
-        <details class="chart-data">
-          <summary class="chart-data__toggle">Ver dados do gráfico</summary>
-          <table class="chart-data__table">
-            <caption class="chart-data__caption">Valores por categoria em cada linha do gráfico</caption>
-            <thead>
-              <tr>
-                <th scope="col">Categoria</th>
-                <th scope="col" class="chart-data__num">Valor</th>
-                <th scope="col" class="chart-data__num">% da linha</th>
-              </tr>
-            </thead>
-            @for (row of chartTableRows(); track row.label) {
-              <tbody>
-                <tr class="chart-data__group">
-                  <th scope="rowgroup">{{ row.label }}</th>
-                  <td class="chart-data__num">
-                    {{ row.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-                  </td>
-                  <td class="chart-data__num"></td>
+          <details class="chart-data">
+            <summary class="chart-data__toggle">Ver dados do gráfico</summary>
+            <table class="chart-data__table">
+              <caption class="chart-data__caption">Valores por categoria em cada linha do gráfico</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Categoria</th>
+                  <th scope="col" class="chart-data__num">Valor</th>
+                  <th scope="col" class="chart-data__num">% da linha</th>
                 </tr>
-                @for (item of row.items; track item.name) {
-                  <tr>
-                    <th scope="row" class="chart-data__item">{{ item.name }}</th>
+              </thead>
+              @for (row of chartTableRows(); track row.label) {
+                <tbody>
+                  <tr class="chart-data__group">
+                    <th scope="rowgroup">{{ row.label }}</th>
                     <td class="chart-data__num">
-                      {{ item.value | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                      {{ row.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
                     </td>
-                    <td class="chart-data__num">{{ item.share | percent: '1.1-1' : 'pt-BR' }}</td>
+                    <td class="chart-data__num"></td>
                   </tr>
-                } @empty {
-                  <tr>
-                    <td class="chart-data__item chart-data__empty" colspan="3">Sem lançamentos nesta linha</td>
-                  </tr>
-                }
-              </tbody>
-            }
-          </table>
-        </details>
-      }
-    </div>
+                  @for (item of row.items; track item.name) {
+                    <tr>
+                      <th scope="row" class="chart-data__item">{{ item.name }}</th>
+                      <td class="chart-data__num">
+                        {{ item.value | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                      </td>
+                      <td class="chart-data__num">{{ item.share | percent: '1.1-1' : 'pt-BR' }}</td>
+                    </tr>
+                  } @empty {
+                    <tr>
+                      <td class="chart-data__item chart-data__empty" colspan="3">Sem lançamentos nesta linha</td>
+                    </tr>
+                  }
+                </tbody>
+              }
+            </table>
+          </details>
+        }
+      </div>
+    }
   }
 </div>

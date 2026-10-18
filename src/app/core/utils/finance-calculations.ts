@@ -1,4 +1,19 @@
-import { Category, MonthTotals, Transaction } from '../models/finances.models';
+import {
+  Category,
+  INVESTMENT_DIRECTION,
+  MonthTotals,
+  Transaction,
+} from '../models/finances.models';
+import { FinanceSummaryDto } from '../services/finance-summary-api.service';
+
+export const EMPTY_MONTH_TOTALS: Readonly<MonthTotals> = {
+  totalIncome: 0,
+  totalEssential: 0,
+  totalNonEssential: 0,
+  totalExpenses: 0,
+  totalInvestments: 0,
+  balance: 0,
+};
 
 export function transactionInMonth(t: Transaction, year: number, month: number): boolean {
   const d = parseISODate(t.date);
@@ -22,44 +37,24 @@ export function categoryMap(categories: Category[]): Map<number, Category> {
   return new Map(categories.map((c) => [c.id, c]));
 }
 
-export function computeMonthTotals(
-  categories: Category[],
-  transactions: Transaction[],
-  year: number,
-  month: number
-): MonthTotals {
-  const cats = categoryMap(categories);
-  const monthTx = filterTransactionsByMonth(transactions, year, month);
+export function isWithdrawal(t: Pick<Transaction, 'amount' | 'direction'>): boolean {
+  if (t.direction) return t.direction === INVESTMENT_DIRECTION.withdrawal;
+  return t.amount < 0;
+}
 
-  let totalIncome = 0;
-  let totalEssential = 0;
-  let totalNonEssential = 0;
-  let totalInvestments = 0;
+export function signedInvestmentAmount(t: Pick<Transaction, 'amount' | 'direction'>): number {
+  const magnitude = Math.abs(t.amount);
+  return isWithdrawal(t) ? -magnitude : magnitude;
+}
 
-  for (const t of monthTx) {
-    if (t.flow === 'income') {
-      totalIncome += t.amount;
-      continue;
-    }
-    if (t.flow === 'investment') {
-      totalInvestments += t.amount;
-      continue;
-    }
-    const cat = cats.get(t.categoryId);
-    if (!cat || cat.flow !== 'expense') continue;
-    if (cat.expenseGroup === 'essential') totalEssential += t.amount;
-    else if (cat.expenseGroup === 'nonEssential') totalNonEssential += t.amount;
-  }
-
-  const totalExpenses = totalEssential + totalNonEssential;
-  const balance = totalIncome - totalExpenses - totalInvestments;
-
+export function monthTotalsFromSummary(summary: FinanceSummaryDto | null): MonthTotals {
+  if (!summary) return { ...EMPTY_MONTH_TOTALS };
   return {
-    totalIncome,
-    totalEssential,
-    totalNonEssential,
-    totalExpenses,
-    totalInvestments,
-    balance,
+    totalIncome: summary.totalIncome,
+    totalEssential: summary.totalEssential,
+    totalNonEssential: summary.totalNonEssential,
+    totalExpenses: summary.totalExpenses,
+    totalInvestments: summary.netInvested,
+    balance: summary.monthBalance,
   };
 }

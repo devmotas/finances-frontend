@@ -6,11 +6,25 @@ import { Category, Transaction } from '../models/finances.models';
 import { LOAD_STATE } from '../models/load-state.model';
 import { AuthTokenService } from './auth-token.service';
 import { CategoryApiService } from './category-api.service';
+import { FinanceSummaryApiService, FinanceSummaryDto } from './finance-summary-api.service';
 import { FinancesFacadeService } from './finances-facade.service';
 import { RecurrenceApiService } from './recurrence-api.service';
 import { TransactionApiService } from './transaction-api.service';
 import { UserApiService } from './user-api.service';
 import { UserProfileService } from './user-profile.service';
+
+const monthSummary = {
+  year: 2026,
+  month: 4,
+  totalIncome: 5000,
+  totalEssential: 2000,
+  totalNonEssential: 300,
+  totalExpenses: 2300,
+  netInvested: 300,
+  monthBalance: 2400,
+} as FinanceSummaryDto;
+
+const summaryApiStub = { get: () => of(monthSummary) };
 
 describe('FinancesFacadeService - estado de carga', () => {
   let categoryApi: jasmine.SpyObj<CategoryApiService>;
@@ -31,6 +45,7 @@ describe('FinancesFacadeService - estado de carga', () => {
         { provide: TransactionApiService, useValue: transactionApi },
         { provide: AuthTokenService, useValue: { hasToken: signal(false) } },
         { provide: RecurrenceApiService, useValue: {} },
+        { provide: FinanceSummaryApiService, useValue: summaryApiStub },
         { provide: UserApiService, useValue: {} },
         { provide: UserProfileService, useValue: {} },
       ],
@@ -132,6 +147,7 @@ describe('FinancesFacadeService - avisos de alteração', () => {
     date: '2026-04-10',
     schedule: 'variable',
     flow: 'investment',
+    direction: 'contribution',
   } as Transaction;
 
   beforeEach(() => {
@@ -153,6 +169,7 @@ describe('FinancesFacadeService - avisos de alteração', () => {
         { provide: TransactionApiService, useValue: transactionApi },
         { provide: AuthTokenService, useValue: { hasToken: signal(false) } },
         { provide: RecurrenceApiService, useValue: {} },
+        { provide: FinanceSummaryApiService, useValue: summaryApiStub },
         { provide: UserApiService, useValue: {} },
         { provide: UserProfileService, useValue: {} },
       ],
@@ -177,7 +194,7 @@ describe('FinancesFacadeService - avisos de alteração', () => {
   });
 
   it('avisa o fluxo do lançamento excluído', () => {
-    transactionApi.delete.and.returnValue(of(undefined) as never);
+    transactionApi.delete.and.returnValue(of({ deleted: [contribution], closedSeries: [] }));
 
     facade.deleteTransaction(contribution.id).subscribe();
 
@@ -217,7 +234,7 @@ describe('FinancesFacadeService - resposta perdida ao salvar', () => {
     description: null,
     amount: 1500,
     startDate: '2026-04-05',
-    months: 12,
+    kind: 'fixed' as const,
   };
 
   beforeEach(() => {
@@ -235,6 +252,7 @@ describe('FinancesFacadeService - resposta perdida ao salvar', () => {
         { provide: CategoryApiService, useValue: categoryApi },
         { provide: TransactionApiService, useValue: transactionApi },
         { provide: RecurrenceApiService, useValue: recurrenceApi },
+        { provide: FinanceSummaryApiService, useValue: summaryApiStub },
         { provide: AuthTokenService, useValue: { hasToken: signal(false) } },
         { provide: UserApiService, useValue: {} },
         { provide: UserProfileService, useValue: {} },
@@ -278,5 +296,93 @@ describe('FinancesFacadeService - resposta perdida ao salvar', () => {
     expect(transactionApi.getByMonth).not.toHaveBeenCalled();
     expect(changedFlows).toEqual([]);
     expect(receivedErrors).toEqual([serverError]);
+  });
+});
+
+describe('FinancesFacadeService - resumo e séries', () => {
+  let categoryApi: jasmine.SpyObj<CategoryApiService>;
+  let transactionApi: jasmine.SpyObj<TransactionApiService>;
+  let summaryApi: jasmine.SpyObj<FinanceSummaryApiService>;
+  let facade: FinancesFacadeService;
+
+  const investmentCategory = { id: 4, name: 'Tesouro', flow: 'investment' } as Category;
+  const withdrawal = {
+    id: 11,
+    categoryId: 4,
+    investmentAccountId: null,
+    description: 'Uso',
+    amount: 200,
+    date: '2026-04-12',
+    schedule: 'variable',
+    flow: 'investment',
+    direction: 'withdrawal',
+  } as Transaction;
+
+  beforeEach(() => {
+    categoryApi = jasmine.createSpyObj<CategoryApiService>('CategoryApiService', ['getAll']);
+    transactionApi = jasmine.createSpyObj<TransactionApiService>('TransactionApiService', [
+      'getByMonth',
+      'update',
+      'restore',
+    ]);
+    summaryApi = jasmine.createSpyObj<FinanceSummaryApiService>('FinanceSummaryApiService', ['get']);
+    categoryApi.getAll.and.returnValue(of([investmentCategory]));
+    transactionApi.getByMonth.and.returnValue(of([withdrawal]));
+    summaryApi.get.and.returnValue(of(monthSummary));
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CategoryApiService, useValue: categoryApi },
+        { provide: TransactionApiService, useValue: transactionApi },
+        { provide: FinanceSummaryApiService, useValue: summaryApi },
+        { provide: AuthTokenService, useValue: { hasToken: signal(false) } },
+        { provide: RecurrenceApiService, useValue: {} },
+        { provide: UserApiService, useValue: {} },
+        { provide: UserProfileService, useValue: {} },
+      ],
+    });
+    facade = TestBed.inject(FinancesFacadeService);
+    facade.reloadCurrentMonth();
+  });
+
+  it('usa os totais do resumo do backend, com investimento líquido', () => {
+    expect(facade.summary()).toBe(monthSummary);
+    expect(facade.monthTotals()).toEqual({
+      totalIncome: 5000,
+      totalEssential: 2000,
+      totalNonEssential: 300,
+      totalExpenses: 2300,
+      totalInvestments: 300,
+      balance: 2400,
+    });
+  });
+
+  it('marca erro quando o resumo do mês falha', () => {
+    summaryApi.get.and.returnValue(throwError(() => new Error('offline')));
+
+    facade.reloadCurrentMonth();
+
+    expect(facade.hasLoadError()).toBeTrue();
+  });
+
+  it('edita um resgate mandando valor positivo e a direção', () => {
+    transactionApi.update.and.returnValue(of(withdrawal));
+
+    facade.updateTransaction({ ...withdrawal, amount: 250 }).subscribe();
+
+    expect(transactionApi.update).toHaveBeenCalledOnceWith(
+      11,
+      { categoryId: 4, direction: 'withdrawal', description: 'Uso', amount: 250, date: '2026-04-12' },
+      false
+    );
+  });
+
+  it('desfazer repassa as séries a reabrir', () => {
+    transactionApi.restore.and.returnValue(of([withdrawal]));
+    const reopen = [{ recurrenceId: 21, endMonth: null }];
+
+    facade.restoreTransactions([], reopen).subscribe();
+
+    expect(transactionApi.restore).toHaveBeenCalledOnceWith([], reopen);
   });
 });

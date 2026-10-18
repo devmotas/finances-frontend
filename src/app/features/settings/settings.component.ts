@@ -40,6 +40,7 @@ const SETTINGS_TABS: readonly SettingsTabOption[] = [
   { id: 'profile', label: 'Perfil e senha' },
 ];
 
+const DEFAULT_EMERGENCY_FUND_TARGET_MONTHS = 6;
 const TAB_ID_PREFIX = 'settings-tab-';
 const PANEL_ID_PREFIX = 'settings-panel-';
 const PASSWORD_MISMATCH_ERROR = 'passwordMismatch';
@@ -84,12 +85,8 @@ export class SettingsComponent {
   readonly confirmPasswordVisible = signal(false);
 
   readonly prefsForm = this.fb.nonNullable.group({
-    defaultRecurrenceMonths: [
-      12,
-      [Validators.required, Validators.min(VALIDATION_LIMITS.monthsMin), Validators.max(VALIDATION_LIMITS.monthsMax)],
-    ],
     emergencyFundTargetMonths: [
-      6,
+      DEFAULT_EMERGENCY_FUND_TARGET_MONTHS,
       [Validators.required, Validators.min(VALIDATION_LIMITS.monthsMin), Validators.max(VALIDATION_LIMITS.monthsMax)],
     ],
   });
@@ -112,11 +109,8 @@ export class SettingsComponent {
   constructor() {
     this.userApi.getMe().subscribe({
       next: (u) => {
-        const m = u.defaultRecurrenceMonths ?? 12;
-        const e = u.emergencyFundTargetMonths ?? 6;
         this.prefsForm.patchValue({
-          defaultRecurrenceMonths: m,
-          emergencyFundTargetMonths: e,
+          emergencyFundTargetMonths: u.emergencyFundTargetMonths ?? DEFAULT_EMERGENCY_FUND_TARGET_MONTHS,
         });
         this.profileForm.patchValue({
           name: u.name ?? '',
@@ -176,16 +170,15 @@ export class SettingsComponent {
       this.toast.show(SETTINGS_FEEDBACK.invalidPrefs, 'error');
       return;
     }
-    const defaultRecurrenceMonths = this.prefsForm.controls.defaultRecurrenceMonths.getRawValue();
     const emergencyFundTargetMonths = this.prefsForm.controls.emergencyFundTargetMonths.getRawValue();
     this.userApi
-      .patchMe({ defaultRecurrenceMonths, emergencyFundTargetMonths })
+      .patchMe({ emergencyFundTargetMonths })
       .pipe(trackBusy(this.prefsSaving))
       .subscribe({
         next: (u) => {
-          const m = u.defaultRecurrenceMonths ?? defaultRecurrenceMonths;
-          const e = u.emergencyFundTargetMonths ?? emergencyFundTargetMonths;
-          this.prefsForm.patchValue({ defaultRecurrenceMonths: m, emergencyFundTargetMonths: e });
+          this.prefsForm.patchValue({
+            emergencyFundTargetMonths: u.emergencyFundTargetMonths ?? emergencyFundTargetMonths,
+          });
           this.userProfile.setFromUser(u);
           this.toast.show(SETTINGS_FEEDBACK.prefsSaved, 'success');
         },

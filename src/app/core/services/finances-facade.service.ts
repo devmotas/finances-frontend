@@ -19,16 +19,23 @@ import {
   Category,
   CategoryCreateDto,
   Flow,
+  INVESTMENT_DIRECTION,
   MonthTotals,
+  SeriesReopenDto,
   Transaction,
   TransactionCreateDto,
   TransactionRestoreDto,
 } from '../models/finances.models';
 import { LOAD_STATE, LoadState } from '../models/load-state.model';
-import { computeMonthTotals, filterTransactionsByMonth } from '../utils/finance-calculations';
+import {
+  filterTransactionsByMonth,
+  isWithdrawal,
+  monthTotalsFromSummary,
+} from '../utils/finance-calculations';
 import { isLostResponse } from '../utils/http-error.util';
 import { AuthTokenService } from './auth-token.service';
 import { CategoryApiService } from './category-api.service';
+import { FinanceSummaryApiService, FinanceSummaryDto } from './finance-summary-api.service';
 import { MonthContextService, YearMonth } from './month-context.service';
 import { RecurrenceApiService, RecurrenceCreateDto } from './recurrence-api.service';
 import { TransactionApiService } from './transaction-api.service';
@@ -39,6 +46,31 @@ interface MonthPayload {
   readonly month: YearMonth;
   readonly categories: Category[];
   readonly transactions: Transaction[];
+  readonly summary: FinanceSummaryDto;
+}
+
+const INVESTMENT_FLOW: Flow = 'investment';
+
+function investmentDirectionOf(t: Transaction) {
+  return isWithdrawal(t) ? INVESTMENT_DIRECTION.withdrawal : INVESTMENT_DIRECTION.contribution;
+}
+
+function investmentWriteDto(t: Transaction): TransactionCreateDto {
+  const target = t.investmentAccountId
+    ? { investmentAccountId: t.investmentAccountId }
+    : { categoryId: t.categoryId };
+  return {
+    ...target,
+    direction: investmentDirectionOf(t),
+    description: t.description,
+    amount: Math.abs(t.amount),
+    date: t.date,
+  };
+}
+
+function toWriteDto(t: Transaction): TransactionCreateDto {
+  if (t.flow === INVESTMENT_FLOW) return investmentWriteDto(t);
+  return { categoryId: t.categoryId, description: t.description, amount: t.amount, date: t.date };
 }
 
 function isSameMonth(a: YearMonth | null, b: YearMonth): boolean {
@@ -49,6 +81,7 @@ function isSameMonth(a: YearMonth | null, b: YearMonth): boolean {
 export class FinancesFacadeService {
   private readonly categoryApi = inject(CategoryApiService);
   private readonly transactionApi = inject(TransactionApiService);
+  private readonly summaryApi = inject(FinanceSummaryApiService);
   private readonly recurrenceApi = inject(RecurrenceApiService);
   private readonly monthCtx = inject(MonthContextService);
   private readonly tokens = inject(AuthTokenService);
@@ -58,6 +91,7 @@ export class FinancesFacadeService {
 
   private readonly _categories = signal<Category[]>([]);
   private readonly _transactions = signal<Transaction[]>([]);
+  private readonly _summary = signal<FinanceSummaryDto | null>(null);
   private readonly _loadState = signal<LoadState>(LOAD_STATE.loading);
   private readonly _lastLoadFailed = signal(false);
   private readonly _loadedMonth = signal<YearMonth | null>(null);
@@ -66,6 +100,7 @@ export class FinancesFacadeService {
 
   readonly categories = computed(() => this._categories());
   readonly transactions = computed(() => this._transactions());
+  readonly summary = this._summary.asReadonly();
   readonly loadState = this._loadState.asReadonly();
   readonly dataChanged$ = this.changedFlows$.asObservable();
   readonly isLoading = computed(() => this._loadState() === LOAD_STATE.loading);
@@ -80,10 +115,7 @@ export class FinancesFacadeService {
     return filterTransactionsByMonth(this._transactions(), year, month);
   });
 
-  readonly monthTotals = computed((): MonthTotals => {
-    const { year, month } = this.monthCtx.selectedMonth();
-    return computeMonthTotals(this._categories(), this._transactions(), year, month);
-  });
+  readonly monthTotals = computed((): MonthTotals => monthTotalsFromSummary(this._summary()));
 
   constructor() {
     toObservable(this.tokens.hasToken)
@@ -127,6 +159,7 @@ export class FinancesFacadeService {
       month: of(selected),
       categories: this.categoryApi.getAll(),
       transactions: this.transactionApi.getByMonth(selected.year, selected.month),
+      summary: this.summaryApi.get(selected.year, selected.month),
     }).pipe(catchError(() => of(null)));
   }
 
@@ -141,6 +174,7 @@ export class FinancesFacadeService {
   private markLoaded(payload: MonthPayload): void {
     this._categories.set(payload.categories);
     this._transactions.set(payload.transactions);
+    this._summary.set(payload.summary);
     this._loadedMonth.set(payload.month);
     this._loadState.set(LOAD_STATE.ok);
     this._lastLoadFailed.set(false);
@@ -158,6 +192,7 @@ export class FinancesFacadeService {
   resetState(): void {
     this._categories.set([]);
     this._transactions.set([]);
+    this._summary.set(null);
     this._loadedMonth.set(null);
     this._loadState.set(LOAD_STATE.loading);
     this._lastLoadFailed.set(false);
@@ -204,7 +239,7 @@ export class FinancesFacadeService {
     return this.categoryApi.update(cat.id, dto).pipe(
       tap((updated) => {
         this._categories.update((list) => list.map((c) => (c.id === updated.id ? updated : c)));
-        this.notifyChange(updated.flow);
+        this.reloadAndNotify(updated.flow);
       })
     );
   }
@@ -224,32 +259,30 @@ export class FinancesFacadeService {
     return this.transactionApi.create(dto).pipe(
       tap((created) => {
         this._transactions.update((list) => [...list, created]);
-        this.notifyChange(created.flow);
+        this.reloadAndNotify(created.flow);
       }),
-      this.refreshWhenResponseLost(this.getCategory(dto.categoryId)?.flow)
+      this.refreshWhenResponseLost(this.flowOfNewTransaction(dto))
     );
+  }
+
+  private flowOfNewTransaction(dto: TransactionCreateDto): Flow | undefined {
+    if (dto.investmentAccountId != null) return INVESTMENT_FLOW;
+    return dto.categoryId == null ? undefined : this.getCategory(dto.categoryId)?.flow;
   }
 
   createRecurrence(dto: RecurrenceCreateDto) {
     const flow = this.getCategory(dto.categoryId)?.flow;
     return this.recurrenceApi.create(dto).pipe(
-      tap(() => this.afterTransactionChange(flow)),
+      tap(() => this.reloadAndNotify(flow)),
       this.refreshWhenResponseLost(flow)
     );
   }
 
   updateTransaction(t: Transaction, options?: { applyToFutureSeries?: boolean }) {
-    const dto: TransactionCreateDto = {
-      categoryId: t.categoryId,
-      description: t.description,
-      amount: t.amount,
-      date: t.date,
-      schedule: t.schedule,
-    };
     return this.transactionApi
-      .update(t.id, dto, options?.applyToFutureSeries === true)
+      .update(t.id, toWriteDto(t), options?.applyToFutureSeries === true)
       .pipe(
-        tap(() => this.afterTransactionChange(t.flow)),
+        tap(() => this.reloadAndNotify(t.flow)),
         this.refreshWhenResponseLost(t.flow)
       );
   }
@@ -258,23 +291,23 @@ export class FinancesFacadeService {
     const flow = this._transactions().find((t) => t.id === id)?.flow;
     return this.transactionApi
       .delete(id, options?.applyToFutureSeries === true)
-      .pipe(tap(() => this.afterTransactionChange(flow)));
+      .pipe(tap(() => this.reloadAndNotify(flow)));
   }
 
-  restoreTransactions(transactions: TransactionRestoreDto[]) {
+  restoreTransactions(transactions: TransactionRestoreDto[], reopenSeries: SeriesReopenDto[] = []) {
     return this.transactionApi
-      .restore(transactions)
-      .pipe(tap((restored) => this.afterTransactionChange(restored[0]?.flow)));
+      .restore(transactions, reopenSeries)
+      .pipe(tap((restored) => this.reloadAndNotify(restored[0]?.flow)));
   }
 
   private refreshWhenResponseLost<T>(flow: Flow | undefined): MonoTypeOperatorFunction<T> {
     return catchError((err: unknown) => {
-      if (isLostResponse(err)) this.afterTransactionChange(flow);
+      if (isLostResponse(err)) this.reloadAndNotify(flow);
       return throwError(() => err);
     });
   }
 
-  private afterTransactionChange(flow: Flow | undefined): void {
+  private reloadAndNotify(flow: Flow | undefined): void {
     this.reloadCurrentMonth();
     this.notifyChange(flow);
   }

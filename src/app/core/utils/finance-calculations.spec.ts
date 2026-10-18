@@ -1,13 +1,15 @@
-import { Category, Transaction } from '../models/finances.models';
-import { computeMonthTotals, filterTransactionsByMonth, transactionInMonth } from './finance-calculations';
+import { Transaction } from '../models/finances.models';
+import { FinanceSummaryDto } from '../services/finance-summary-api.service';
+import {
+  EMPTY_MONTH_TOTALS,
+  filterTransactionsByMonth,
+  isWithdrawal,
+  monthTotalsFromSummary,
+  signedInvestmentAmount,
+  transactionInMonth,
+} from './finance-calculations';
 
 describe('finance-calculations', () => {
-  const categories: Category[] = [
-    { id: 1, name: 'Salário', flow: 'income' },
-    { id: 2, name: 'Aluguel', flow: 'expense', expenseGroup: 'essential' },
-    { id: 3, name: 'Lazer', flow: 'expense', expenseGroup: 'nonEssential' },
-    { id: 4, name: 'Tesouro', flow: 'investment' },
-  ];
   const transactions: Transaction[] = [
     {
       id: 101,
@@ -36,15 +38,6 @@ describe('finance-calculations', () => {
       schedule: 'variable',
       flow: 'expense',
     },
-    {
-      id: 104,
-      categoryId: 4,
-      description: 'Aporte',
-      amount: 500,
-      date: '2026-04-10',
-      schedule: 'variable',
-      flow: 'investment',
-    },
   ];
 
   it('transactionInMonth', () => {
@@ -53,35 +46,53 @@ describe('finance-calculations', () => {
   });
 
   it('filterTransactionsByMonth', () => {
-    const m = filterTransactionsByMonth(transactions, 2026, 4);
-    expect(m.length).toBe(3);
+    expect(filterTransactionsByMonth(transactions, 2026, 4).length).toBe(2);
   });
 
-  it('computeMonthTotals', () => {
-    const t = computeMonthTotals(categories, transactions, 2026, 4);
-    expect(t.totalIncome).toBe(5000);
-    expect(t.totalEssential).toBe(2000);
-    expect(t.totalNonEssential).toBe(0);
-    expect(t.totalExpenses).toBe(2000);
-    expect(t.totalInvestments).toBe(500);
-    expect(t.balance).toBe(2500);
+  describe('aporte e resgate', () => {
+    it('resgate vem com valor positivo e direção', () => {
+      const resgate = { amount: 200, direction: 'withdrawal' as const };
+
+      expect(isWithdrawal(resgate)).toBeTrue();
+      expect(signedInvestmentAmount(resgate)).toBe(-200);
+    });
+
+    it('aporte soma no investimento líquido', () => {
+      const aporte = { amount: 500, direction: 'contribution' as const };
+
+      expect(isWithdrawal(aporte)).toBeFalse();
+      expect(signedInvestmentAmount(aporte)).toBe(500);
+    });
+
+    it('lançamento antigo sem direção usa o sinal do valor', () => {
+      expect(signedInvestmentAmount({ amount: -300, direction: null })).toBe(-300);
+      expect(signedInvestmentAmount({ amount: 300 })).toBe(300);
+    });
   });
 
-  it('computeMonthTotals subtracts investment resgates (negative amounts)', () => {
-    const withResgate: Transaction[] = [
-      ...transactions,
-      {
-        id: 105,
-        categoryId: 4,
-        description: 'Resgate parcial',
-        amount: -200,
-        date: '2026-04-20',
-        schedule: 'variable',
-        flow: 'investment',
-      },
-    ];
-    const t = computeMonthTotals(categories, withResgate, 2026, 4);
-    expect(t.totalInvestments).toBe(300);
-    expect(t.balance).toBe(2700);
+  describe('monthTotalsFromSummary', () => {
+    it('usa o resumo do backend como fonte única dos totais', () => {
+      const summary = {
+        totalIncome: 4989.98,
+        totalEssential: 1229,
+        totalNonEssential: 3760.15,
+        totalExpenses: 4989.15,
+        netInvested: -150,
+        monthBalance: 150.83,
+      } as FinanceSummaryDto;
+
+      expect(monthTotalsFromSummary(summary)).toEqual({
+        totalIncome: 4989.98,
+        totalEssential: 1229,
+        totalNonEssential: 3760.15,
+        totalExpenses: 4989.15,
+        totalInvestments: -150,
+        balance: 150.83,
+      });
+    });
+
+    it('sem resumo devolve totais zerados', () => {
+      expect(monthTotalsFromSummary(null)).toEqual(EMPTY_MONTH_TOTALS);
+    });
   });
 });

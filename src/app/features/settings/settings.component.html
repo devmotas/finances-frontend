@@ -40,35 +40,8 @@
             <lucide-icon name="settings" [size]="28" [strokeWidth]="2"></lucide-icon>
           </div>
           <div class="field">
-            <label class="field__label" for="settings-default-months">Meses para frente (padrão)</label>
-            <input
-              id="settings-default-months"
-              class="field__input"
-              type="number"
-              [min]="limits.monthsMin"
-              [max]="limits.monthsMax"
-              formControlName="defaultRecurrenceMonths"
-              [attr.aria-invalid]="isInvalid(prefsForm.controls.defaultRecurrenceMonths)"
-              [attr.aria-describedby]="
-                describedBy(
-                  'settings-default-months-hint',
-                  isInvalid(prefsForm.controls.defaultRecurrenceMonths) && 'settings-default-months-err'
-                )
-              "
-            />
-            <span id="settings-default-months-hint" class="field__hint">
-              Entre {{ limits.monthsMin }} e {{ limits.monthsMax }} meses. Esse valor pré-preenche o campo
-              “Repetir por (meses)” ao lançar uma entrada ou saída <strong>fixa</strong>.
-            </span>
-            @if (isInvalid(prefsForm.controls.defaultRecurrenceMonths)) {
-              <span id="settings-default-months-err" class="field__err" role="alert">
-                Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.
-              </span>
-            }
-          </div>
-          <div class="field">
             <label class="field__label" for="settings-emergency-months">
-              Meta do fundo de emergência (meses de despesa)
+              Meta da reserva (meses)
             </label>
             <input
               id="settings-emergency-months"
@@ -86,8 +59,8 @@
               "
             />
             <span id="settings-emergency-months-hint" class="field__hint">
-              Usado na tela <strong>Reserva</strong> para a barra de progresso: quantos meses de despesa do mês
-              selecionado você deseja cobrir. Ex.: 6 para uma reserva de 6 meses de gastos.
+              Quantos meses de despesa de referência (média das saídas essenciais dos últimos 6 meses fechados) a
+              reserva de emergência deve cobrir. Ex.: 6.
             </span>
             @if (isInvalid(prefsForm.controls.emergencyFundTargetMonths)) {
               <span id="settings-emergency-months-err" class="field__err" role="alert">

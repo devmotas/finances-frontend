@@ -1,28 +1,13 @@
 import { CurrencyPipe, PercentPipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { Component, computed, inject } from '@angular/core';
 import { ChartConfiguration, ChartData } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { LucideAngularModule } from 'lucide-angular';
-import {
-  catchError,
-  combineLatest,
-  distinctUntilChanged,
-  filter,
-  map,
-  of,
-  switchMap,
-  tap,
-} from 'rxjs';
 import { Category, Transaction } from '../../core/models/finances.models';
-import { AuthTokenService } from '../../core/services/auth-token.service';
-import {
-  FinanceSummaryApiService,
-  FinanceSummaryDto,
-} from '../../core/services/finance-summary-api.service';
+import { FinanceSummaryDto } from '../../core/services/finance-summary-api.service';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
-import { categoryMap } from '../../core/utils/finance-calculations';
+import { categoryMap, isWithdrawal } from '../../core/utils/finance-calculations';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
 import {
@@ -55,12 +40,24 @@ interface ChartTableRow {
 
 const FLOW_ROWS: readonly { flow: ChartFlow; label: string }[] = [
   { flow: 'income', label: 'Entradas' },
-  { flow: 'essential', label: 'Despesas essenciais' },
-  { flow: 'nonEssential', label: 'Despesas não essenciais' },
-  { flow: 'investment', label: 'Investimentos' },
+  { flow: 'essential', label: 'Saídas essenciais' },
+  { flow: 'nonEssential', label: 'Saídas não essenciais' },
+  { flow: 'investment', label: 'Aportes' },
 ];
 
-const COMPOSITION_ROW_LABEL = 'Composição das despesas';
+const COMPOSITION_ROW_LABEL = 'Composição das saídas';
+
+const MONTH_NAME_FORMAT: Intl.DateTimeFormatOptions = { month: 'long' };
+const LOCALE = 'pt-BR';
+
+function monthName(year: number, month: number): string {
+  const raw = new Date(year, month - 1, 1).toLocaleDateString(LOCALE, MONTH_NAME_FORMAT);
+  return raw.charAt(0).toUpperCase() + raw.slice(1);
+}
+
+function hasMonthActivity(s: FinanceSummaryDto): boolean {
+  return s.totalIncome > 0 || s.totalExpenses > 0 || s.totalContributions > 0 || s.totalWithdrawals > 0;
+}
 
 const ROW_LABELS = [...FLOW_ROWS.map((row) => row.label), COMPOSITION_ROW_LABEL];
 
@@ -90,7 +87,7 @@ function buildCategorySlices(categories: Category[], monthTx: Transaction[]): Ca
     if (t.flow === 'income') {
       b.income += t.amount;
     } else if (t.flow === 'investment') {
-      b.investment += t.amount;
+      if (!isWithdrawal(t)) b.investment += t.amount;
     } else if (cat.flow === 'expense') {
       if (cat.expenseGroup === 'essential') b.essential += t.amount;
       else if (cat.expenseGroup === 'nonEssential') b.nonEssential += t.amount;
@@ -191,18 +188,23 @@ function buildStackedBarData(
 })
 export class OverviewComponent {
   readonly facade = inject(FinancesFacadeService);
-  private readonly summaryApi = inject(FinanceSummaryApiService);
   private readonly monthCtx = inject(MonthContextService);
-  private readonly tokens = inject(AuthTokenService);
-  private readonly destroyRef = inject(DestroyRef);
 
-  readonly financeSummary = signal<FinanceSummaryDto | null>(null);
+  readonly summary = this.facade.summary;
 
-  readonly totals = computed(() => this.facade.monthTotals());
+  readonly selectedMonthName = computed(() => {
+    const { year, month } = this.monthCtx.selectedMonth();
+    return monthName(year, month);
+  });
+
+  readonly nextMonthName = computed(() => {
+    const next = this.summary()?.nextMonth;
+    return next ? monthName(next.year, next.month) : '';
+  });
 
   readonly hasData = computed(() => {
-    const t = this.totals();
-    return t.totalIncome > 0 || t.totalExpenses > 0 || t.totalInvestments > 0;
+    const s = this.summary();
+    return s !== null && hasMonthActivity(s);
   });
 
   private readonly categorySlices = computed(() =>
@@ -210,7 +212,7 @@ export class OverviewComponent {
   );
 
   readonly overviewChartData = computed((): ChartData<'bar'> => {
-    const t = this.totals();
+    const t = this.facade.monthTotals();
     return buildStackedBarData(this.categorySlices(), t.totalEssential, t.totalNonEssential);
   });
 
@@ -286,25 +288,4 @@ export class OverviewComponent {
       },
     },
   };
-
-  constructor() {
-    combineLatest([toObservable(this.monthCtx.selectedMonth), toObservable(this.tokens.hasToken)])
-      .pipe(
-        distinctUntilChanged(
-          (a, b) =>
-            a[0].year === b[0].year && a[0].month === b[0].month && a[1] === b[1]
-        ),
-        tap(([, has]) => {
-          if (!has) this.financeSummary.set(null);
-        }),
-        filter(([, has]) => has),
-        map(([ym]) => ym),
-        tap(() => this.financeSummary.set(null)),
-        switchMap((ym) =>
-          this.summaryApi.get(ym.year, ym.month).pipe(catchError(() => of(null as FinanceSummaryDto | null)))
-        ),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((s) => this.financeSummary.set(s));
-  }
 }
