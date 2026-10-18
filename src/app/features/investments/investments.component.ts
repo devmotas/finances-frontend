@@ -21,12 +21,25 @@ import { TransactionDeletion } from '../../shared/components/series-delete-modal
 import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
-import { CHART_SEGMENT_BORDER, cssToken, flowShade, formatCompactBrl } from '../../shared/charts/chart-theme';
+import {
+  CHART_SEGMENT_BORDER,
+  cssToken,
+  flowShade,
+  formatCompactBrl,
+} from '../../shared/charts/chart-theme';
+import { formatBrl } from '../../core/utils/brl-format';
+import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
 
 const INITIAL_BALANCE_SHADE = 3;
 const MONTH_SHADE = 0;
 
 const INVESTMENT_FLOW: Flow = 'investment';
+
+interface EvolutionDataRow {
+  label: string;
+  invested: number;
+  cumulativeWealth: number;
+}
 
 function isWithdrawal(t: Transaction): boolean {
   return t.amount < 0;
@@ -43,6 +56,7 @@ function isWithdrawal(t: Transaction): boolean {
     SeriesDeleteModalComponent,
     MonthLoadErrorComponent,
     MonthLoadingComponent,
+    TransactionActionLabelPipe,
   ],
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.scss',
@@ -107,6 +121,27 @@ export class InvestmentsComponent {
       const d = new Date(p.year, p.month - 1, 1);
       return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
     });
+  });
+
+  readonly chartDataRows = computed((): EvolutionDataRow[] => {
+    const labels = this.chartLabels();
+    return (this.apiMeta()?.monthlySeries ?? []).map((point, index) => ({
+      label: labels[index],
+      invested: point.invested,
+      cumulativeWealth: point.cumulativeWealth,
+    }));
+  });
+
+  readonly evolutionChartSummary = computed(() => {
+    const rows = this.chartDataRows();
+    const first = rows.at(0);
+    const last = rows.at(-1);
+    if (!first || !last) return '';
+    return (
+      `Evolução dos investimentos: patrimônio acumulado passa de ${formatBrl(first.cumulativeWealth)} ` +
+      `em ${first.label} para ${formatBrl(last.cumulativeWealth)} em ${last.label}. ` +
+      'Valores detalhados em "Ver dados do gráfico".'
+    );
   });
 
   readonly useStackedInvestmentChart = computed(() => {

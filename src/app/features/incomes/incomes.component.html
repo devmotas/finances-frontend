@@ -10,14 +10,16 @@
       }
     </div>
     <div class="page__actions">
-      <div class="export-menu">
+      <div class="export-menu" [appExportMenuDisclosure]="reportExport">
         <button
           type="button"
+          #exportTrigger
           class="btn btn--ghost export-menu__trigger"
           [appBusyButton]="reportExport.isExporting()"
           [busyLabel]="busyLabel.exporting"
           (click)="reportExport.toggleMenu($event)"
           [attr.aria-expanded]="reportExport.isMenuOpen()"
+          [attr.aria-controls]="reportExport.isMenuOpen() ? 'incomes-export-menu' : null"
           title="Exportar relatório"
         >
           <lucide-icon name="download" [size]="18" [strokeWidth]="2"></lucide-icon>
@@ -31,7 +33,7 @@
           ></lucide-icon>
         </button>
         @if (reportExport.isMenuOpen()) {
-          <div class="export-menu__panel" (click)="$event.stopPropagation()">
+          <div id="incomes-export-menu" class="export-menu__panel" (click)="$event.stopPropagation()">
             <label class="export-menu__field">
               <span class="export-menu__label">Período</span>
               <select class="export-menu__select" [value]="reportExport.period()" (change)="reportExport.onPeriodChange($event)">
@@ -73,11 +75,12 @@
   } @else if (facade.isMonthDataPending()) {
     <app-month-loading />
   } @else {
-    <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    <div class="chips" role="group" aria-label="Filtrar por categoria">
       <button
         type="button"
         class="chip chip--system"
         [class.chip--active]="filterCategoryId() === null"
+        [attr.aria-pressed]="filterCategoryId() === null"
         (click)="selectAllFilter()"
       >
         Todos
@@ -87,6 +90,7 @@
           type="button"
           class="chip"
           [class.chip--active]="filterCategoryId() === c.id"
+          [attr.aria-pressed]="filterCategoryId() === c.id"
           (click)="toggleCategoryFilter(c.id)"
         >
           {{ c.name }}
@@ -120,6 +124,7 @@
                   @if (txHasRecurrence(t)) {
                     <span
                       class="tx-list__serie"
+                      role="img"
                       title="Parte de uma série recorrente"
                       aria-label="Recorrente"
                     >
@@ -136,8 +141,20 @@
                   t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
                 }}</span>
                 <div class="tx-list__actions">
-                  <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
-                  <button type="button" class="link-btn link-btn--danger" (click)="deletion.request(t)">
+                  <button
+                    type="button"
+                    class="link-btn"
+                    [attr.aria-label]="t | transactionActionLabel: 'Editar' : facade.getCategory(t.categoryId)?.name"
+                    (click)="editTx(t)"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="link-btn link-btn--danger"
+                    [attr.aria-label]="t | transactionActionLabel: 'Excluir' : facade.getCategory(t.categoryId)?.name"
+                    (click)="deletion.request(t)"
+                  >
                     Excluir
                   </button>
                 </div>

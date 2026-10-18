@@ -25,20 +25,14 @@
     </div>
     @if (facade.isMonthDataReady()) {
       <p class="page__stats" role="group" aria-label="Resumo de investimentos no mês selecionado">
-        <span
-          class="page__stat"
-          title="Soma líquida no mês: aportes (positivos) menos resgates (saídas da categoria)."
-        >
+        <span class="page__stat">
           <span class="page__stat-label">Investimentos no mês (líquido)</span>
           <span class="page__stat-value page__stat-value--month">{{
             monthInvested() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
           }}</span>
         </span>
         <span class="page__stat-sep" aria-hidden="true"></span>
-        <span
-          class="page__stat"
-          title="Soma dos saldos iniciais nas categorias de investimento mais todos os aportes com data anterior ao primeiro dia do mês selecionado."
-        >
+        <span class="page__stat">
           <span class="page__stat-label">Patrimônio antes do mês</span>
           <span class="page__stat-value page__stat-value--acc">
             @if (positionBeforeMonth() !== null) {
@@ -49,10 +43,7 @@
           </span>
         </span>
         <span class="page__stat-sep" aria-hidden="true"></span>
-        <span
-          class="page__stat"
-          title="Patrimônio antes do mês mais os aportes registrados até o último dia do mês selecionado."
-        >
+        <span class="page__stat">
           <span class="page__stat-label">Patrimônio no fim do mês</span>
           <span class="page__stat-value page__stat-value--total">
             @if (positionThroughMonthEnd() !== null) {
@@ -63,6 +54,20 @@
           </span>
         </span>
       </p>
+      <details class="disclosure page__stats-help">
+        <summary class="disclosure__toggle">
+          Como calculamos estes valores
+          <lucide-icon name="chevron-down" [size]="16" [strokeWidth]="2.5" class="disclosure__chevron"></lucide-icon>
+        </summary>
+        <dl class="page__stats-defs">
+          <dt>Investimentos no mês (líquido)</dt>
+          <dd>Aportes do mês menos os resgates.</dd>
+          <dt>Patrimônio antes do mês</dt>
+          <dd>Saldos iniciais das categorias mais os aportes feitos antes do dia 1º do mês.</dd>
+          <dt>Patrimônio no fim do mês</dt>
+          <dd>Patrimônio antes do mês mais os aportes registrados até o último dia do mês.</dd>
+        </dl>
+      </details>
     }
   </div>
 
@@ -79,14 +84,46 @@
           <strong>Saldo inicial</strong>). A linha é o patrimônio acumulado (inicial + aportes até o fim de cada
           período).
         </p>
-        <div class="inv-chart" role="img" aria-label="Gráfico: saldo inicial e últimos 12 meses de investimentos">
+        <div class="inv-chart">
           <canvas
             baseChart
+            role="img"
+            [attr.aria-label]="evolutionChartSummary()"
             [data]="evolutionChartData()"
             [options]="evolutionChartOptions()"
             [type]="evolutionChartType"
           ></canvas>
         </div>
+
+        <details class="disclosure chart-data">
+          <summary class="disclosure__toggle">
+            Ver dados do gráfico
+            <lucide-icon name="chevron-down" [size]="16" [strokeWidth]="2.5" class="disclosure__chevron"></lucide-icon>
+          </summary>
+          <div class="chart-data__scroll">
+            <table class="chart-data__table">
+              <caption class="chart-data__caption">
+                Valor aplicado em cada período e patrimônio acumulado ao fim dele.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Período</th>
+                  <th scope="col">No período</th>
+                  <th scope="col">Patrimônio acumulado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of chartDataRows(); track $index) {
+                  <tr>
+                    <th scope="row">{{ row.label }}</th>
+                    <td>{{ row.invested | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
+                    <td>{{ row.cumulativeWealth | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </details>
 
         @if (categoryPositionTotals().length > 0) {
           <div class="inv-cat-totals" aria-labelledby="inv-cat-totals-title">
@@ -114,11 +151,12 @@
       </section>
     }
 
-    <div class="chips" role="tablist" aria-label="Filtrar por categoria">
+    <div class="chips" role="group" aria-label="Filtrar por categoria">
       <button
         type="button"
         class="chip chip--system"
         [class.chip--active]="filterCategoryId() === null"
+        [attr.aria-pressed]="filterCategoryId() === null"
         (click)="selectAllFilter()"
       >
         Todos
@@ -128,6 +166,7 @@
           type="button"
           class="chip"
           [class.chip--active]="filterCategoryId() === c.id"
+          [attr.aria-pressed]="filterCategoryId() === c.id"
           (click)="toggleCategoryFilter(c.id)"
         >
           {{ c.name }}
@@ -162,6 +201,7 @@
                   @if (txHasRecurrence(t)) {
                     <span
                       class="tx-list__serie"
+                      role="img"
                       title="Parte de uma série fixa"
                       aria-label="Recorrente"
                     >
@@ -184,8 +224,20 @@
                   t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
                 }}</span>
                 <div class="tx-list__actions">
-                  <button type="button" class="link-btn" (click)="editTx(t)">Editar</button>
-                  <button type="button" class="link-btn link-btn--danger" (click)="deletion.request(t)">
+                  <button
+                    type="button"
+                    class="link-btn"
+                    [attr.aria-label]="t | transactionActionLabel: 'Editar' : facade.getCategory(t.categoryId)?.name"
+                    (click)="editTx(t)"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    type="button"
+                    class="link-btn link-btn--danger"
+                    [attr.aria-label]="t | transactionActionLabel: 'Excluir' : facade.getCategory(t.categoryId)?.name"
+                    (click)="deletion.request(t)"
+                  >
                     Excluir
                   </button>
                 </div>

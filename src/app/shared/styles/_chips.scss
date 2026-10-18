@@ -1,0 +1,76 @@
+@use 'touch';
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.chip {
+  min-height: touch.$min-target;
+  padding: 0.375rem 0.875rem;
+  border-radius: var(--fin-radius-full);
+  border: 1px solid var(--fin-border);
+  background: var(--fin-surface);
+  color: var(--fin-text-secondary);
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-medium);
+  cursor: pointer;
+  transition:
+    border-color var(--fin-transition-fast),
+    background var(--fin-transition-fast),
+    color var(--fin-transition-fast),
+    box-shadow var(--fin-transition-fast);
+}
+
+.chip:hover {
+  border-color: color-mix(in srgb, var(--fin-primary) 45%, var(--fin-border));
+  background: var(--fin-bg-muted);
+  color: var(--fin-text);
+}
+
+.chip--active {
+  border-color: var(--fin-primary);
+  background: var(--fin-primary-muted);
+  color: var(--fin-primary);
+  font-weight: var(--fin-weight-semibold);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fin-primary) 25%, transparent);
+}
+
+.chip--system {
+  font-weight: var(--fin-weight-semibold);
+  border-style: dashed;
+}
+
+.chip--system.chip--active {
+  border-style: solid;
+}
+
+@media (max-width: 767px) {
+  .chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.35rem;
+    margin-inline: -1rem;
+    padding-inline: 1rem;
+    scroll-padding-inline: 1rem;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .chip {
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    min-height: 40px;
+    padding: 0.4rem 0.75rem;
+    font-size: var(--fin-text-sm);
+  }
+}

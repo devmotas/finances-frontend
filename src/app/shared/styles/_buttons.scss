@@ -1,0 +1,77 @@
+@use 'touch';
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: touch.$min-target;
+  padding: 0.5rem 1.125rem;
+  border-radius: var(--fin-radius-sm);
+  font-weight: var(--fin-weight-semibold);
+  font-size: var(--fin-text-base);
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background var(--fin-transition-fast),
+    border-color var(--fin-transition-fast),
+    color var(--fin-transition-fast),
+    box-shadow var(--fin-transition-fast),
+    transform var(--fin-transition-fast);
+}
+
+.btn__icon {
+  display: inline-flex;
+  line-height: 0;
+  color: currentColor;
+}
+
+.btn__icon--lead {
+  margin-inline-end: 0.125rem;
+}
+
+.btn--primary {
+  background: var(--fin-primary);
+  color: #fff;
+  border-color: var(--fin-primary);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.btn--primary:hover {
+  background: var(--fin-primary-hover);
+  border-color: var(--fin-primary-hover);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--fin-primary) 30%, transparent);
+}
+
+.btn--primary:active {
+  transform: translateY(1px);
+}
+
+.btn--secondary {
+  background: var(--fin-surface);
+  color: var(--fin-text-secondary);
+  border-color: var(--fin-border);
+}
+
+.btn--secondary:hover {
+  background: var(--fin-bg-muted);
+  border-color: var(--fin-border-strong);
+  color: var(--fin-text);
+}
+
+.btn--secondary:active {
+  transform: translateY(1px);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--fin-text-secondary);
+  border-color: transparent;
+  min-height: touch.$min-target;
+  padding: 0.4rem 0.65rem;
+  font-size: var(--fin-text-sm);
+}
+
+.btn--ghost:hover {
+  background: var(--fin-bg-muted);
+  color: var(--fin-text);
+}

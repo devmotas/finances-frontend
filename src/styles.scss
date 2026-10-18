@@ -27,6 +27,7 @@
   --fin-text-muted: #56657a;
   --fin-border: #e2e8f0;
   --fin-border-strong: #cbd5e1;
+  --fin-border-input: #7d8ca0;
   --fin-bg-page: #eef2f7;
   --fin-bg-page-2: #e2e8f0;
   --fin-bg-muted: #f1f5f9;
@@ -100,6 +101,11 @@ a {
 
 a:hover {
   color: var(--fin-primary-hover);
+}
+
+:where(button, a, select, input, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--fin-primary);
+  outline-offset: 2px;
 }
 
 .fin-spinner {

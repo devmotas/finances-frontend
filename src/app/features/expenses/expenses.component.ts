@@ -1,5 +1,5 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, HostListener, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { Category, Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
@@ -16,6 +16,8 @@ import { BusyButtonComponent } from '../../shared/components/busy-button/busy-bu
 import { BUSY_LABEL } from '../../shared/components/busy-button/busy-labels';
 import { ReportExport } from '../../shared/report-export/report-export';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
+import { ExportMenuDisclosureDirective } from '../../shared/report-export/export-menu-disclosure.directive';
+import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
 
 @Component({
   selector: 'app-expenses',
@@ -28,6 +30,8 @@ import { MonthLoadingComponent } from '../../shared/components/month-loading/mon
     MonthLoadErrorComponent,
     MonthLoadingComponent,
     BusyButtonComponent,
+    ExportMenuDisclosureDirective,
+    TransactionActionLabelPipe,
   ],
   templateUrl: './expenses.component.html',
   styleUrl: './expenses.component.scss',
@@ -101,11 +105,6 @@ export class ExpensesComponent {
 
   toggleCategoryFilter(id: number): void {
     this.filterCategoryId.update((cur) => (cur === id ? null : id));
-  }
-
-  @HostListener('document:click')
-  closeExportMenu(): void {
-    this.reportExport.closeMenu();
   }
 
   openNewTx(): void {
