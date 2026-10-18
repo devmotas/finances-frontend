@@ -46,3 +46,8 @@ Thumbs.db
 
 # Gerado no build por scripts/write-build-info.mjs
 /src/app/core/build-info/build-info.generated.ts
+
+# Contexto de design (impeccable), só local
+/PRODUCT.md
+/DESIGN.md
+/.impeccable/
