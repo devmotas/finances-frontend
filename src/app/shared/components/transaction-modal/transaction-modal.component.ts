@@ -1,4 +1,4 @@
-import { Component, HostListener, effect, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, HostListener, effect, inject, input, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AbstractControl,
@@ -8,7 +8,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import {
   Flow,
@@ -16,7 +16,9 @@ import {
   InvestmentDirection,
   Transaction,
 } from '../../../core/models/finances.models';
+import { InvestmentAccountRecord } from '../../../core/models/investment-accounts.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
+import { InvestmentAccountsApiService } from '../../../core/services/investment-accounts-api.service';
 import { MonthContextService } from '../../../core/services/month-context.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatNumberToBrlInput, parseBrlToNumber } from '../../../core/utils/brl-parse';
@@ -36,7 +38,10 @@ import {
   planFromTotal,
 } from './installment-plan';
 import {
+  destinationAccountIdFrom,
   INSTALLMENTS_MIN,
+  NO_DESTINATION,
+  offersDestination,
   RECURRENCE,
   RecurrenceChoice,
   RecurrenceOption,
@@ -54,6 +59,7 @@ const SERIES_UPDATE_SCOPE = {
 type SeriesUpdateScope = (typeof SERIES_UPDATE_SCOPE)[keyof typeof SERIES_UPDATE_SCOPE];
 
 const INVESTMENT_FLOW = 'investment' satisfies Flow;
+const INCOME_FLOW = 'income' satisfies Flow;
 const WITHDRAWAL_INTENT = 'resgate';
 const DEFAULT_INSTALLMENTS = 10;
 const FIRST_DAY_OF_MONTH = '01';
@@ -131,7 +137,11 @@ export class TransactionModalComponent {
   private readonly facade = inject(FinancesFacadeService);
   private readonly monthCtx = inject(MonthContextService);
   private readonly toast = inject(ToastService);
+  private readonly accountsApi = inject(InvestmentAccountsApiService);
+  private readonly destroyRef = inject(DestroyRef);
   readonly limits = VALIDATION_LIMITS;
+  readonly noDestination = NO_DESTINATION;
+  readonly destinationAccounts = signal<InvestmentAccountRecord[]>([]);
   readonly installmentsMin = INSTALLMENTS_MIN;
   readonly recurrence = RECURRENCE;
   readonly scope = SERIES_UPDATE_SCOPE;
@@ -158,6 +168,7 @@ export class TransactionModalComponent {
       Validators.max(VALIDATION_LIMITS.monthsMax),
     ]),
     amountIsTotal: this.fb.nonNullable.control(false),
+    destinationAccountId: this.fb.nonNullable.control(NO_DESTINATION),
     seriesUpdateScope: this.fb.nonNullable.control<SeriesUpdateScope>(SERIES_UPDATE_SCOPE.thisMonth),
   });
 
@@ -214,11 +225,23 @@ export class TransactionModalComponent {
         recurrence: RECURRENCE.single,
         installments: DEFAULT_INSTALLMENTS,
         amountIsTotal: false,
+        destinationAccountId: NO_DESTINATION,
         seriesUpdateScope: SERIES_UPDATE_SCOPE.thisMonth,
       },
       { emitEvent: false }
     );
     this.syncInstallmentControls(RECURRENCE.single);
+    if (this.flow() === INCOME_FLOW) this.loadDestinationAccounts();
+  }
+
+  private loadDestinationAccounts(): void {
+    this.accountsApi
+      .list()
+      .pipe(
+        catchError(() => of([])),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((accounts) => this.destinationAccounts.set(accounts));
   }
 
   private syncInstallmentControls(choice: RecurrenceChoice): void {
@@ -284,6 +307,19 @@ export class TransactionModalComponent {
 
   isInstallmentSelected(): boolean {
     return this.showRecurrenceChoice() && this.form.controls.recurrence.value === RECURRENCE.installment;
+  }
+
+  showsDestination(): boolean {
+    return (
+      this.showRecurrenceChoice() &&
+      offersDestination(this.flow(), this.form.controls.recurrence.value) &&
+      this.destinationAccounts().length > 0
+    );
+  }
+
+  private chosenDestinationAccountId(): number | null {
+    if (!this.showsDestination()) return null;
+    return destinationAccountIdFrom(this.form.controls.destinationAccountId.value);
   }
 
   installmentPreviewText(): string | null {
@@ -423,6 +459,7 @@ export class TransactionModalComponent {
       amount,
       installments: this.form.controls.installments.value,
       amountIsTotal: this.form.controls.amountIsTotal.value,
+      destinationAccountId: this.chosenDestinationAccountId(),
     });
     if (!request || choice === RECURRENCE.single) return;
     if (choice === RECURRENCE.installment && !this.currentInstallmentPlan()) {

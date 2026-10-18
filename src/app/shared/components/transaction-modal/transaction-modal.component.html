@@ -149,6 +149,28 @@
           </div>
         }
 
+        @if (showsDestination()) {
+          <div class="field">
+            <label class="field__label" for="tx-destination">
+              Guardar direto em <span class="field__optional">(opcional)</span>
+            </label>
+            <select
+              id="tx-destination"
+              class="field__input"
+              formControlName="destinationAccountId"
+              aria-describedby="tx-destination-hint"
+            >
+              <option [value]="noDestination">Nenhuma conta (fica no caixa)</option>
+              @for (account of destinationAccounts(); track account.id) {
+                <option [value]="account.id">{{ account.name }}</option>
+              }
+            </select>
+            <span id="tx-destination-hint" class="field__hint">
+              Todo mês a entrada já vira aporte nessa conta; o caixa não muda.
+            </span>
+          </div>
+        }
+
         @if (isInstallmentSelected()) {
           <div class="field">
             <label class="field__label" for="tx-installments">Número de parcelas</label>

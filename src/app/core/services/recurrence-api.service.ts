@@ -12,6 +12,7 @@ interface RecurrenceBaseDto {
 export interface FixedRecurrenceCreateDto extends RecurrenceBaseDto {
   kind: typeof SERIES_KIND.fixed;
   amount: number;
+  destinationAccountId?: number;
 }
 
 export interface InstallmentRecurrenceCreateDto extends RecurrenceBaseDto {
@@ -32,6 +33,7 @@ export interface SeriesDto {
   startDate: string;
   endMonth: string | null;
   installmentTotal: number | null;
+  destinationAccountId: number | null;
 }
 
 export interface RecurrenceCreatedDto {

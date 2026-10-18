@@ -26,6 +26,15 @@ describe('InvestmentAccountsApiService', () => {
 
   afterEach(() => http.verify());
 
+  it('lista as contas com GET /investment-accounts', () => {
+    let names: string[] = [];
+    api.list().subscribe((accounts) => (names = accounts.map((a) => a.name)));
+    const req = http.expectOne('/investment-accounts');
+    expect(req.request.method).toBe('GET');
+    req.flush([{ id: 1, ...dto }]);
+    expect(names).toEqual(['Caixinha']);
+  });
+
   it('cria a conta com POST /investment-accounts', () => {
     api.create(dto).subscribe();
     const req = http.expectOne('/investment-accounts');

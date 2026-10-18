@@ -13,6 +13,10 @@ export class InvestmentAccountsApiService {
   private readonly http = inject(HttpClient);
   private readonly base = '/investment-accounts';
 
+  list(): Observable<InvestmentAccountRecord[]> {
+    return this.http.get<InvestmentAccountRecord[]>(this.base);
+  }
+
   create(dto: InvestmentAccountSaveDto): Observable<InvestmentAccountRecord> {
     return this.http.post<InvestmentAccountRecord>(this.base, dto);
   }

@@ -1,8 +1,11 @@
 import { CurrencyPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { catchError, map, of } from 'rxjs';
 import { LucideAngularModule } from 'lucide-angular';
 import { Transaction } from '../../core/models/finances.models';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
+import { InvestmentAccountsApiService } from '../../core/services/investment-accounts-api.service';
 import { MonthContextService } from '../../core/services/month-context.service';
 import { ReportsApiService } from '../../core/services/reports-api.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -53,6 +56,16 @@ export class IncomesComponent {
   );
   readonly busyLabel = BUSY_LABEL;
 
+  private readonly accountNames = toSignal(
+    inject(InvestmentAccountsApiService)
+      .list()
+      .pipe(
+        map((accounts) => new Map(accounts.map((a) => [a.id, a.name]))),
+        catchError(() => of(new Map<number, string>()))
+      ),
+    { initialValue: new Map<number, string>() }
+  );
+
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);
   readonly editingTx = signal<Transaction | null>(null);
@@ -68,6 +81,10 @@ export class IncomesComponent {
   readonly total = computed(() => this.facade.monthTotals().totalIncome);
 
   readonly categories = computed(() => this.facade.incomeCategories());
+
+  destinationName(t: Transaction): string | null {
+    return t.destinationAccountId == null ? null : (this.accountNames().get(t.destinationAccountId) ?? null);
+  }
 
   openCategory(): void {
     this.categoryOpen.set(true);

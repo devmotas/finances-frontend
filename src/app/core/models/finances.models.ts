@@ -37,6 +37,7 @@ export interface Transaction {
   seriesKind?: SeriesKind | null;
   seriesEndsOn?: string | null;
   installmentTotal?: number | null;
+  destinationAccountId?: number | null;
 }
 
 export interface CategoryCreateDto {

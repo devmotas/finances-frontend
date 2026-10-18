@@ -120,7 +120,7 @@
                 @if (t.description | transactionDescription; as description) {
                   <span class="tx-list__desc">{{ description }}</span>
                 }
-                <app-transaction-badges [transaction]="t" />
+                <app-transaction-badges [transaction]="t" [destinationName]="destinationName(t)" />
               </div>
               <div class="tx-list__side">
                 <span class="tx-list__amount tx-list__amount--in">{{

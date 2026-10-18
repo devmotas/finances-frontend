@@ -11,6 +11,8 @@ export type RecurrenceChoice = (typeof RECURRENCE)[keyof typeof RECURRENCE];
 
 export const INSTALLMENTS_MIN = 2;
 
+export const NO_DESTINATION = '';
+
 export interface RecurrenceOption {
   readonly value: RecurrenceChoice;
   readonly label: string;
@@ -36,11 +38,24 @@ const INSTALLMENT_OPTION: RecurrenceOption = {
 };
 
 const EXPENSE_FLOW: Flow = 'expense';
+const INCOME_FLOW: Flow = 'income';
 
 export function recurrenceOptionsFor(flow: Flow): readonly RecurrenceOption[] {
   return flow === EXPENSE_FLOW
     ? [SINGLE_OPTION, FIXED_OPTION, INSTALLMENT_OPTION]
     : [SINGLE_OPTION, FIXED_OPTION];
+}
+
+export function offersDestination(flow: Flow, choice: RecurrenceChoice): boolean {
+  return flow === INCOME_FLOW && choice === RECURRENCE.fixed;
+}
+
+export function destinationAccountIdFrom(value: string): number | null {
+  return value === NO_DESTINATION ? null : Number(value);
+}
+
+function destinationOf(accountId: number | null): { destinationAccountId?: number } {
+  return accountId === null ? {} : { destinationAccountId: accountId };
 }
 
 export interface SeriesFormValue {
@@ -51,11 +66,14 @@ export interface SeriesFormValue {
   readonly amount: number;
   readonly installments: number;
   readonly amountIsTotal: boolean;
+  readonly destinationAccountId: number | null;
 }
 
 export function seriesRequest(v: SeriesFormValue): RecurrenceCreateDto | null {
   const base = { categoryId: v.categoryId, description: v.description, startDate: v.startDate };
-  if (v.choice === RECURRENCE.fixed) return { ...base, kind: SERIES_KIND.fixed, amount: v.amount };
+  if (v.choice === RECURRENCE.fixed) {
+    return { ...base, kind: SERIES_KIND.fixed, amount: v.amount, ...destinationOf(v.destinationAccountId) };
+  }
   if (v.choice !== RECURRENCE.installment) return null;
   const value = v.amountIsTotal ? { totalAmount: v.amount } : { amount: v.amount };
   return { ...base, kind: SERIES_KIND.installment, installments: v.installments, ...value };

@@ -5,6 +5,9 @@
     </span>
   }
   <span class="badges__kind">{{ kindLabel() }}</span>
+  @if (destinationTitle(); as title) {
+    <span class="badges__kind" [attr.title]="title">→ {{ destinationName() }}</span>
+  }
   @if (endingNotice(); as notice) {
     <span class="badges__warning">
       <lucide-icon name="triangle-alert" [size]="14" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
