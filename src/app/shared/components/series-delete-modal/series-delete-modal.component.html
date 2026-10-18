@@ -22,7 +22,7 @@
       <div id="series-delete-desc" class="modal__text">
         <p class="modal__question">Excluir {{ itemLabel() }}?</p>
         @if (isSeries()) {
-          <p class="modal__detail">Ele faz parte de uma série fixa. Escolha até onde excluir.</p>
+          <p class="modal__detail">{{ copy().detail }}</p>
         }
       </div>
 
@@ -48,7 +48,7 @@
             (click)="deleteThisAndFuture()"
           >
             <span class="scope-option__title">Este e os próximos</span>
-            <span class="scope-option__hint">Apaga este mês e todos os seguintes da série.</span>
+            <span class="scope-option__hint">{{ copy().futureHint }}</span>
           </button>
         </div>
       }

@@ -1,6 +1,7 @@
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  CalendarClock,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -25,6 +26,7 @@ import {
   Tag,
   TrendingDown,
   TrendingUp,
+  TriangleAlert,
   User,
   UserPlus,
   Wallet,
@@ -34,6 +36,7 @@ import {
 export const APP_LUCIDE_ICONS = {
   ArrowDownLeft,
   ArrowUpRight,
+  CalendarClock,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -58,6 +61,7 @@ export const APP_LUCIDE_ICONS = {
   Tag,
   TrendingDown,
   TrendingUp,
+  TriangleAlert,
   User,
   UserPlus,
   Wallet,

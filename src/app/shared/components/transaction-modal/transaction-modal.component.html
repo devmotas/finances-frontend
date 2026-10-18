@@ -94,8 +94,7 @@
           <span id="tx-amount-hint" class="field__hint">Use vírgula para os centavos, ex.: 1.250,50.</span>
           @if (showsWithdrawalHint()) {
             <span id="tx-amount-withdrawal-hint" class="field__hint">
-              O valor informado será registrado como saída desta categoria e volta ao saldo disponível na
-              visão geral (líquido do mês).
+              O resgate volta para o saldo em caixa e reduz o investimento líquido do mês.
             </span>
           }
           @if (isInvalid(form.controls.amount)) {
@@ -128,93 +127,84 @@
 
         @if (investmentNewHidesRecurrenceControls()) {
           <p class="modal__hint modal__hint--invest-pontual" role="note">
-            Cada aporte ou resgate vale <strong>só no mês selecionado na barra superior</strong>. Esta tela não
-            cria séries fixas nem lançamentos futuros automáticos para investimento.
+            Cada aporte ou resgate vale <strong>só para o mês desta data</strong>. Investimento não vira série.
           </p>
-        } @else {
+        }
+
+        @if (showRecurrenceChoice()) {
           <div class="field">
-            <label class="field__label" for="tx-schedule">Recorrência</label>
+            <label class="field__label" for="tx-recurrence">Repetição</label>
             <select
-              id="tx-schedule"
+              id="tx-recurrence"
               class="field__input"
-              formControlName="schedule"
-              aria-describedby="tx-schedule-hint"
+              formControlName="recurrence"
+              aria-describedby="tx-recurrence-hint"
               [disabled]="blockNewWithoutCategories()"
             >
-              <option value="fixed">Fixa — todo mês</option>
-              <option value="variable">Só neste mês</option>
+              @for (option of recurrenceOptions(); track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
             </select>
-            <span id="tx-schedule-hint" class="field__hint">
-              Fixa repete todo mês; “Só neste mês” vale apenas para o mês selecionado.
+            <span id="tx-recurrence-hint" class="field__hint">{{ selectedRecurrenceHint() }}</span>
+          </div>
+        }
+
+        @if (isInstallmentSelected()) {
+          <div class="field">
+            <label class="field__label" for="tx-installments">Número de parcelas</label>
+            <input
+              id="tx-installments"
+              class="field__input"
+              type="number"
+              inputmode="numeric"
+              [min]="installmentsMin"
+              [max]="limits.monthsMax"
+              formControlName="installments"
+              [attr.aria-invalid]="isInvalid(form.controls.installments)"
+              [attr.aria-describedby]="describedBy(isInvalid(form.controls.installments) && 'tx-installments-err')"
+            />
+            @if (isInvalid(form.controls.installments)) {
+              <span id="tx-installments-err" class="field__err" role="alert">
+                Use um número entre {{ installmentsMin }} e {{ limits.monthsMax }}.
+              </span>
+            }
+          </div>
+          <div class="field field--check">
+            <input
+              id="tx-amount-is-total"
+              type="checkbox"
+              formControlName="amountIsTotal"
+              aria-describedby="tx-amount-is-total-hint"
+            />
+            <label class="field__label field__label--inline" for="tx-amount-is-total">
+              Informar o valor total da compra
+            </label>
+            <span id="tx-amount-is-total-hint" class="field__hint">
+              O valor é dividido igualmente; os centavos que sobram vão na 1ª parcela.
             </span>
           </div>
+          @if (installmentPreviewText(); as preview) {
+            <p class="installment-preview" role="status">{{ preview }}</p>
+          }
         }
 
         @if (showSeriesUpdateScope()) {
           <div class="field">
-            <label class="field__label" for="tx-series-scope">Alteração na série fixa</label>
+            <label class="field__label" for="tx-series-scope">Alterar na série</label>
             <select
               id="tx-series-scope"
               class="field__input"
               formControlName="seriesUpdateScope"
               aria-describedby="tx-series-scope-hint"
             >
-              <option value="thisMonth">Somente este mês</option>
-              <option value="futureSeries">Este mês e todos os futuros da série</option>
+              <option [value]="scope.thisMonth">Só este mês</option>
+              <option [value]="scope.futureSeries">Este e os próximos</option>
             </select>
             <span id="tx-series-scope-hint" class="field__hint">
-              “Somente este mês” altera só esta ocorrência. A outra opção replica a alteração para os
-              meses seguintes da mesma série (a partir deste lançamento).
+              “Só este mês” muda apenas este lançamento. “Este e os próximos” encerra a série no mês anterior e
+              começa uma série nova a partir deste mês com os novos dados; os meses anteriores não mudam.
             </span>
           </div>
-        }
-
-        @if (showRecurrenceMonths()) {
-          <div class="field">
-            <label class="field__label" for="tx-recurrence-months">Repetir por (meses)</label>
-            <input
-              id="tx-recurrence-months"
-              class="field__input"
-              type="number"
-              [min]="limits.monthsMin"
-              [max]="limits.monthsMax"
-              formControlName="recurrenceMonths"
-              [attr.aria-invalid]="isInvalid(form.controls.recurrenceMonths)"
-              [attr.aria-describedby]="
-                describedBy(
-                  'tx-recurrence-months-hint',
-                  isInvalid(form.controls.recurrenceMonths) && 'tx-recurrence-months-err'
-                )
-              "
-              [disabled]="blockNewWithoutCategories()"
-            />
-            <span id="tx-recurrence-months-hint" class="field__hint">
-              Quantos meses à frente serão gerados de uma vez, como lançamentos fixos. O padrão vem de
-              <strong>Configurações</strong>.
-            </span>
-            @if (isInvalid(form.controls.recurrenceMonths)) {
-              <span id="tx-recurrence-months-err" class="field__err" role="alert">
-                Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.
-              </span>
-            }
-          </div>
-          @if (flow() === 'expense') {
-            <div class="field field--check">
-              <input
-                id="tx-installment"
-                type="checkbox"
-                formControlName="markInstallment"
-                aria-describedby="tx-installment-hint"
-              />
-              <label class="field__label field__label--inline" for="tx-installment">
-                Compra parcelada (rótulo “Parcela X de Y”)
-              </label>
-              <span id="tx-installment-hint" class="field__hint">
-                Só faz sentido para saídas (ex.: compra em 12x). O número de parcelas é o mesmo de
-                “Repetir por (meses)”.
-              </span>
-            </div>
-          }
         }
 
         <div class="modal__actions">

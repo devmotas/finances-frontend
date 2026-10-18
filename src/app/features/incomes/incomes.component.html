@@ -117,24 +117,10 @@
             <li class="tx-list__item">
               <div class="tx-list__main">
                 <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                @if (t.description.trim()) {
-                  <span class="tx-list__desc">{{ t.description }}</span>
+                @if (t.description | transactionDescription; as description) {
+                  <span class="tx-list__desc">{{ description }}</span>
                 }
-                <span class="tx-list__badges">
-                  @if (txHasRecurrence(t)) {
-                    <span
-                      class="tx-list__serie"
-                      role="img"
-                      title="Parte de uma série recorrente"
-                      aria-label="Recorrente"
-                    >
-                      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
-                    </span>
-                  }
-                  <span class="tx-list__badge">
-                    {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
-                  </span>
-                </span>
+                <app-transaction-badges [transaction]="t" />
               </div>
               <div class="tx-list__side">
                 <span class="tx-list__amount tx-list__amount--in">{{

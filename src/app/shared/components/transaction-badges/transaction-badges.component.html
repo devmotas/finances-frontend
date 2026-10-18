@@ -1,0 +1,14 @@
+<span class="badges">
+  @if (isSeries()) {
+    <span class="badges__serie" role="img" title="Parte de uma série" aria-label="Série">
+      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
+    </span>
+  }
+  <span class="badges__kind">{{ kindLabel() }}</span>
+  @if (endingNotice(); as notice) {
+    <span class="badges__warning">
+      <lucide-icon name="triangle-alert" [size]="14" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+      {{ notice }}
+    </span>
+  }
+</span>

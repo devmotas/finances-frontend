@@ -1,19 +1,43 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
+import { SERIES_KIND, SeriesKind } from '../models/finances.models';
 
-export interface RecurrenceCreateDto {
+interface RecurrenceBaseDto {
   categoryId: number;
   description?: string | null;
+  startDate: string;
+}
+
+export interface FixedRecurrenceCreateDto extends RecurrenceBaseDto {
+  kind: typeof SERIES_KIND.fixed;
+  amount: number;
+}
+
+export interface InstallmentRecurrenceCreateDto extends RecurrenceBaseDto {
+  kind: typeof SERIES_KIND.installment;
+  installments: number;
+  amount?: number;
+  totalAmount?: number;
+}
+
+export type RecurrenceCreateDto = FixedRecurrenceCreateDto | InstallmentRecurrenceCreateDto;
+
+export interface SeriesDto {
+  id: number;
+  kind: SeriesKind;
+  categoryId: number;
+  description: string | null;
   amount: number;
   startDate: string;
-  months: number;
-  installmentTotal?: number | null;
+  endMonth: string | null;
+  installmentTotal: number | null;
 }
 
 export interface RecurrenceCreatedDto {
   recurrenceId: number;
   createdCount: number;
+  series: SeriesDto;
 }
 
 @Injectable({ providedIn: 'root' })

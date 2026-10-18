@@ -172,3 +172,15 @@
     margin: 0 0 0 1.75rem;
   }
 }
+
+.installment-preview {
+  margin: 0;
+  padding: 0.625rem 0.75rem;
+  font-size: var(--fin-text-base);
+  font-weight: var(--fin-weight-bold);
+  font-variant-numeric: tabular-nums;
+  color: var(--fin-text);
+  background: var(--fin-bg-muted);
+  border: 1px solid var(--fin-border);
+  border-radius: var(--fin-radius-sm);
+}

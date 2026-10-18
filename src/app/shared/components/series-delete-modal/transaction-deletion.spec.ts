@@ -1,5 +1,9 @@
 import { of, Subject, throwError } from 'rxjs';
-import { Category, Transaction } from '../../../core/models/finances.models';
+import {
+  Category,
+  Transaction,
+  TransactionDeletionResult,
+} from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastAction, ToastService } from '../../../core/services/toast.service';
 import { SERIES_DELETE_SCOPE } from './series-delete-scope';
@@ -30,6 +34,10 @@ describe('TransactionDeletion', () => {
     date: '2026-10-09',
   } as Transaction;
   const nextMonthTx = { ...seriesTx, id: 9, date: '2026-11-05', recurrenceIndex: 3 } as Transaction;
+  const seriesClosed: TransactionDeletionResult = {
+    deleted: [seriesTx, nextMonthTx],
+    closedSeries: [{ recurrenceId: 3, previousEndMonth: null }],
+  };
 
   let facade: jasmine.SpyObj<FinancesFacadeService>;
   let toast: jasmine.SpyObj<ToastService>;
@@ -45,7 +53,7 @@ describe('TransactionDeletion', () => {
       'getCategory',
       'restoreTransactions',
     ]);
-    facade.deleteTransaction.and.returnValue(of([seriesTx, nextMonthTx]));
+    facade.deleteTransaction.and.returnValue(of(seriesClosed));
     facade.getCategory.and.returnValue({ id: 1, name: 'Moradia' } as Category);
     toast = jasmine.createSpyObj<ToastService>('ToastService', ['show', 'showWithAction']);
     facade.restoreTransactions.and.returnValue(of([seriesTx, nextMonthTx]));
@@ -100,7 +108,7 @@ describe('TransactionDeletion', () => {
   });
 
   it('mantém o modal aberto e indica o escopo enquanto a exclusão está em andamento', () => {
-    const response = new Subject<Transaction[]>();
+    const response = new Subject<TransactionDeletionResult>();
     facade.deleteTransaction.and.returnValue(response as never);
     deletion.request(seriesTx);
 
@@ -112,7 +120,7 @@ describe('TransactionDeletion', () => {
     expect(deletion.deletingScope()).toBe(SERIES_DELETE_SCOPE.thisAndFuture);
     expect(facade.deleteTransaction).toHaveBeenCalledTimes(1);
 
-    response.next([seriesTx]);
+    response.next(seriesClosed);
     response.complete();
 
     expect(deletion.isOpen()).toBeFalse();
@@ -140,53 +148,87 @@ describe('TransactionDeletion', () => {
     );
   });
 
-  it('desfazer restaura todas as linhas excluídas e recarrega o mês', () => {
+  it('desfazer o encerramento restaura as linhas e reabre a série com o fim anterior', () => {
     deletion.request(seriesTx);
     deletion.confirm(SERIES_DELETE_SCOPE.thisAndFuture);
 
     undoAction().run().subscribe();
 
-    expect(facade.restoreTransactions).toHaveBeenCalledOnceWith([
-      {
-        categoryId: 1,
-        description: 'Academia',
-        amount: 100,
-        date: '2026-10-05',
-        schedule: 'fixed',
-        recurrenceId: 3,
-        recurrenceIndex: 2,
-      },
-      {
-        categoryId: 1,
-        description: 'Academia',
-        amount: 100,
-        date: '2026-11-05',
-        schedule: 'fixed',
-        recurrenceId: 3,
-        recurrenceIndex: 3,
-      },
-    ]);
+    expect(facade.restoreTransactions).toHaveBeenCalledOnceWith(
+      [
+        {
+          categoryId: 1,
+          investmentAccountId: null,
+          direction: null,
+          description: 'Academia',
+          amount: 100,
+          date: '2026-10-05',
+          recurrenceId: 3,
+          recurrenceIndex: 2,
+        },
+        {
+          categoryId: 1,
+          investmentAccountId: null,
+          direction: null,
+          description: 'Academia',
+          amount: 100,
+          date: '2026-11-05',
+          recurrenceId: 3,
+          recurrenceIndex: 3,
+        },
+      ],
+      [{ recurrenceId: 3, endMonth: null }]
+    );
     expect(toast.show).toHaveBeenCalledOnceWith('Exclusão desfeita.', 'success');
   });
 
   it('desfazer envia descrição vazia como nula e lançamento avulso sem série', () => {
-    facade.deleteTransaction.and.returnValue(of([singleTx]));
+    facade.deleteTransaction.and.returnValue(of({ deleted: [singleTx], closedSeries: [] }));
     deletion.request(singleTx);
     deletion.confirm(SERIES_DELETE_SCOPE.thisMonth);
 
     undoAction().run().subscribe();
 
-    expect(facade.restoreTransactions).toHaveBeenCalledOnceWith([
-      {
-        categoryId: 1,
-        description: null,
-        amount: 50,
-        date: '2026-10-09',
-        schedule: 'variable',
-        recurrenceId: null,
-        recurrenceIndex: null,
-      },
-    ]);
+    expect(facade.restoreTransactions).toHaveBeenCalledOnceWith(
+      [
+        {
+          categoryId: 1,
+          investmentAccountId: null,
+          direction: null,
+          description: null,
+          amount: 50,
+          date: '2026-10-09',
+          recurrenceId: null,
+          recurrenceIndex: null,
+        },
+      ],
+      []
+    );
+  });
+
+  it('desfazer um resgate mantém a direção', () => {
+    const withdrawal = {
+      ...singleTx,
+      id: 12,
+      flow: 'investment',
+      amount: 300,
+      direction: 'withdrawal',
+    } as Transaction;
+    facade.deleteTransaction.and.returnValue(of({ deleted: [withdrawal], closedSeries: [] }));
+    deletion.request(withdrawal);
+    deletion.confirm(SERIES_DELETE_SCOPE.thisMonth);
+
+    undoAction().run().subscribe();
+
+    const [restored] = facade.restoreTransactions.calls.mostRecent().args[0];
+    expect(restored.direction).toBe('withdrawal');
+    expect(restored.amount).toBe(300);
+  });
+
+  it('informa o tipo da série para o texto do modal', () => {
+    deletion.request({ ...seriesTx, seriesKind: 'installment' } as Transaction);
+
+    expect(deletion.seriesKind()).toBe('installment');
   });
 
   it('avisa quando não consegue desfazer', () => {

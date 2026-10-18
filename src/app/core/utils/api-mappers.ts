@@ -1,4 +1,14 @@
-import { Category, ExpenseGroup, Flow, Schedule, Transaction } from '../models/finances.models';
+import {
+  Category,
+  ExpenseGroup,
+  Flow,
+  INVESTMENT_DIRECTION,
+  InvestmentDirection,
+  Schedule,
+  SERIES_KIND,
+  SeriesKind,
+  Transaction,
+} from '../models/finances.models';
 
 export interface CategoryApiDto {
   id: number;
@@ -18,6 +28,11 @@ export interface TransactionApiDto {
   flow: string;
   recurrenceId: number | null;
   recurrenceIndex: number | null;
+  investmentAccountId?: number | null;
+  direction?: string | null;
+  seriesKind?: string | null;
+  seriesEndsOn?: string | null;
+  installmentTotal?: number | null;
 }
 
 function asFlow(v: string): Flow {
@@ -33,6 +48,16 @@ function asExpenseGroup(v: string | null): ExpenseGroup | undefined {
 
 function asSchedule(v: string): Schedule {
   return v === 'fixed' ? 'fixed' : 'variable';
+}
+
+function asSeriesKind(v: string | null | undefined): SeriesKind | null {
+  if (v === SERIES_KIND.fixed || v === SERIES_KIND.installment) return v;
+  return null;
+}
+
+function asDirection(v: string | null | undefined): InvestmentDirection | null {
+  if (v === INVESTMENT_DIRECTION.contribution || v === INVESTMENT_DIRECTION.withdrawal) return v;
+  return null;
 }
 
 export function mapCategoryApiDto(row: CategoryApiDto): Category {
@@ -56,5 +81,10 @@ export function mapTransactionApiDto(row: TransactionApiDto): Transaction {
     flow: asFlow(row.flow),
     recurrenceId: row.recurrenceId,
     recurrenceIndex: row.recurrenceIndex,
+    investmentAccountId: row.investmentAccountId ?? null,
+    direction: asDirection(row.direction),
+    seriesKind: asSeriesKind(row.seriesKind),
+    seriesEndsOn: row.seriesEndsOn ?? null,
+    installmentTotal: row.installmentTotal ?? null,
   };
 }

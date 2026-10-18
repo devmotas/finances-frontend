@@ -79,6 +79,20 @@ describe('SeriesDeleteModalComponent', () => {
     expect(confirmed).toEqual([SERIES_DELETE_SCOPE.thisAndFuture]);
   });
 
+  it('série fixa explica que "Este e os próximos" encerra a série', () => {
+    setup(true);
+    const hint = button('Este e os próximos').querySelector('.scope-option__hint')?.textContent;
+    expect(hint).toContain('Encerra a série');
+  });
+
+  it('compra parcelada explica que apaga as parcelas seguintes', () => {
+    setup(true);
+    fixture.componentRef.setInput('seriesKind', 'installment');
+    fixture.detectChanges();
+    const hint = button('Este e os próximos').querySelector('.scope-option__hint')?.textContent;
+    expect(hint).toContain('Apaga esta parcela');
+  });
+
   it('lançamento avulso mostra apenas Excluir e Cancelar', () => {
     setup(false);
     const labels = Array.from(

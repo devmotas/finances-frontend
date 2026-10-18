@@ -1,6 +1,18 @@
 export type Flow = 'income' | 'expense' | 'investment';
 export type ExpenseGroup = 'essential' | 'nonEssential';
 export type Schedule = 'fixed' | 'variable';
+export type SeriesKind = 'fixed' | 'installment';
+export type InvestmentDirection = 'contribution' | 'withdrawal';
+
+export const SERIES_KIND = {
+  fixed: 'fixed',
+  installment: 'installment',
+} as const satisfies Record<SeriesKind, SeriesKind>;
+
+export const INVESTMENT_DIRECTION = {
+  contribution: 'contribution',
+  withdrawal: 'withdrawal',
+} as const satisfies Record<InvestmentDirection, InvestmentDirection>;
 
 export interface Category {
   id: number;
@@ -20,6 +32,11 @@ export interface Transaction {
   flow: Flow;
   recurrenceId?: number | null;
   recurrenceIndex?: number | null;
+  investmentAccountId?: number | null;
+  direction?: InvestmentDirection | null;
+  seriesKind?: SeriesKind | null;
+  seriesEndsOn?: string | null;
+  installmentTotal?: number | null;
 }
 
 export interface CategoryCreateDto {
@@ -30,21 +47,39 @@ export interface CategoryCreateDto {
 }
 
 export interface TransactionCreateDto {
-  categoryId: number;
+  categoryId?: number;
+  investmentAccountId?: number;
+  direction?: InvestmentDirection;
   description?: string | null;
   amount: number;
   date: string;
-  schedule: Schedule;
+  schedule?: Schedule;
 }
 
 export interface TransactionRestoreDto {
-  categoryId: number;
+  categoryId: number | null;
+  investmentAccountId: number | null;
+  direction: InvestmentDirection | null;
   description: string | null;
   amount: number;
   date: string;
-  schedule: Schedule;
   recurrenceId: number | null;
   recurrenceIndex: number | null;
+}
+
+export interface ClosedSeries {
+  recurrenceId: number;
+  previousEndMonth: string | null;
+}
+
+export interface SeriesReopenDto {
+  recurrenceId: number;
+  endMonth: string | null;
+}
+
+export interface TransactionDeletionResult {
+  deleted: Transaction[];
+  closedSeries: ClosedSeries[];
 }
 
 export interface MonthTotals {

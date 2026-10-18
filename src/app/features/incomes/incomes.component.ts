@@ -6,7 +6,6 @@ import { FinancesFacadeService } from '../../core/services/finances-facade.servi
 import { MonthContextService } from '../../core/services/month-context.service';
 import { ReportsApiService } from '../../core/services/reports-api.service';
 import { ToastService } from '../../core/services/toast.service';
-import { isSeriesTransaction } from '../../core/utils/transaction-series';
 import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
 import { SeriesDeleteModalComponent } from '../../shared/components/series-delete-modal/series-delete-modal.component';
 import { TransactionDeletion } from '../../shared/components/series-delete-modal/transaction-deletion';
@@ -18,6 +17,8 @@ import { ReportExport } from '../../shared/report-export/report-export';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
 import { ExportMenuDisclosureDirective } from '../../shared/report-export/export-menu-disclosure.directive';
 import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
+import { TransactionDescriptionPipe } from '../../shared/pipes/transaction-description.pipe';
+import { TransactionBadgesComponent } from '../../shared/components/transaction-badges/transaction-badges.component';
 
 @Component({
   selector: 'app-incomes',
@@ -32,6 +33,8 @@ import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-actio
     BusyButtonComponent,
     ExportMenuDisclosureDirective,
     TransactionActionLabelPipe,
+    TransactionDescriptionPipe,
+    TransactionBadgesComponent,
   ],
   templateUrl: './incomes.component.html',
   styleUrl: './incomes.component.scss',
@@ -82,10 +85,6 @@ export class IncomesComponent {
   editTx(t: Transaction): void {
     this.editingTx.set(t);
     this.txOpen.set(true);
-  }
-
-  txHasRecurrence(t: Transaction): boolean {
-    return isSeriesTransaction(t);
   }
 
   selectAllFilter(): void {

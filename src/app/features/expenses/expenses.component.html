@@ -5,9 +5,7 @@
       @if (facade.isMonthDataReady()) {
         <p class="page__total page__total--out">
           Total:
-          {{
-            totalEssential() + totalNonEssential() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-          }}
+          {{ monthTotal() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
         </p>
       }
     </div>
@@ -110,7 +108,7 @@
       <div class="panel">
         @if (essentialList().length === 0) {
           <div class="empty">
-            <p class="empty__title">Nenhuma despesa registrada</p>
+            <p class="empty__title">Nenhuma saída registrada</p>
             @if (categories().length === 0) {
               <p class="empty__hint">
                 Use <strong>Categoria</strong> para criar categorias; depois use o botão
@@ -124,24 +122,10 @@
               <li class="tx-list__item tx-list__item--ess">
                 <div class="tx-list__main">
                   <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                  @if (t.description.trim()) {
-                    <span class="tx-list__desc">{{ t.description }}</span>
+                  @if (t.description | transactionDescription; as description) {
+                    <span class="tx-list__desc">{{ description }}</span>
                   }
-                  <span class="tx-list__badges">
-                    @if (txHasRecurrence(t)) {
-                      <span
-                        class="tx-list__serie"
-                        role="img"
-                        title="Parte de uma série recorrente"
-                        aria-label="Recorrente"
-                      >
-                        <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
-                      </span>
-                    }
-                    <span class="tx-list__badge">
-                      {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
-                    </span>
-                  </span>
+                  <app-transaction-badges [transaction]="t" />
                 </div>
                 <div class="tx-list__side">
                   <span class="tx-list__amount tx-list__amount--ess">{{
@@ -183,7 +167,7 @@
       <div class="panel">
         @if (nonEssentialList().length === 0) {
           <div class="empty">
-            <p class="empty__title">Nenhuma despesa registrada</p>
+            <p class="empty__title">Nenhuma saída registrada</p>
             @if (categories().length === 0) {
               <p class="empty__hint">
                 Use <strong>Categoria</strong> para criar categorias; depois use o botão
@@ -197,24 +181,10 @@
               <li class="tx-list__item tx-list__item--ne">
                 <div class="tx-list__main">
                   <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                  @if (t.description.trim()) {
-                    <span class="tx-list__desc">{{ t.description }}</span>
+                  @if (t.description | transactionDescription; as description) {
+                    <span class="tx-list__desc">{{ description }}</span>
                   }
-                  <span class="tx-list__badges">
-                    @if (txHasRecurrence(t)) {
-                      <span
-                        class="tx-list__serie"
-                        role="img"
-                        title="Parte de uma série recorrente"
-                        aria-label="Recorrente"
-                      >
-                        <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
-                      </span>
-                    }
-                    <span class="tx-list__badge">
-                      {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
-                    </span>
-                  </span>
+                  <app-transaction-badges [transaction]="t" />
                 </div>
                 <div class="tx-list__side">
                   <span class="tx-list__amount tx-list__amount--out">{{

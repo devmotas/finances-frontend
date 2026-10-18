@@ -1,6 +1,14 @@
 import { computed, signal } from '@angular/core';
 import { catchError, EMPTY, finalize, Observable, tap } from 'rxjs';
-import { Transaction, TransactionRestoreDto } from '../../../core/models/finances.models';
+import {
+  ClosedSeries,
+  SERIES_KIND,
+  SeriesKind,
+  SeriesReopenDto,
+  Transaction,
+  TransactionDeletionResult,
+  TransactionRestoreDto,
+} from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatBrl } from '../../../core/utils/brl-format';
@@ -29,6 +37,7 @@ export class TransactionDeletion {
     const t = this.pending();
     return t !== null && isSeriesTransaction(t);
   });
+  readonly seriesKind = computed<SeriesKind>(() => this.pending()?.seriesKind ?? SERIES_KIND.fixed);
   readonly itemLabel = computed(() => {
     const t = this.pending();
     return t ? this.describe(t) : '';
@@ -73,24 +82,25 @@ export class TransactionDeletion {
       .deleteTransaction(t.id, { applyToFutureSeries })
       .pipe(finalize(() => this.runningScope.set(null)))
       .subscribe({
-        next: (deleted) => {
+        next: (result) => {
           this.pending.set(null);
-          this.notifyDeleted(t, deleted);
+          this.notifyDeleted(t, result);
         },
         error: (err: unknown) => this.toast.show(httpErrorMessage(err, DELETE_FAILED_MESSAGE), 'error'),
       });
   }
 
-  private notifyDeleted(t: Transaction, deleted: Transaction[]): void {
+  private notifyDeleted(t: Transaction, result: TransactionDeletionResult): void {
     this.toast.showWithAction(this.texts.deletedMessage(t), 'success', {
       label: UNDO_LABEL,
       busyLabel: UNDO_BUSY_LABEL,
-      run: () => this.undo(deleted),
+      run: () => this.undo(result),
     });
   }
 
-  private undo(deleted: Transaction[]): Observable<unknown> {
-    return this.facade.restoreTransactions(deleted.map(toRestoreDto)).pipe(
+  private undo({ deleted, closedSeries }: TransactionDeletionResult): Observable<unknown> {
+    const reopenSeries = closedSeries.map(toReopenDto);
+    return this.facade.restoreTransactions(deleted.map(toRestoreDto), reopenSeries).pipe(
       tap(() => this.toast.show(UNDO_SUCCESS_MESSAGE, 'success')),
       catchError((err: unknown) => {
         this.toast.show(httpErrorMessage(err, UNDO_FAILED_MESSAGE), 'error');
@@ -102,12 +112,17 @@ export class TransactionDeletion {
 
 function toRestoreDto(t: Transaction): TransactionRestoreDto {
   return {
-    categoryId: t.categoryId,
+    categoryId: t.categoryId ?? null,
+    investmentAccountId: t.investmentAccountId ?? null,
+    direction: t.direction ?? null,
     description: t.description || null,
     amount: t.amount,
     date: t.date,
-    schedule: t.schedule,
     recurrenceId: t.recurrenceId ?? null,
     recurrenceIndex: t.recurrenceIndex ?? null,
   };
+}
+
+function toReopenDto(closed: ClosedSeries): SeriesReopenDto {
+  return { recurrenceId: closed.recurrenceId, endMonth: closed.previousEndMonth };
 }

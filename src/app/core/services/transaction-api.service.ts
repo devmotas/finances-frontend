@@ -2,14 +2,18 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import {
+  ClosedSeries,
+  SeriesReopenDto,
   Transaction,
   TransactionCreateDto,
+  TransactionDeletionResult,
   TransactionRestoreDto,
 } from '../models/finances.models';
 import { TransactionApiDto, mapTransactionApiDto } from '../utils/api-mappers';
 
 interface DeletedTransactionsResponse {
   deleted: TransactionApiDto[];
+  closedSeries?: ClosedSeries[];
 }
 
 interface RestoredTransactionsResponse {
@@ -43,16 +47,25 @@ export class TransactionApiService {
       .pipe(map(mapTransactionApiDto));
   }
 
-  delete(id: number, applyToFutureSeries = false): Observable<Transaction[]> {
+  delete(id: number, applyToFutureSeries = false): Observable<TransactionDeletionResult> {
     const params = new HttpParams().set('applyToFutureSeries', String(applyToFutureSeries));
     return this.http
       .delete<DeletedTransactionsResponse>(`${this.base}/${id}`, { params })
-      .pipe(map((res) => res.deleted.map(mapTransactionApiDto)));
+      .pipe(
+        map((res) => ({
+          deleted: res.deleted.map(mapTransactionApiDto),
+          closedSeries: res.closedSeries ?? [],
+        }))
+      );
   }
 
-  restore(transactions: TransactionRestoreDto[]): Observable<Transaction[]> {
+  restore(
+    transactions: TransactionRestoreDto[],
+    reopenSeries: SeriesReopenDto[] = []
+  ): Observable<Transaction[]> {
+    const body = reopenSeries.length > 0 ? { transactions, reopenSeries } : { transactions };
     return this.http
-      .post<RestoredTransactionsResponse>(`${this.base}/restore`, { transactions })
+      .post<RestoredTransactionsResponse>(`${this.base}/restore`, body)
       .pipe(map((res) => res.restored.map(mapTransactionApiDto)));
   }
 }
