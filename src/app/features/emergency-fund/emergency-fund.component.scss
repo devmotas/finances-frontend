@@ -132,7 +132,7 @@
 .ef-progress__fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--fin-primary), color-mix(in srgb, var(--fin-primary) 70%, #0f172a));
+  background: var(--fin-text);
   transition: width 0.35s ease;
 }
 
