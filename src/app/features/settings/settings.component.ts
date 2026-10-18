@@ -13,6 +13,7 @@ import { trackBusy } from '../../core/utils/track-busy';
 import { BusyButtonComponent } from '../../shared/components/busy-button/busy-button.component';
 import { BUSY_LABEL } from '../../shared/components/busy-button/busy-labels';
 import { describedBy, isInvalid } from '../../shared/a11y/field-a11y';
+import { buildVersionLabel } from '../../core/build-info/build-info';
 
 const SETTINGS_FEEDBACK = {
   loadFailed: 'Não foi possível carregar suas configurações.',
@@ -71,6 +72,7 @@ export class SettingsComponent {
   readonly tabs = SETTINGS_TABS;
   readonly describedBy = describedBy;
   readonly isInvalid = isInvalid;
+  readonly versionLabel = buildVersionLabel();
   private readonly tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabButton');
   readonly activeTab = signal<SettingsTab>('prefs');
   readonly initialLoading = signal(true);

@@ -6,6 +6,7 @@ import {
   DEFAULT_CURRENCY_CODE,
   LOCALE_ID,
   importProvidersFrom,
+  provideAppInitializer,
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
@@ -16,6 +17,7 @@ import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.intercep
 import { pendingRequestsInterceptor } from './core/interceptors/pending-requests.interceptor';
 
 import { APP_LUCIDE_ICONS } from './core/icons/app-lucide-icons';
+import { recordBuildInfo } from './core/build-info/build-info';
 import { routes } from './app.routes';
 
 registerLocaleData(localePt);
@@ -25,6 +27,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([pendingRequestsInterceptor, apiBaseUrlInterceptor, authInterceptor])),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
+    provideAppInitializer(() => recordBuildInfo()),
     importProvidersFrom(LucideAngularModule.pick(APP_LUCIDE_ICONS)),
     { provide: LOCALE_ID, useValue: 'pt-BR' },
     { provide: DEFAULT_CURRENCY_CODE, useValue: 'BRL' },

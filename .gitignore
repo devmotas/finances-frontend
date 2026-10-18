@@ -43,3 +43,6 @@ Thumbs.db
 
 # Notas locais de trabalho (tickets, design). Repo público: não versionar.
 /.scratch/
+
+# Gerado no build por scripts/write-build-info.mjs
+/src/app/core/build-info/build-info.generated.ts

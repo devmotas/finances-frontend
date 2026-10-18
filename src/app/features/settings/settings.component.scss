@@ -211,6 +211,12 @@
   border-color: var(--fin-border-strong);
 }
 
+.version {
+  margin: 2rem 0 0;
+  font-size: var(--fin-text-xs);
+  color: var(--fin-text-muted);
+}
+
 @media (max-width: 767px) {
   .page__head {
     margin-bottom: 1rem;
