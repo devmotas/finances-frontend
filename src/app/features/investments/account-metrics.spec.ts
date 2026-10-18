@@ -14,6 +14,7 @@ function account(overrides: Partial<InvestmentMonthAccount> = {}): InvestmentMon
     yield: 30,
     balance: 1530,
     missingToTarget: null,
+    spending: 0,
     lastBalanceUpdate: null,
     monthContributions: 200,
     monthWithdrawals: 50,

@@ -38,7 +38,11 @@
             {{ s.cashBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
           </p>
           <p class="hero__caption">
-            Dinheiro fora dos investimentos no fim do mês; a sobra de cada mês passa para o seguinte.
+            Conta corrente + Carteira no fim do mês; a sobra de cada mês passa para o seguinte.
+          </p>
+          <p class="hero__caption">
+            Conta corrente {{ s.ledgerBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} · Carteira
+            {{ s.walletBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
           </p>
         </div>
       </section>
@@ -51,7 +55,8 @@
           <div>
             <h2 id="next-month-title" class="next-month__title">{{ nextMonthName() }} já comprometido</h2>
             <p class="next-month__caption">
-              O que já está lançado para {{ nextMonthName() }}: séries e lançamentos avulsos registrados.
+              O que já está lançado para {{ nextMonthName() }}: séries e lançamentos avulsos registrados, mais a
+              média de gastos da carteira dos últimos três meses.
             </p>
           </div>
         </div>
@@ -78,6 +83,12 @@
             <dt>Investimentos (aportes − resgates)</dt>
             <dd class="next-month__amount next-month__amount--inv">
               {{ s.nextMonth.committedInvestment | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+          <div class="next-month__row">
+            <dt>Gastos previstos da carteira (média)</dt>
+            <dd class="next-month__amount next-month__amount--ne">
+              {{ s.nextMonth.expectedWalletSpending | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
           <div class="next-month__row next-month__row--total">

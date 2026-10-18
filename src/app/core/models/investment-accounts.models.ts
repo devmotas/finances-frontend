@@ -2,6 +2,7 @@ export const ACCOUNT_ROLE = {
   investment: 'investment',
   reserve: 'reserve',
   shortTermReserve: 'short_term_reserve',
+  wallet: 'wallet',
 } as const;
 
 export type AccountRole = (typeof ACCOUNT_ROLE)[keyof typeof ACCOUNT_ROLE];
@@ -41,6 +42,7 @@ export interface InvestmentAccountPosition extends InvestmentAccountRecord {
   yield: number;
   balance: number;
   missingToTarget: number | null;
+  spending: number;
   lastBalanceUpdate: LastBalanceUpdate | null;
 }
 
@@ -48,6 +50,23 @@ export interface InvestmentMonthAccount extends InvestmentAccountPosition {
   monthContributions: number;
   monthWithdrawals: number;
   monthYield: number;
+}
+
+export interface InvestmentMonthWallet extends InvestmentMonthAccount {
+  monthSpending: number;
+}
+
+export const WALLET_ADJUSTMENT_FLOW = {
+  expense: 'expense',
+  income: 'income',
+} as const;
+
+export type WalletAdjustmentFlow = (typeof WALLET_ADJUSTMENT_FLOW)[keyof typeof WALLET_ADJUSTMENT_FLOW];
+
+export interface WalletAdjustment {
+  transactionId: number;
+  flow: WalletAdjustmentFlow;
+  amount: number;
 }
 
 export interface BalanceUpdateCreateDto {
@@ -61,6 +80,7 @@ export interface BalanceUpdateDto {
   date: string;
   balance: number;
   yield: number;
+  walletAdjustment?: WalletAdjustment | null;
 }
 
 export interface InvestmentMovement {
@@ -109,7 +129,9 @@ export interface InvestmentStackAccount {
 export interface InvestmentMonthView {
   summary: InvestmentMonthSummary;
   accounts: InvestmentMonthAccount[];
+  wallets?: InvestmentMonthWallet[];
   transactions: InvestmentMovement[];
+  walletTransactions?: InvestmentMovement[];
   monthlySeries: InvestmentMonthPoint[];
   stackAccounts: InvestmentStackAccount[];
 }

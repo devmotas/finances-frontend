@@ -19,6 +19,7 @@ import { ExportMenuDisclosureDirective } from '../../shared/report-export/export
 import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
 import { TransactionDescriptionPipe } from '../../shared/pipes/transaction-description.pipe';
 import { TransactionBadgesComponent } from '../../shared/components/transaction-badges/transaction-badges.component';
+import { isWalletTransaction } from '../../core/utils/transaction-series';
 
 @Component({
   selector: 'app-expenses',
@@ -52,6 +53,7 @@ export class ExpensesComponent {
     this.toast
   );
   readonly busyLabel = BUSY_LABEL;
+  readonly isWalletTransaction = isWalletTransaction;
 
   readonly categoryOpen = signal(false);
   readonly txOpen = signal(false);

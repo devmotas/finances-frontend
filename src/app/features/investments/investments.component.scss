@@ -101,6 +101,19 @@
   color: var(--fin-text);
 }
 
+.section__note {
+  margin: -0.5rem 0 0.75rem;
+  font-size: var(--fin-text-sm);
+  color: var(--fin-text-muted);
+}
+
+.section__subtitle {
+  margin: 1.25rem 0 0.5rem;
+  font-size: var(--fin-text-md);
+  font-weight: var(--fin-weight-bold);
+  color: var(--fin-text);
+}
+
 .accounts {
   list-style: none;
   margin: 0;
@@ -131,6 +144,10 @@
   width: 6px;
   border-radius: var(--fin-radius) 0 0 var(--fin-radius);
   background: linear-gradient(180deg, var(--fin-investment), var(--fin-investment-hover));
+}
+
+.acc-card--wallet::before {
+  background: var(--fin-text-muted);
 }
 
 .acc-card__head {
@@ -178,6 +195,10 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--fin-tracking-tight);
   color: var(--fin-investment);
+}
+
+.acc-card__value--wallet {
+  color: var(--fin-text);
 }
 
 .acc-card__facts {

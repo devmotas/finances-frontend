@@ -38,6 +38,7 @@ export interface Transaction {
   seriesEndsOn?: string | null;
   installmentTotal?: number | null;
   destinationAccountId?: number | null;
+  walletAccountId?: number | null;
 }
 
 export interface CategoryCreateDto {

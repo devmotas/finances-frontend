@@ -18,11 +18,20 @@
       </div>
 
       <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
-        <p id="bal-modal-desc" class="modal__note">
-          Patrimônio calculado no fim do mês:
-          <strong>{{ acc.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>.
-          A diferença entre o saldo real e o calculado vira rendimento.
-        </p>
+        @if (isWallet()) {
+          <p id="bal-modal-desc" class="modal__note">
+            Saldo esperado da carteira no fim do mês:
+            <strong>{{ acc.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>.
+            Informe o saldo do app do banco: se for menor, a diferença vira Gastos da carteira; se for maior, vira
+            Entrada na carteira.
+          </p>
+        } @else {
+          <p id="bal-modal-desc" class="modal__note">
+            Patrimônio calculado no fim do mês:
+            <strong>{{ acc.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>.
+            A diferença entre o saldo real e o calculado vira rendimento.
+          </p>
+        }
 
         <div class="field">
           <label class="field__label" for="bal-date">Data</label>

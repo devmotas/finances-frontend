@@ -34,6 +34,7 @@ export interface TransactionApiDto {
   seriesEndsOn?: string | null;
   installmentTotal?: number | null;
   destinationAccountId?: number | null;
+  walletAccountId?: number | null;
 }
 
 function asFlow(v: string): Flow {
@@ -88,5 +89,6 @@ export function mapTransactionApiDto(row: TransactionApiDto): Transaction {
     seriesEndsOn: row.seriesEndsOn ?? null,
     installmentTotal: row.installmentTotal ?? null,
     destinationAccountId: row.destinationAccountId ?? null,
+    walletAccountId: row.walletAccountId ?? null,
   };
 }

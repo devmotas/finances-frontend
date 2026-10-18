@@ -7,7 +7,6 @@ import { BalanceUpdateDto, InvestmentMonthAccount } from '../../../core/models/i
 import { InvestmentAccountsApiService } from '../../../core/services/investment-accounts-api.service';
 import { MonthContextService } from '../../../core/services/month-context.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { formatBrl } from '../../../core/utils/brl-format';
 import { saveErrorMessage } from '../../../core/utils/http-error.util';
 import { trackBusy } from '../../../core/utils/track-busy';
 import { describedBy, isInvalid } from '../../../shared/a11y/field-a11y';
@@ -19,15 +18,13 @@ import {
   defaultBalanceUpdateDate,
   parseAmount,
 } from '../../../shared/components/investments/investment-form';
+import { isWallet } from '../account-role';
+import { balanceUpdatedMessage } from './balance-update-message';
 
 const ESCAPE_KEY = 'Escape';
 const BACKDROP_CLASS = 'modal__backdrop';
 const ZERO_AMOUNT = 0;
 const SAVE_FAILED = 'Não foi possível atualizar o saldo.';
-
-export function balanceUpdatedMessage(update: BalanceUpdateDto): string {
-  return `Saldo atualizado. Rendimento até essa data: ${formatBrl(update.yield)}.`;
-}
 
 @Component({
   selector: 'app-balance-update-modal',
@@ -46,6 +43,7 @@ export class BalanceUpdateModalComponent {
   readonly saved = output<BalanceUpdateDto>();
 
   readonly visible = computed(() => this.account() !== null);
+  readonly isWallet = computed(() => isWallet(this.account()?.role));
   readonly savingLabel = BUSY_LABEL.saving;
   readonly describedBy = describedBy;
   readonly isInvalid = isInvalid;
@@ -91,7 +89,7 @@ export class BalanceUpdateModalComponent {
       .pipe(trackBusy(this.isSaving))
       .subscribe({
         next: (update) => {
-          this.toast.show(balanceUpdatedMessage(update), 'success');
+          this.toast.show(balanceUpdatedMessage(update, this.isWallet()), 'success');
           this.saved.emit(update);
         },
         error: (err: unknown) => this.toast.show(saveErrorMessage(err, SAVE_FAILED), 'error'),

@@ -126,24 +126,26 @@
                 <span class="tx-list__amount tx-list__amount--in">{{
                   t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
                 }}</span>
-                <div class="tx-list__actions">
-                  <button
-                    type="button"
-                    class="link-btn"
-                    [attr.aria-label]="t | transactionActionLabel: 'Editar' : facade.getCategory(t.categoryId)?.name"
-                    (click)="editTx(t)"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    class="link-btn link-btn--danger"
-                    [attr.aria-label]="t | transactionActionLabel: 'Excluir' : facade.getCategory(t.categoryId)?.name"
-                    (click)="deletion.request(t)"
-                  >
-                    Excluir
-                  </button>
-                </div>
+                @if (!isWalletTransaction(t)) {
+                  <div class="tx-list__actions">
+                    <button
+                      type="button"
+                      class="link-btn"
+                      [attr.aria-label]="t | transactionActionLabel: 'Editar' : facade.getCategory(t.categoryId)?.name"
+                      (click)="editTx(t)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="link-btn link-btn--danger"
+                      [attr.aria-label]="t | transactionActionLabel: 'Excluir' : facade.getCategory(t.categoryId)?.name"
+                      (click)="deletion.request(t)"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                }
               </div>
             </li>
           }

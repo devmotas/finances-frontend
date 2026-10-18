@@ -19,6 +19,7 @@ export interface NextMonthSummaryDto {
   committedEssential: number;
   committedNonEssential: number;
   committedInvestment: number;
+  expectedWalletSpending: number;
   projectedBalance: number;
 }
 
@@ -34,6 +35,8 @@ export interface FinanceSummaryDto {
   netInvested: number;
   monthBalance: number;
   cashBalance: number;
+  ledgerBalance: number;
+  walletBalance: number;
   investedPosition: number;
   investedYield: number;
   investedBookValue: number;

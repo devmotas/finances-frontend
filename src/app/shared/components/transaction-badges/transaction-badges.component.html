@@ -5,6 +5,9 @@
     </span>
   }
   <span class="badges__kind">{{ kindLabel() }}</span>
+  @if (isWallet()) {
+    <span class="badges__kind" [attr.title]="walletTitle">Carteira</span>
+  }
   @if (destinationTitle(); as title) {
     <span class="badges__kind" [attr.title]="title">→ {{ destinationName() }}</span>
   }

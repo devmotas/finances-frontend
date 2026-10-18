@@ -22,6 +22,7 @@ import { ExportMenuDisclosureDirective } from '../../shared/report-export/export
 import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
 import { TransactionDescriptionPipe } from '../../shared/pipes/transaction-description.pipe';
 import { TransactionBadgesComponent } from '../../shared/components/transaction-badges/transaction-badges.component';
+import { isWalletTransaction } from '../../core/utils/transaction-series';
 
 @Component({
   selector: 'app-incomes',
@@ -55,6 +56,7 @@ export class IncomesComponent {
     this.toast
   );
   readonly busyLabel = BUSY_LABEL;
+  readonly isWalletTransaction = isWalletTransaction;
 
   private readonly accountNames = toSignal(
     inject(InvestmentAccountsApiService)

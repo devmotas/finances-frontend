@@ -27,7 +27,7 @@ import {
   defaultDateForMonth,
   parseAmount,
 } from '../../../shared/components/investments/investment-form';
-import { DIRECTIONS, directionActionLabel, isShortTermReserve } from '../account-role';
+import { DIRECTIONS, directionActionLabel, isShortTermReserve, isWallet } from '../account-role';
 
 const ESCAPE_KEY = 'Escape';
 const BACKDROP_CLASS = 'modal__backdrop';
@@ -48,7 +48,20 @@ const DIRECTION_HINT = {
     [MOVEMENT_DIRECTION.contribution]: 'Volta para a reserva de curto prazo. Não conta como saída.',
     [MOVEMENT_DIRECTION.withdrawal]: 'Vai da reserva de curto prazo para o caixa. Não conta como entrada.',
   },
+  wallet: {
+    [MOVEMENT_DIRECTION.contribution]: 'Sai da conta corrente e entra na carteira. Não conta como saída.',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Sai da carteira e volta para a conta corrente. Não conta como entrada.',
+  },
 } as const;
+
+const TITLE = {
+  editing: 'Editar lançamento',
+  investment: 'Aporte ou resgate',
+  shortTerm: 'Pegar emprestado ou devolver',
+  wallet: 'Transferir',
+} as const;
+
+type MovementKind = 'investment' | 'shortTerm' | 'wallet';
 
 export interface MovementPreset {
   accountId: number | null;
@@ -96,17 +109,18 @@ export class MovementModalComponent {
     return this.accounts().find((account) => account.id === id)?.role;
   });
 
-  readonly isShortTerm = computed(() => isShortTermReserve(this.selectedRole()));
+  private readonly kind = computed((): MovementKind => {
+    const role = this.selectedRole();
+    if (isShortTermReserve(role)) return 'shortTerm';
+    return isWallet(role) ? 'wallet' : 'investment';
+  });
 
   readonly directionHint = computed(() => {
     const direction = this.formValue().direction ?? MOVEMENT_DIRECTION.contribution;
-    return (this.isShortTerm() ? DIRECTION_HINT.shortTerm : DIRECTION_HINT.investment)[direction];
+    return DIRECTION_HINT[this.kind()][direction];
   });
 
-  readonly title = computed(() => {
-    if (this.editing()) return 'Editar lançamento';
-    return this.isShortTerm() ? 'Pegar emprestado ou devolver' : 'Aporte ou resgate';
-  });
+  readonly title = computed(() => (this.editing() ? TITLE.editing : TITLE[this.kind()]));
 
   constructor() {
     lockBodyScrollWhile(this.visible);

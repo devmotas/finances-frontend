@@ -2,9 +2,10 @@ import { Component, computed, input } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { Transaction } from '../../../core/models/finances.models';
 import { seriesEndingNotice, seriesKindLabel } from '../../../core/utils/series-status';
-import { isSeriesTransaction } from '../../../core/utils/transaction-series';
+import { isSeriesTransaction, isWalletTransaction } from '../../../core/utils/transaction-series';
 
 const DESTINATION_TITLE_PREFIX = 'Todo mês vira aporte em';
+const WALLET_TITLE = 'Calculado pela atualização de saldo da Carteira';
 
 @Component({
   selector: 'app-transaction-badges',
@@ -16,7 +17,9 @@ export class TransactionBadgesComponent {
   readonly transaction = input.required<Transaction>();
   readonly destinationName = input<string | null>(null);
 
+  readonly walletTitle = WALLET_TITLE;
   readonly isSeries = computed(() => isSeriesTransaction(this.transaction()));
+  readonly isWallet = computed(() => isWalletTransaction(this.transaction()));
   readonly kindLabel = computed(() => seriesKindLabel(this.transaction()));
   readonly endingNotice = computed(() => seriesEndingNotice(this.transaction()));
   readonly destinationTitle = computed(() => {

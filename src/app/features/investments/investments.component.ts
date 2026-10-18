@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 import {
   InvestmentAccountRecord,
   InvestmentMonthAccount,
+  InvestmentMonthWallet,
   InvestmentMovement,
   MOVEMENT_DIRECTION,
   MovementDirection,
@@ -52,6 +53,11 @@ export interface AccountCard {
   hasMissing: boolean;
 }
 
+export interface WalletCard {
+  account: InvestmentMonthWallet;
+  monthNet: number;
+}
+
 @Component({
   selector: 'app-investments',
   imports: [
@@ -95,7 +101,14 @@ export class InvestmentsComponent {
   readonly formatDate = formatIsoDate;
 
   readonly accounts = computed(() => this.view()?.accounts ?? []);
-  readonly hasAccounts = computed(() => this.accounts().length > 0);
+  readonly wallets = computed(() => this.view()?.wallets ?? []);
+  readonly movementAccounts = computed(() => [...this.accounts(), ...this.wallets()]);
+  readonly hasAccounts = computed(() => this.movementAccounts().length > 0);
+  readonly walletMovements = computed(() => this.view()?.walletTransactions ?? []);
+
+  readonly walletCards = computed((): WalletCard[] =>
+    this.wallets().map((account) => ({ account, monthNet: accountMonthNet(account) }))
+  );
 
   readonly accountCards = computed((): AccountCard[] => {
     const view = this.view();
@@ -195,6 +208,10 @@ export class InvestmentsComponent {
     this.movementModalOpen.set(true);
   }
 
+  openTransfer(wallet: InvestmentMonthWallet): void {
+    this.openNewMovement(wallet.id, MOVEMENT_DIRECTION.contribution);
+  }
+
   openEditMovement(movement: InvestmentMovement): void {
     this.editingMovement.set(movement);
     this.movementModalOpen.set(true);
@@ -229,7 +246,7 @@ export class InvestmentsComponent {
   }
 
   private findAccount(id: number): InvestmentMonthAccount | undefined {
-    return this.accounts().find((account) => account.id === id);
+    return this.movementAccounts().find((account) => account.id === id);
   }
 
   private describeMovement(movement: InvestmentMovement): string {

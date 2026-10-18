@@ -58,6 +58,121 @@
   } @else if (monthView.isPending()) {
     <app-month-loading />
   } @else {
+    @if (walletCards().length > 0) {
+      <section class="section" aria-labelledby="inv-wallet-title">
+        <h2 id="inv-wallet-title" class="section__title">Carteira</h2>
+        <p class="section__note">Dinheiro do dia a dia: entra no saldo em caixa e fica fora do patrimônio.</p>
+        <ul class="accounts">
+          @for (card of walletCards(); track card.account.id) {
+            <li class="acc-card acc-card--wallet">
+              <div class="acc-card__head">
+                <h3 class="acc-card__name">{{ card.account.name }}</h3>
+                <span class="acc-card__role">Carteira</span>
+              </div>
+
+              <p class="acc-card__balance">
+                <span class="acc-card__label">Saldo</span>
+                <span class="acc-card__value acc-card__value--wallet">{{
+                  card.account.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                }}</span>
+              </p>
+
+              <dl class="acc-card__facts">
+                <div class="acc-card__fact">
+                  <dt>Gastos no mês</dt>
+                  <dd>{{ card.account.monthSpending | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+                </div>
+                <div class="acc-card__fact">
+                  <dt>Transferências no mês</dt>
+                  <dd>{{ card.monthNet | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+                </div>
+              </dl>
+
+              <p class="acc-card__hint">
+                @if (card.account.lastBalanceUpdate; as update) {
+                  Saldo atualizado em {{ formatDate(update.date) }}.
+                } @else {
+                  Sem atualização de saldo ainda.
+                }
+              </p>
+
+              <div class="acc-card__actions">
+                <button type="button" class="btn btn--secondary btn--sm" (click)="openTransfer(card.account)">
+                  Transferir
+                </button>
+                <button type="button" class="btn btn--secondary btn--sm" (click)="openBalanceUpdate(card.account)">
+                  Atualizar saldo
+                </button>
+              </div>
+              <div class="acc-card__links">
+                <button
+                  type="button"
+                  class="link-btn"
+                  [attr.aria-label]="'Editar a conta ' + card.account.name"
+                  (click)="openEditAccount(card.account)"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="link-btn link-btn--danger"
+                  [attr.aria-label]="'Excluir a conta ' + card.account.name"
+                  [attr.aria-busy]="deletingAccountId() === card.account.id"
+                  [disabled]="deletingAccountId() !== null"
+                  (click)="deleteAccount(card.account)"
+                >
+                  {{ deletingAccountId() === card.account.id ? 'Excluindo…' : 'Excluir' }}
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+
+        @if (walletMovements().length > 0) {
+          <h3 class="section__subtitle">Transferências do mês</h3>
+          <div class="panel">
+            <ul class="tx-list">
+              @for (m of walletMovements(); track m.id) {
+                <li class="tx-list__item">
+                  <div class="tx-list__main">
+                    <span class="tx-list__cat">{{ accountName(m) }}</span>
+                    @if (m.description?.trim()) {
+                      <span class="tx-list__desc">{{ m.description }}</span>
+                    }
+                    <span class="tx-list__badges">
+                      <span class="tx-list__badge tx-list__badge--direction">{{ badgeLabel(m) }}</span>
+                      <span class="tx-list__badge">{{ formatDate(m.date) }}</span>
+                    </span>
+                  </div>
+                  <div class="tx-list__side">
+                    <span class="tx-list__amount">{{ m.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
+                    <div class="tx-list__actions">
+                      <button
+                        type="button"
+                        class="link-btn"
+                        [attr.aria-label]="movementActionLabel('Editar', m)"
+                        (click)="openEditMovement(m)"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        class="link-btn link-btn--danger"
+                        [attr.aria-label]="movementActionLabel('Excluir', m)"
+                        (click)="deletion.request(m)"
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      </section>
+    }
+
     <section class="section" aria-labelledby="inv-accounts-title">
       <h2 id="inv-accounts-title" class="section__title">Contas de investimento</h2>
       @if (accountCards().length === 0) {
@@ -266,7 +381,7 @@
 
 <app-movement-modal
   [visible]="movementModalOpen()"
-  [accounts]="accounts()"
+  [accounts]="movementAccounts()"
   [editing]="editingMovement()"
   [preset]="movementPreset()"
   (closed)="closeMovementModal()"
