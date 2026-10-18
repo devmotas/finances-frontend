@@ -123,26 +123,60 @@
           <p class="empty__hint">Adicione entradas e saídas para ver o resumo</p>
         </div>
       } @else {
-        <h3 class="summary__title">Resumo do mês</h3>
+        <h2 class="summary__title">Resumo do mês</h2>
         <p class="summary__caption">
           Proporção por categoria nas quatro primeiras linhas (inclui aportes em investimentos); na última, total de
-          essenciais versus não essenciais — passe o mouse sobre as barras para detalhes
+          essenciais versus não essenciais. Os valores detalhados estão na tabela abaixo do gráfico.
         </p>
 
-        <div
-          class="overview-chart"
-          role="img"
-          [attr.aria-label]="
-            'Barras por categoria: entradas, despesas essenciais, não essenciais, investimentos e composição total das despesas'
-          "
-        >
+        <div class="overview-chart">
           <canvas
             baseChart
+            role="img"
+            [attr.aria-label]="chartSummaryLabel()"
             [data]="overviewChartData()"
             [options]="overviewChartOptions"
             [type]="overviewChartType"
           ></canvas>
         </div>
+
+        <details class="chart-data">
+          <summary class="chart-data__toggle">Ver dados do gráfico</summary>
+          <table class="chart-data__table">
+            <caption class="chart-data__caption">Valores por categoria em cada linha do gráfico</caption>
+            <thead>
+              <tr>
+                <th scope="col">Categoria</th>
+                <th scope="col" class="chart-data__num">Valor</th>
+                <th scope="col" class="chart-data__num">% da linha</th>
+              </tr>
+            </thead>
+            @for (row of chartTableRows(); track row.label) {
+              <tbody>
+                <tr class="chart-data__group">
+                  <th scope="rowgroup">{{ row.label }}</th>
+                  <td class="chart-data__num">
+                    {{ row.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                  </td>
+                  <td class="chart-data__num"></td>
+                </tr>
+                @for (item of row.items; track item.name) {
+                  <tr>
+                    <th scope="row" class="chart-data__item">{{ item.name }}</th>
+                    <td class="chart-data__num">
+                      {{ item.value | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                    </td>
+                    <td class="chart-data__num">{{ item.share | percent: '1.1-1' : 'pt-BR' }}</td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td class="chart-data__item chart-data__empty" colspan="3">Sem lançamentos nesta linha</td>
+                  </tr>
+                }
+              </tbody>
+            }
+          </table>
+        </details>
       }
     </div>
   }

@@ -15,19 +15,6 @@ import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { apiBaseUrlInterceptor } from './core/interceptors/api-base-url.interceptor';
 import { pendingRequestsInterceptor } from './core/interceptors/pending-requests.interceptor';
 
-import {
-  BarController,
-  BarElement,
-  CategoryScale,
-  Legend,
-  LinearScale,
-  LineController,
-  LineElement,
-  PointElement,
-  Tooltip,
-} from 'chart.js';
-import { provideCharts } from 'ng2-charts';
-
 import { APP_LUCIDE_ICONS } from './core/icons/app-lucide-icons';
 import { routes } from './app.routes';
 
@@ -37,19 +24,6 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideHttpClient(withInterceptors([pendingRequestsInterceptor, apiBaseUrlInterceptor, authInterceptor])),
     provideZoneChangeDetection({ eventCoalescing: true }),
-    provideCharts({
-      registerables: [
-        BarController,
-        BarElement,
-        CategoryScale,
-        LinearScale,
-        LineController,
-        LineElement,
-        PointElement,
-        Tooltip,
-        Legend,
-      ],
-    }),
     provideRouter(routes),
     importProvidersFrom(LucideAngularModule.pick(APP_LUCIDE_ICONS)),
     { provide: LOCALE_ID, useValue: 'pt-BR' },

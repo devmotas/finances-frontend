@@ -281,6 +281,76 @@
   margin-bottom: 0.25rem;
 }
 
+.chart-data {
+  margin-top: 1rem;
+  border-top: 1px solid var(--fin-border);
+  padding-top: 0.5rem;
+}
+
+.chart-data__toggle {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  cursor: pointer;
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-semibold);
+  color: var(--fin-primary);
+  border-radius: var(--fin-radius-sm);
+}
+
+.chart-data__toggle:hover {
+  color: var(--fin-primary-hover);
+}
+
+.chart-data__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fin-text-sm);
+  color: var(--fin-text-secondary);
+}
+
+.chart-data__caption {
+  text-align: left;
+  padding-bottom: 0.5rem;
+  font-size: var(--fin-text-xs);
+  color: var(--fin-text-muted);
+}
+
+.chart-data__table th,
+.chart-data__table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--fin-border);
+}
+
+.chart-data__table thead th {
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-semibold);
+  color: var(--fin-text-muted);
+}
+
+.chart-data__group th,
+.chart-data__group td {
+  background: var(--fin-bg-muted);
+  font-weight: var(--fin-weight-bold);
+  color: var(--fin-text);
+}
+
+.chart-data__table .chart-data__item {
+  font-weight: var(--fin-weight-medium);
+  padding-left: 1.25rem;
+}
+
+.chart-data__table .chart-data__num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.chart-data__empty {
+  color: var(--fin-text-muted);
+}
+
 @media (max-width: 480px) {
   .overview-chart {
     height: 300px;
@@ -350,5 +420,10 @@
 
   .overview-chart {
     height: 240px;
+  }
+
+  .chart-data__table th,
+  .chart-data__table td {
+    padding: 0.5rem;
   }
 }

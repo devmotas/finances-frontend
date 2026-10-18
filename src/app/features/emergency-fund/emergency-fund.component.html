@@ -75,12 +75,12 @@
       <p class="ef-progress__caption">100% indica que a reserva cobre pelo menos a meta de meses configurada.</p>
     </section>
   } @else if (loadFailed()) {
-    <div class="ef-empty panel">
+    <div class="ef-empty panel" role="alert">
       <span class="ef-empty__icon" aria-hidden="true">
         <lucide-icon name="piggy-bank" [size]="40" [strokeWidth]="1.75"></lucide-icon>
       </span>
       <p class="ef-empty__title">Não foi possível carregar o resumo</p>
-      <p class="ef-empty__hint">Confira se a API está no ar e se você está autenticado.</p>
+      <p class="ef-empty__hint">O servidor não respondeu. Recarregue a página em alguns instantes para tentar de novo.</p>
     </div>
   } @else {
     <app-month-loading />
