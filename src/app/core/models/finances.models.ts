@@ -37,6 +37,16 @@ export interface TransactionCreateDto {
   schedule: Schedule;
 }
 
+export interface TransactionRestoreDto {
+  categoryId: number;
+  description: string | null;
+  amount: number;
+  date: string;
+  schedule: Schedule;
+  recurrenceId: number | null;
+  recurrenceIndex: number | null;
+}
+
 export interface MonthTotals {
   totalIncome: number;
   totalEssential: number;

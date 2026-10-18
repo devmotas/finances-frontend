@@ -1,7 +1,7 @@
 import { of, Subject, throwError } from 'rxjs';
 import { Category, Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
-import { ToastService } from '../../../core/services/toast.service';
+import { ToastAction, ToastService } from '../../../core/services/toast.service';
 import { SERIES_DELETE_SCOPE } from './series-delete-scope';
 import { TransactionDeletion } from './transaction-deletion';
 
@@ -17,6 +17,8 @@ describe('TransactionDeletion', () => {
     schedule: 'fixed',
     recurrenceId: 3,
     amount: 100,
+    date: '2026-10-05',
+    recurrenceIndex: 2,
   } as Transaction;
   const singleTx = {
     id: 8,
@@ -25,23 +27,33 @@ describe('TransactionDeletion', () => {
     schedule: 'variable',
     recurrenceId: null,
     amount: 50,
+    date: '2026-10-09',
   } as Transaction;
+  const nextMonthTx = { ...seriesTx, id: 9, date: '2026-11-05', recurrenceIndex: 3 } as Transaction;
 
   let facade: jasmine.SpyObj<FinancesFacadeService>;
+  let toast: jasmine.SpyObj<ToastService>;
   let deletion: TransactionDeletion;
+
+  function undoAction(): ToastAction {
+    return toast.showWithAction.calls.mostRecent().args[2];
+  }
 
   beforeEach(() => {
     facade = jasmine.createSpyObj<FinancesFacadeService>('FinancesFacadeService', [
       'deleteTransaction',
       'getCategory',
+      'restoreTransactions',
     ]);
-    facade.deleteTransaction.and.returnValue(of(undefined) as never);
+    facade.deleteTransaction.and.returnValue(of([seriesTx, nextMonthTx]));
     facade.getCategory.and.returnValue({ id: 1, name: 'Moradia' } as Category);
-    const toast = jasmine.createSpyObj<ToastService>('ToastService', ['show']);
-    deletion = new TransactionDeletion(facade, toast, {
-      itemLabel: () => 'esta saída',
-      deletedMessage: () => 'Saída excluída.',
-    });
+    toast = jasmine.createSpyObj<ToastService>('ToastService', ['show', 'showWithAction']);
+    facade.restoreTransactions.and.returnValue(of([seriesTx, nextMonthTx]));
+    deletion = new TransactionDeletion(
+      facade,
+      toast,
+      { itemLabel: () => 'esta saída', deletedMessage: () => 'Saída excluída.' }
+    );
   });
 
   it('identifica o lançamento pela descrição e pelo valor', () => {
@@ -88,7 +100,7 @@ describe('TransactionDeletion', () => {
   });
 
   it('mantém o modal aberto e indica o escopo enquanto a exclusão está em andamento', () => {
-    const response = new Subject<void>();
+    const response = new Subject<Transaction[]>();
     facade.deleteTransaction.and.returnValue(response as never);
     deletion.request(seriesTx);
 
@@ -100,7 +112,7 @@ describe('TransactionDeletion', () => {
     expect(deletion.deletingScope()).toBe(SERIES_DELETE_SCOPE.thisAndFuture);
     expect(facade.deleteTransaction).toHaveBeenCalledTimes(1);
 
-    response.next();
+    response.next([seriesTx]);
     response.complete();
 
     expect(deletion.isOpen()).toBeFalse();
@@ -115,5 +127,77 @@ describe('TransactionDeletion', () => {
 
     expect(deletion.isOpen()).toBeTrue();
     expect(deletion.deletingScope()).toBeNull();
+  });
+
+  it('oferece desfazer a exclusão no toast de sucesso', () => {
+    deletion.request(seriesTx);
+    deletion.confirm(SERIES_DELETE_SCOPE.thisAndFuture);
+
+    expect(toast.showWithAction).toHaveBeenCalledOnceWith(
+      'Saída excluída.',
+      'success',
+      jasmine.objectContaining({ label: 'Desfazer', busyLabel: 'Desfazendo…' })
+    );
+  });
+
+  it('desfazer restaura todas as linhas excluídas e recarrega o mês', () => {
+    deletion.request(seriesTx);
+    deletion.confirm(SERIES_DELETE_SCOPE.thisAndFuture);
+
+    undoAction().run().subscribe();
+
+    expect(facade.restoreTransactions).toHaveBeenCalledOnceWith([
+      {
+        categoryId: 1,
+        description: 'Academia',
+        amount: 100,
+        date: '2026-10-05',
+        schedule: 'fixed',
+        recurrenceId: 3,
+        recurrenceIndex: 2,
+      },
+      {
+        categoryId: 1,
+        description: 'Academia',
+        amount: 100,
+        date: '2026-11-05',
+        schedule: 'fixed',
+        recurrenceId: 3,
+        recurrenceIndex: 3,
+      },
+    ]);
+    expect(toast.show).toHaveBeenCalledOnceWith('Exclusão desfeita.', 'success');
+  });
+
+  it('desfazer envia descrição vazia como nula e lançamento avulso sem série', () => {
+    facade.deleteTransaction.and.returnValue(of([singleTx]));
+    deletion.request(singleTx);
+    deletion.confirm(SERIES_DELETE_SCOPE.thisMonth);
+
+    undoAction().run().subscribe();
+
+    expect(facade.restoreTransactions).toHaveBeenCalledOnceWith([
+      {
+        categoryId: 1,
+        description: null,
+        amount: 50,
+        date: '2026-10-09',
+        schedule: 'variable',
+        recurrenceId: null,
+        recurrenceIndex: null,
+      },
+    ]);
+  });
+
+  it('avisa quando não consegue desfazer', () => {
+    facade.restoreTransactions.and.returnValue(throwError(() => new Error('offline')));
+    deletion.request(seriesTx);
+    deletion.confirm(SERIES_DELETE_SCOPE.thisMonth);
+    const completed = jasmine.createSpy('completed');
+
+    undoAction().run().subscribe({ complete: completed });
+
+    expect(completed).toHaveBeenCalled();
+    expect(toast.show).toHaveBeenCalledOnceWith(jasmine.any(String), 'error');
   });
 });

@@ -1,6 +1,6 @@
 import { computed, signal } from '@angular/core';
-import { finalize } from 'rxjs';
-import { Transaction } from '../../../core/models/finances.models';
+import { catchError, EMPTY, finalize, Observable, tap } from 'rxjs';
+import { Transaction, TransactionRestoreDto } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { formatBrl } from '../../../core/utils/brl-format';
@@ -9,6 +9,10 @@ import { isSeriesTransaction } from '../../../core/utils/transaction-series';
 import { SERIES_DELETE_SCOPE, SeriesDeleteScope } from './series-delete-scope';
 
 const DELETE_FAILED_MESSAGE = 'Não foi possível excluir o lançamento.';
+const UNDO_LABEL = 'Desfazer';
+const UNDO_BUSY_LABEL = 'Desfazendo…';
+const UNDO_SUCCESS_MESSAGE = 'Exclusão desfeita.';
+const UNDO_FAILED_MESSAGE = 'Não foi possível desfazer a exclusão.';
 
 export interface TransactionDeletionTexts {
   itemLabel(t: Transaction): string;
@@ -69,11 +73,41 @@ export class TransactionDeletion {
       .deleteTransaction(t.id, { applyToFutureSeries })
       .pipe(finalize(() => this.runningScope.set(null)))
       .subscribe({
-        next: () => {
+        next: (deleted) => {
           this.pending.set(null);
-          this.toast.show(this.texts.deletedMessage(t), 'success');
+          this.notifyDeleted(t, deleted);
         },
         error: (err: unknown) => this.toast.show(httpErrorMessage(err, DELETE_FAILED_MESSAGE), 'error'),
       });
   }
+
+  private notifyDeleted(t: Transaction, deleted: Transaction[]): void {
+    this.toast.showWithAction(this.texts.deletedMessage(t), 'success', {
+      label: UNDO_LABEL,
+      busyLabel: UNDO_BUSY_LABEL,
+      run: () => this.undo(deleted),
+    });
+  }
+
+  private undo(deleted: Transaction[]): Observable<unknown> {
+    return this.facade.restoreTransactions(deleted.map(toRestoreDto)).pipe(
+      tap(() => this.toast.show(UNDO_SUCCESS_MESSAGE, 'success')),
+      catchError((err: unknown) => {
+        this.toast.show(httpErrorMessage(err, UNDO_FAILED_MESSAGE), 'error');
+        return EMPTY;
+      })
+    );
+  }
+}
+
+function toRestoreDto(t: Transaction): TransactionRestoreDto {
+  return {
+    categoryId: t.categoryId,
+    description: t.description || null,
+    amount: t.amount,
+    date: t.date,
+    schedule: t.schedule,
+    recurrenceId: t.recurrenceId ?? null,
+    recurrenceIndex: t.recurrenceIndex ?? null,
+  };
 }

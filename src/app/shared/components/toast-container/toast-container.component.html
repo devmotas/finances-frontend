@@ -20,6 +20,17 @@
     (focusout)="resume(t.id)"
   >
     <span class="toast__msg">{{ t.message }}</span>
+    @if (t.action; as action) {
+      <button
+        type="button"
+        class="toast__action"
+        [appBusyButton]="t.actionBusy"
+        [busyLabel]="action.busyLabel"
+        (click)="runAction(t.id)"
+      >
+        {{ action.label }}
+      </button>
+    }
     <button type="button" class="toast__close" (click)="dismiss(t.id)" aria-label="Fechar notificação">×</button>
   </div>
 </ng-template>

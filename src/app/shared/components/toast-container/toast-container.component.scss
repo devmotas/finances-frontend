@@ -68,6 +68,41 @@
   box-shadow: var(--fin-shadow-md);
 }
 
+.toast__msg {
+  flex: 1;
+  align-self: center;
+}
+
+.toast__action {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  margin: -0.5rem 0;
+  border: none;
+  border-radius: var(--fin-radius-sm);
+  background: transparent;
+  color: var(--fin-primary);
+  font: inherit;
+  font-weight: var(--fin-weight-semibold);
+  cursor: pointer;
+  transition:
+    background var(--fin-transition-fast),
+    color var(--fin-transition-fast);
+}
+
+.toast__action:hover:not(:disabled) {
+  background: var(--fin-primary-muted);
+  color: var(--fin-primary-hover);
+}
+
+.toast__action:focus-visible {
+  outline: 2px solid var(--fin-primary);
+  outline-offset: 2px;
+}
+
 .toast__close {
   flex-shrink: 0;
   border: none;

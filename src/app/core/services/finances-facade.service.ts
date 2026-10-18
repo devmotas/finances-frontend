@@ -20,6 +20,7 @@ import {
   MonthTotals,
   Transaction,
   TransactionCreateDto,
+  TransactionRestoreDto,
 } from '../models/finances.models';
 import { LOAD_STATE, LoadState } from '../models/load-state.model';
 import { computeMonthTotals, filterTransactionsByMonth } from '../utils/finance-calculations';
@@ -248,6 +249,12 @@ export class FinancesFacadeService {
     return this.transactionApi
       .delete(id, options?.applyToFutureSeries === true)
       .pipe(tap(() => this.afterTransactionChange(flow)));
+  }
+
+  restoreTransactions(transactions: TransactionRestoreDto[]) {
+    return this.transactionApi
+      .restore(transactions)
+      .pipe(tap((restored) => this.afterTransactionChange(restored[0]?.flow)));
   }
 
   private afterTransactionChange(flow: Flow | undefined): void {

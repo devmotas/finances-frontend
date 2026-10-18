@@ -1,8 +1,20 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
-import { Transaction, TransactionCreateDto } from '../models/finances.models';
+import {
+  Transaction,
+  TransactionCreateDto,
+  TransactionRestoreDto,
+} from '../models/finances.models';
 import { TransactionApiDto, mapTransactionApiDto } from '../utils/api-mappers';
+
+interface DeletedTransactionsResponse {
+  deleted: TransactionApiDto[];
+}
+
+interface RestoredTransactionsResponse {
+  restored: TransactionApiDto[];
+}
 
 @Injectable({ providedIn: 'root' })
 export class TransactionApiService {
@@ -31,8 +43,16 @@ export class TransactionApiService {
       .pipe(map(mapTransactionApiDto));
   }
 
-  delete(id: number, applyToFutureSeries = false): Observable<void> {
+  delete(id: number, applyToFutureSeries = false): Observable<Transaction[]> {
     const params = new HttpParams().set('applyToFutureSeries', String(applyToFutureSeries));
-    return this.http.delete<void>(`${this.base}/${id}`, { params });
+    return this.http
+      .delete<DeletedTransactionsResponse>(`${this.base}/${id}`, { params })
+      .pipe(map((res) => res.deleted.map(mapTransactionApiDto)));
+  }
+
+  restore(transactions: TransactionRestoreDto[]): Observable<Transaction[]> {
+    return this.http
+      .post<RestoredTransactionsResponse>(`${this.base}/restore`, { transactions })
+      .pipe(map((res) => res.restored.map(mapTransactionApiDto)));
   }
 }
