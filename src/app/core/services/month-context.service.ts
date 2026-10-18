@@ -1,4 +1,5 @@
 import { Injectable, signal } from '@angular/core';
+import { monthYearLabel } from '../utils/month-label';
 
 export interface YearMonth {
   year: number;
@@ -46,7 +47,6 @@ export class MonthContextService {
 
   labelPtBr(): string {
     const { year, month } = this.selected();
-    const d = new Date(year, month - 1, 1);
-    return d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return monthYearLabel(year, month);
   }
 }

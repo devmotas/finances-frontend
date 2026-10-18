@@ -28,6 +28,7 @@ import {
   formatCompactBrl,
 } from '../../shared/charts/chart-theme';
 import { formatBrl } from '../../core/utils/brl-format';
+import { monthYearLabel } from '../../core/utils/month-label';
 import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
 
 const INITIAL_BALANCE_SHADE = 3;
@@ -311,9 +312,7 @@ export class InvestmentsComponent {
 
   readonly selectedMonthTitleLabel = computed(() => {
     const { year, month } = this.monthCtx.selectedMonth();
-    const d = new Date(year, month - 1, 1);
-    const raw = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    return raw.charAt(0).toUpperCase() + raw.slice(1);
+    return monthYearLabel(year, month);
   });
 
   categoryTotalAccent(index: number): string {
