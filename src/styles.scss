@@ -45,6 +45,8 @@
   --fin-investment: #5b21b6;
   --fin-investment-hover: #4c1d95;
   --fin-investment-soft: color-mix(in srgb, var(--fin-investment) 12%, var(--fin-surface));
+  --fin-warning: #975a06;
+  --fin-warning-soft: color-mix(in srgb, var(--fin-warning) 12%, var(--fin-surface));
 
   --fin-radius: 12px;
   --fin-radius-sm: 8px;

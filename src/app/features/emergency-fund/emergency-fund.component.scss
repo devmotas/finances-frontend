@@ -52,7 +52,7 @@
 }
 
 .ef-card--highlight::before {
-  background: linear-gradient(180deg, var(--fin-primary), color-mix(in srgb, var(--fin-primary) 65%, #000));
+  background: var(--fin-text);
 }
 
 .ef-card__label {
@@ -80,10 +80,6 @@
 
 .ef-card__value--inv {
   color: var(--fin-investment);
-}
-
-.ef-card__value--accent {
-  color: var(--fin-primary);
 }
 
 .ef-card__hint {
