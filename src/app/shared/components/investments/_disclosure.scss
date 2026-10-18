@@ -1,0 +1,31 @@
+@use '../../styles/touch';
+
+.disclosure__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: touch.$min-target;
+  list-style: none;
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-semibold);
+  color: var(--fin-primary);
+  border-radius: var(--fin-radius-sm);
+  cursor: pointer;
+  transition: color var(--fin-transition-fast);
+}
+
+.disclosure__toggle::-webkit-details-marker {
+  display: none;
+}
+
+.disclosure__toggle:hover {
+  color: var(--fin-primary-hover);
+}
+
+.disclosure__chevron {
+  transition: transform var(--fin-transition-fast);
+}
+
+.disclosure[open] .disclosure__chevron {
+  transform: rotate(180deg);
+}

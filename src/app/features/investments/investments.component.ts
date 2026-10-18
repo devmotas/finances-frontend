@@ -1,49 +1,55 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
-import { ChartConfiguration, ChartData } from 'chart.js';
-import { BaseChartDirective } from 'ng2-charts';
+import { Component, computed, inject, signal } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
-import { catchError, distinctUntilChanged, filter, map, merge, of, switchMap, tap } from 'rxjs';
-import { Flow, Transaction } from '../../core/models/finances.models';
-import { FinancesFacadeService } from '../../core/services/finances-facade.service';
+import { finalize } from 'rxjs';
 import {
-  InvestmentApiService,
-  InvestmentMonthViewDto,
-} from '../../core/services/investment-api.service';
-import { MonthContextService } from '../../core/services/month-context.service';
+  InvestmentAccountRecord,
+  InvestmentMonthAccount,
+  InvestmentMovement,
+  MOVEMENT_DIRECTION,
+  MovementDirection,
+} from '../../core/models/investment-accounts.models';
+import { FinancesFacadeService } from '../../core/services/finances-facade.service';
+import { InvestmentAccountsApiService } from '../../core/services/investment-accounts-api.service';
+import { InvestmentApiService } from '../../core/services/investment-api.service';
+import { InvestmentMovementsApiService } from '../../core/services/investment-movements-api.service';
 import { ToastService } from '../../core/services/toast.service';
+import { formatBrl } from '../../core/utils/brl-format';
 import { httpErrorMessage } from '../../core/utils/http-error.util';
-import { isSeriesTransaction } from '../../core/utils/transaction-series';
-import { CategoryModalComponent } from '../../shared/components/category-modal/category-modal.component';
-import { SeriesDeleteModalComponent } from '../../shared/components/series-delete-modal/series-delete-modal.component';
-import { TransactionDeletion } from '../../shared/components/series-delete-modal/transaction-deletion';
-import { TransactionModalComponent } from '../../shared/components/transaction-modal/transaction-modal.component';
+import { formatIsoDate } from '../../shared/components/investments/investment-form';
+import { monthScopedResource } from '../../shared/components/investments/month-scoped-resource';
 import { MonthLoadErrorComponent } from '../../shared/components/month-load-error/month-load-error.component';
 import { MonthLoadingComponent } from '../../shared/components/month-loading/month-loading.component';
+import { SeriesDeleteModalComponent } from '../../shared/components/series-delete-modal/series-delete-modal.component';
+import { AccountModalComponent } from './account-modal/account-modal.component';
+import { accountMonthNet, hasMissingToTarget } from './account-metrics';
 import {
-  CHART_SEGMENT_BORDER,
-  cssToken,
-  flowShade,
-  formatCompactBrl,
-} from '../../shared/charts/chart-theme';
-import { formatBrl } from '../../core/utils/brl-format';
-import { monthYearLabel } from '../../core/utils/month-label';
-import { TransactionActionLabelPipe } from '../../shared/pipes/transaction-action-label.pipe';
+  ACCOUNT_ROLE_LABEL,
+  directionActionLabel,
+  directionBadgeLabel,
+  directionItemLabel,
+  isShortTermReserve,
+} from './account-role';
+import { BalanceUpdateModalComponent } from './balance-update-modal/balance-update-modal.component';
+import { EvolutionChartComponent } from './evolution-chart/evolution-chart.component';
+import { MovementDeletion } from './movement-deletion';
+import { MovementModalComponent, MovementPreset } from './movement-modal/movement-modal.component';
 
-const INITIAL_BALANCE_SHADE = 3;
-const MONTH_SHADE = 0;
+const FEEDBACK = {
+  accountDeleted: 'Conta excluída.',
+  accountDeleteFailed: 'Não foi possível excluir a conta.',
+  accountRequired: 'Crie uma conta antes de registrar um aporte ou resgate.',
+} as const;
 
-const INVESTMENT_FLOW: Flow = 'investment';
+const DEFAULT_PRESET: MovementPreset = { accountId: null, direction: MOVEMENT_DIRECTION.contribution };
 
-interface EvolutionDataRow {
-  label: string;
-  invested: number;
-  cumulativeWealth: number;
-}
-
-function isWithdrawal(t: Transaction): boolean {
-  return t.amount < 0;
+export interface AccountCard {
+  account: InvestmentMonthAccount;
+  roleLabel: string;
+  isShortTerm: boolean;
+  monthNet: number;
+  monthYield: number | null;
+  hasMissing: boolean;
 }
 
 @Component({
@@ -51,325 +57,186 @@ function isWithdrawal(t: Transaction): boolean {
   imports: [
     CurrencyPipe,
     LucideAngularModule,
-    BaseChartDirective,
-    CategoryModalComponent,
-    TransactionModalComponent,
-    SeriesDeleteModalComponent,
     MonthLoadErrorComponent,
     MonthLoadingComponent,
-    TransactionActionLabelPipe,
+    SeriesDeleteModalComponent,
+    AccountModalComponent,
+    MovementModalComponent,
+    BalanceUpdateModalComponent,
+    EvolutionChartComponent,
   ],
   templateUrl: './investments.component.html',
   styleUrl: './investments.component.scss',
 })
 export class InvestmentsComponent {
-  private readonly destroyRef = inject(DestroyRef);
-  readonly facade = inject(FinancesFacadeService);
+  private readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
-  readonly deletion = new TransactionDeletion(this.facade, this.toast, {
-    itemLabel: (t) => (isWithdrawal(t) ? 'este resgate' : 'este aporte'),
-    deletedMessage: (t) => (isWithdrawal(t) ? 'Resgate excluído.' : 'Aporte excluído.'),
-  });
-  private readonly monthCtx = inject(MonthContextService);
   private readonly investmentApi = inject(InvestmentApiService);
+  private readonly accountsApi = inject(InvestmentAccountsApiService);
 
-  readonly categoryOpen = signal(false);
-  readonly txOpen = signal(false);
-  readonly editingTx = signal<Transaction | null>(null);
-  readonly txInvestmentIntent = signal<'aporte' | 'resgate'>('aporte');
-  readonly filterCategoryId = signal<number | null>(null);
+  readonly monthView = monthScopedResource((ym) => this.investmentApi.getMonthView(ym.year, ym.month));
+  readonly view = this.monthView.value;
 
-  readonly apiMeta = signal<InvestmentMonthViewDto | null>(null);
-
-  constructor() {
-    const monthChanges$ = toObservable(this.monthCtx.selectedMonth).pipe(
-      distinctUntilChanged((a, b) => a.year === b.year && a.month === b.month),
-      tap(() => this.apiMeta.set(null))
-    );
-    const investmentChanges$ = this.facade.dataChanged$.pipe(
-      filter((flow) => flow === INVESTMENT_FLOW),
-      map(() => this.monthCtx.selectedMonth())
-    );
-
-    merge(monthChanges$, investmentChanges$)
-      .pipe(
-        switchMap((ym) =>
-          this.investmentApi.getMonthView(ym.year, ym.month).pipe(catchError(() => of(null)))
-        ),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe((v) => this.apiMeta.set(v));
-  }
-
-  readonly list = computed(() => {
-    const fid = this.filterCategoryId();
-    const items = this.facade.monthTransactions().filter((t) => t.flow === 'investment');
-    if (fid == null) return items;
-    return items.filter((t) => t.categoryId === fid);
+  readonly deletion = new MovementDeletion(inject(InvestmentMovementsApiService), this.toast, {
+    describe: (movement) => this.describeMovement(movement),
+    changed: () => this.refresh(),
   });
 
-  readonly monthInvested = computed(() => this.facade.monthTotals().totalInvestments);
+  readonly accountModalOpen = signal(false);
+  readonly editingAccount = signal<InvestmentAccountRecord | null>(null);
+  readonly movementModalOpen = signal(false);
+  readonly editingMovement = signal<InvestmentMovement | null>(null);
+  readonly movementPreset = signal<MovementPreset>(DEFAULT_PRESET);
+  readonly balanceAccount = signal<InvestmentMonthAccount | null>(null);
+  readonly deletingAccountId = signal<number | null>(null);
+  readonly filterAccountId = signal<number | null>(null);
 
-  readonly positionBeforeMonth = computed(() => this.apiMeta()?.summary.positionBeforeMonth ?? null);
+  readonly directions = MOVEMENT_DIRECTION;
+  readonly formatDate = formatIsoDate;
 
-  readonly positionThroughMonthEnd = computed(() => this.apiMeta()?.summary.positionThroughMonthEnd ?? null);
+  readonly accounts = computed(() => this.view()?.accounts ?? []);
+  readonly hasAccounts = computed(() => this.accounts().length > 0);
 
-  readonly chartLabels = computed(() => {
-    const s = this.apiMeta()?.monthlySeries ?? [];
-    return s.map((p) => {
-      const label = p.displayLabel?.trim();
-      if (label) return label;
-      const d = new Date(p.year, p.month - 1, 1);
-      return d.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' });
-    });
-  });
-
-  readonly chartDataRows = computed((): EvolutionDataRow[] => {
-    const labels = this.chartLabels();
-    return (this.apiMeta()?.monthlySeries ?? []).map((point, index) => ({
-      label: labels[index],
-      invested: point.invested,
-      cumulativeWealth: point.cumulativeWealth,
+  readonly accountCards = computed((): AccountCard[] => {
+    const view = this.view();
+    if (!view) return [];
+    return view.accounts.map((account) => ({
+      account,
+      roleLabel: ACCOUNT_ROLE_LABEL[account.role],
+      isShortTerm: isShortTermReserve(account.role),
+      monthNet: accountMonthNet(account),
+      monthYield: account.monthYield,
+      hasMissing: hasMissingToTarget(account),
     }));
   });
 
-  readonly evolutionChartSummary = computed(() => {
-    const rows = this.chartDataRows();
-    const first = rows.at(0);
-    const last = rows.at(-1);
-    if (!first || !last) return '';
-    return (
-      `Evolução dos investimentos: patrimônio acumulado passa de ${formatBrl(first.cumulativeWealth)} ` +
-      `em ${first.label} para ${formatBrl(last.cumulativeWealth)} em ${last.label}. ` +
-      'Valores detalhados em "Ver dados do gráfico".'
-    );
+  readonly summary = computed(() => this.view()?.summary ?? null);
+  readonly monthYield = computed(() => this.summary()?.monthYield ?? null);
+
+  readonly movements = computed(() => {
+    const all = this.view()?.transactions ?? [];
+    const accountId = this.filterAccountId();
+    return accountId === null ? all : all.filter((m) => m.investmentAccountId === accountId);
   });
 
-  readonly useStackedInvestmentChart = computed(() => {
-    const m = this.apiMeta();
-    if (!m) return false;
-    const cats = m.stackCategories;
-    if (cats.length === 0) return false;
-    return m.monthlySeries.every((row) => row.categoryAmounts.length === cats.length);
-  });
+  accountName(movement: InvestmentMovement): string {
+    return this.findAccount(movement.investmentAccountId)?.name ?? '';
+  }
 
-  readonly evolutionChartData = computed((): ChartData<'bar'> => {
-    const meta = this.apiMeta();
-    const s = meta?.monthlySeries ?? [];
-    const labels = this.chartLabels();
-    const stacked = this.useStackedInvestmentChart();
-    const cats = meta?.stackCategories ?? [];
+  badgeLabel(movement: InvestmentMovement): string {
+    return directionBadgeLabel(this.findAccount(movement.investmentAccountId)?.role, movement.direction);
+  }
 
-    const lineDataset = {
-      type: 'line' as const,
-      label: 'Patrimônio acumulado',
-      data: s.map((p) => p.cumulativeWealth),
-      yAxisID: 'y1',
-      borderColor: cssToken('--fin-investment-hover'),
-      backgroundColor: cssToken('--fin-investment-hover'),
-      borderWidth: 2.5,
-      tension: 0.25,
-      pointRadius: 3,
-      pointBackgroundColor: cssToken('--fin-investment-hover'),
-      order: 1,
-      fill: false,
-    };
+  actionLabel(card: AccountCard, direction: MovementDirection): string {
+    return directionActionLabel(card.account.role, direction);
+  }
 
-    if (!stacked) {
-      const barBg = s.map((p) =>
-        flowShade('investment', p.displayLabel ? INITIAL_BALANCE_SHADE : MONTH_SHADE)
-      );
-      return {
-        labels,
-        datasets: [
-          {
-            type: 'bar',
-            label: 'Total no período',
-            data: s.map((p) => p.invested),
-            yAxisID: 'y',
-            backgroundColor: barBg,
-            borderColor: CHART_SEGMENT_BORDER,
-            borderWidth: 1,
-            borderRadius: 4,
-            borderSkipped: false,
-            order: 2,
-          },
-          lineDataset,
-        ],
-      } as ChartData<'bar'>;
-    }
+  movementActionLabel(action: string, movement: InvestmentMovement): string {
+    return `${action} ${this.describeMovement(movement)}`;
+  }
 
-    const barDatasets = cats.map((cat, idx) => {
-      const short =
-        cat.name.length > 26 ? `${cat.name.slice(0, 24).trimEnd()}…` : cat.name;
-      return {
-        type: 'bar' as const,
-        label: short,
-        data: s.map((row) => row.categoryAmounts[idx] ?? 0),
-        yAxisID: 'y',
-        stack: 'inv',
-        backgroundColor: flowShade('investment', idx),
-        borderColor: CHART_SEGMENT_BORDER,
-        borderWidth: 1,
-        borderRadius: 2,
-        borderSkipped: false,
-        order: 2,
-      };
-    });
+  selectAllAccounts(): void {
+    this.filterAccountId.set(null);
+  }
 
-    return {
-      labels,
-      datasets: [...barDatasets, lineDataset],
-    } as ChartData<'bar'>;
-  });
+  toggleAccountFilter(id: number): void {
+    this.filterAccountId.update((current) => (current === id ? null : id));
+  }
 
-  readonly evolutionChartType = 'bar' as const;
+  openNewAccount(): void {
+    this.editingAccount.set(null);
+    this.accountModalOpen.set(true);
+  }
 
-  readonly evolutionChartOptions = computed((): ChartConfiguration<'bar'>['options'] => {
-    const stacked = this.useStackedInvestmentChart();
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'bottom',
-          labels: { boxWidth: 10, font: { size: 10 }, color: cssToken('--fin-text-secondary') },
+  openEditAccount(account: InvestmentMonthAccount): void {
+    this.editingAccount.set(account);
+    this.accountModalOpen.set(true);
+  }
+
+  closeAccountModal(): void {
+    this.accountModalOpen.set(false);
+    this.editingAccount.set(null);
+  }
+
+  onAccountSaved(): void {
+    this.closeAccountModal();
+    this.refresh();
+  }
+
+  deleteAccount(account: InvestmentMonthAccount): void {
+    if (this.deletingAccountId() !== null) return;
+    if (!confirm(`Excluir a conta "${account.name}"?`)) return;
+    this.deletingAccountId.set(account.id);
+    this.accountsApi
+      .delete(account.id)
+      .pipe(finalize(() => this.deletingAccountId.set(null)))
+      .subscribe({
+        next: () => {
+          this.toast.show(FEEDBACK.accountDeleted, 'success');
+          this.refresh();
         },
-        tooltip: {
-          filter: (item) => {
-            if (item.dataset.yAxisID === 'y1') return true;
-            const v = item.raw as number;
-            return Math.abs(Number(v)) > 1e-9;
-          },
-          callbacks: {
-            label: (ctx) => {
-              const v = ctx.raw as number;
-              const formatted = new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL',
-              }).format(v);
-              if (ctx.dataset.yAxisID === 'y1') {
-                return `${ctx.dataset.label ?? 'Patrimônio'}: ${formatted}`;
-              }
-              return `${ctx.dataset.label ?? ''}: ${formatted}`;
-            },
-          },
-        },
-      },
-      scales: {
-        x: {
-          stacked,
-          grid: { color: cssToken('--fin-border') },
-          ticks: {
-            font: { size: 11 },
-            color: cssToken('--fin-text-muted'),
-            maxRotation: 40,
-            minRotation: 0,
-          },
-        },
-        y: {
-          type: 'linear',
-          position: 'left',
-          beginAtZero: true,
-          stacked,
-          title: {
-            display: true,
-            text: stacked ? 'Por categoria (R$)' : 'Valor da coluna (R$)',
-            color: cssToken('--fin-text-muted'),
-            font: { size: 11 },
-          },
-          grid: { color: cssToken('--fin-border') },
-          ticks: {
-            color: cssToken('--fin-text-muted'),
-            callback: (value) => formatCompactBrl(Number(value)),
-          },
-        },
-        y1: {
-          type: 'linear',
-          position: 'right',
-          beginAtZero: true,
-          stacked: false,
-          grid: { drawOnChartArea: false },
-          title: { display: true, text: 'Patrimônio (R$)', color: cssToken('--fin-text-muted'), font: { size: 11 } },
-          ticks: {
-            color: cssToken('--fin-text-muted'),
-            callback: (value) => formatCompactBrl(Number(value)),
-          },
-        },
-      },
-    };
-  });
-
-  readonly categories = computed(() => this.facade.investmentCategories());
-
-  readonly hasChartSeries = computed(() => (this.apiMeta()?.monthlySeries.length ?? 0) > 0);
-
-  readonly categoryPositionTotals = computed(
-    () => this.apiMeta()?.categoryTotalsThroughSelectedMonth ?? []
-  );
-
-  readonly selectedMonthTitleLabel = computed(() => {
-    const { year, month } = this.monthCtx.selectedMonth();
-    return monthYearLabel(year, month);
-  });
-
-  categoryTotalAccent(index: number): string {
-    return flowShade('investment', index);
+        error: (err: unknown) =>
+          this.toast.show(httpErrorMessage(err, FEEDBACK.accountDeleteFailed), 'error'),
+      });
   }
 
-  openCategory(): void {
-    this.categoryOpen.set(true);
-  }
-
-  closeCategory(): void {
-    this.categoryOpen.set(false);
-  }
-
-  closeTx(): void {
-    this.txOpen.set(false);
-    this.editingTx.set(null);
-    this.txInvestmentIntent.set('aporte');
-  }
-
-  editTx(t: Transaction): void {
-    this.txInvestmentIntent.set(isWithdrawal(t) ? 'resgate' : 'aporte');
-    this.editingTx.set(t);
-    this.txOpen.set(true);
-  }
-
-  txHasRecurrence(t: Transaction): boolean {
-    return isSeriesTransaction(t);
-  }
-
-  selectAllFilter(): void {
-    this.filterCategoryId.set(null);
-  }
-
-  toggleCategoryFilter(id: number): void {
-    this.filterCategoryId.update((cur) => (cur === id ? null : id));
-  }
-
-  openNewTx(): void {
-    if (this.facade.investmentCategories().length === 0) {
-      this.toast.show('Crie uma categoria antes de registrar um aporte.', 'info');
-      this.categoryOpen.set(true);
+  openNewMovement(
+    accountId: number | null = null,
+    direction: MovementDirection = MOVEMENT_DIRECTION.contribution
+  ): void {
+    if (!this.view()) return;
+    if (!this.hasAccounts()) {
+      this.toast.show(FEEDBACK.accountRequired, 'info');
+      this.openNewAccount();
       return;
     }
-    this.txInvestmentIntent.set('aporte');
-    this.editingTx.set(null);
-    this.txOpen.set(true);
+    this.editingMovement.set(null);
+    this.movementPreset.set({ accountId, direction });
+    this.movementModalOpen.set(true);
   }
 
-  openNewResgate(): void {
-    if (this.facade.investmentCategories().length === 0) {
-      this.toast.show('Crie uma categoria antes de registrar um resgate.', 'info');
-      this.categoryOpen.set(true);
-      return;
-    }
-    this.txInvestmentIntent.set('resgate');
-    this.editingTx.set(null);
-    this.txOpen.set(true);
+  openEditMovement(movement: InvestmentMovement): void {
+    this.editingMovement.set(movement);
+    this.movementModalOpen.set(true);
+  }
+
+  closeMovementModal(): void {
+    this.movementModalOpen.set(false);
+    this.editingMovement.set(null);
+  }
+
+  onMovementSaved(): void {
+    this.closeMovementModal();
+    this.refresh();
+  }
+
+  openBalanceUpdate(account: InvestmentMonthAccount): void {
+    this.balanceAccount.set(account);
+  }
+
+  closeBalanceUpdate(): void {
+    this.balanceAccount.set(null);
+  }
+
+  onBalanceUpdated(): void {
+    this.closeBalanceUpdate();
+    this.refresh();
+  }
+
+  private refresh(): void {
+    this.monthView.reload();
+    this.facade.reloadCurrentMonth();
+  }
+
+  private findAccount(id: number): InvestmentMonthAccount | undefined {
+    return this.accounts().find((account) => account.id === id);
+  }
+
+  private describeMovement(movement: InvestmentMovement): string {
+    const role = this.findAccount(movement.investmentAccountId)?.role;
+    const kind = directionItemLabel(role, movement.direction);
+    const name = movement.description?.trim() || this.accountName(movement);
+    const amount = formatBrl(movement.amount);
+    return name ? `${kind} “${name}” de ${amount}` : `${kind} de ${amount}`;
   }
 }

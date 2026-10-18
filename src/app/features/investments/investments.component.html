@@ -3,272 +3,286 @@
     <div class="page__head-top">
       <h1 class="page__title">Investimentos</h1>
       <div class="page__actions">
-        <button type="button" class="btn btn--secondary" (click)="openCategory()">
+        <button type="button" class="btn btn--secondary" (click)="openNewAccount()">
           <span class="btn__icon" aria-hidden="true">
-            <lucide-icon name="tag" [size]="18" [strokeWidth]="2"></lucide-icon>
+            <lucide-icon name="wallet" [size]="18" [strokeWidth]="2"></lucide-icon>
           </span>
-          Categoria
+          Nova conta
         </button>
-        <button type="button" class="btn btn--secondary" (click)="openNewResgate()">
-          <span class="btn__icon" aria-hidden="true">
-            <lucide-icon name="arrow-down-left" [size]="18" [strokeWidth]="2"></lucide-icon>
-          </span>
-          Resgate
-        </button>
-        <button type="button" class="btn btn--primary" (click)="openNewTx()">
+        <button type="button" class="btn btn--primary" (click)="openNewMovement()">
           <span class="btn__icon btn__icon--lead" aria-hidden="true">
             <lucide-icon name="plus" [size]="20" [strokeWidth]="2.5"></lucide-icon>
           </span>
-          Aporte
+          Aporte ou resgate
         </button>
       </div>
     </div>
-    @if (facade.isMonthDataReady()) {
-      <p class="page__stats" role="group" aria-label="Resumo de investimentos no mês selecionado">
+    @if (summary(); as s) {
+      <p class="page__stats" role="group" aria-label="Resumo dos investimentos no mês selecionado">
         <span class="page__stat">
-          <span class="page__stat-label">Investimentos no mês (líquido)</span>
-          <span class="page__stat-value page__stat-value--month">{{
-            monthInvested() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+          <span class="page__stat-label">Patrimônio no fim do mês</span>
+          <span class="page__stat-value page__stat-value--inv">{{
+            s.positionThroughMonthEnd | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
           }}</span>
         </span>
         <span class="page__stat-sep" aria-hidden="true"></span>
         <span class="page__stat">
-          <span class="page__stat-label">Patrimônio antes do mês</span>
-          <span class="page__stat-value page__stat-value--acc">
-            @if (positionBeforeMonth() !== null) {
-              {{ positionBeforeMonth() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-            } @else {
-              —
-            }
-          </span>
+          <span class="page__stat-label">Rendimento no mês</span>
+          <span class="page__stat-value">{{ monthYield() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
         </span>
         <span class="page__stat-sep" aria-hidden="true"></span>
         <span class="page__stat">
-          <span class="page__stat-label">Patrimônio no fim do mês</span>
-          <span class="page__stat-value page__stat-value--total">
-            @if (positionThroughMonthEnd() !== null) {
-              {{ positionThroughMonthEnd() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-            } @else {
-              —
-            }
-          </span>
+          <span class="page__stat-label">Aportes − resgates no mês</span>
+          <span class="page__stat-value">{{ s.monthTotal | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
         </span>
       </p>
-      <details class="disclosure page__stats-help">
+      <details class="disclosure">
         <summary class="disclosure__toggle">
           Como calculamos estes valores
           <lucide-icon name="chevron-down" [size]="16" [strokeWidth]="2.5" class="disclosure__chevron"></lucide-icon>
         </summary>
         <dl class="page__stats-defs">
-          <dt>Investimentos no mês (líquido)</dt>
-          <dd>Aportes do mês menos os resgates.</dd>
-          <dt>Patrimônio antes do mês</dt>
-          <dd>Saldos iniciais das categorias mais os aportes feitos antes do dia 1º do mês.</dd>
-          <dt>Patrimônio no fim do mês</dt>
-          <dd>Patrimônio antes do mês mais os aportes registrados até o último dia do mês.</dd>
+          <dt>Patrimônio</dt>
+          <dd>Saldo inicial das contas + aportes − resgates + rendimento, até o último dia do mês.</dd>
+          <dt>Rendimento</dt>
+          <dd>Quanto as contas cresceram ou caíram sem aporte nem resgate. Vem das atualizações de saldo.</dd>
+          <dt>Aportes − resgates</dt>
+          <dd>O que saiu do caixa para as contas menos o que voltou para o caixa no mês.</dd>
         </dl>
       </details>
     }
   </div>
 
-  @if (facade.hasLoadError()) {
+  @if (monthView.hasError()) {
     <app-month-load-error />
-  } @else if (facade.isMonthDataPending()) {
+  } @else if (monthView.isPending()) {
     <app-month-loading />
   } @else {
-    @if (hasChartSeries()) {
-      <section class="chart-panel panel" aria-labelledby="inv-chart-title">
-        <h2 id="inv-chart-title" class="chart-panel__title">Evolução (saldo inicial + 12 meses)</h2>
-        <p class="chart-panel__caption">
-          Cada cor na barra é uma <strong>categoria de investimento</strong> (mesma cor em todos os meses e em
-          <strong>Saldo inicial</strong>). A linha é o patrimônio acumulado (inicial + aportes até o fim de cada
-          período).
-        </p>
-        <div class="inv-chart">
-          <canvas
-            baseChart
-            role="img"
-            [attr.aria-label]="evolutionChartSummary()"
-            [data]="evolutionChartData()"
-            [options]="evolutionChartOptions()"
-            [type]="evolutionChartType"
-          ></canvas>
-        </div>
-
-        <details class="disclosure chart-data">
-          <summary class="disclosure__toggle">
-            Ver dados do gráfico
-            <lucide-icon name="chevron-down" [size]="16" [strokeWidth]="2.5" class="disclosure__chevron"></lucide-icon>
-          </summary>
-          <div class="chart-data__scroll">
-            <table class="chart-data__table">
-              <caption class="chart-data__caption">
-                Valor aplicado em cada período e patrimônio acumulado ao fim dele.
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Período</th>
-                  <th scope="col">No período</th>
-                  <th scope="col">Patrimônio acumulado</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of chartDataRows(); track $index) {
-                  <tr>
-                    <th scope="row">{{ row.label }}</th>
-                    <td>{{ row.invested | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
-                    <td>{{ row.cumulativeWealth | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </details>
-
-        @if (categoryPositionTotals().length > 0) {
-          <div class="inv-cat-totals" aria-labelledby="inv-cat-totals-title">
-            <h3 id="inv-cat-totals-title" class="inv-cat-totals__title">
-              Posição por categoria até {{ selectedMonthTitleLabel() }}
-            </h3>
-            <p class="inv-cat-totals__hint">
-              Saldo inicial da categoria + todos os aportes com data até o fim do mês da barra superior.
-            </p>
-            <ul class="inv-cat-totals__list">
-              @for (row of categoryPositionTotals(); track row.categoryId; let i = $index) {
-                <li
-                  class="inv-cat-totals__item"
-                  [style.border-left-color]="categoryTotalAccent(i)"
-                >
-                  <span class="inv-cat-totals__name">{{ row.name }}</span>
-                  <span class="inv-cat-totals__value">{{
-                    row.totalThroughMonthEnd | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
-                  }}</span>
-                </li>
-              }
-            </ul>
-          </div>
-        }
-      </section>
-    }
-
-    <div class="chips" role="group" aria-label="Filtrar por categoria">
-      <button
-        type="button"
-        class="chip chip--system"
-        [class.chip--active]="filterCategoryId() === null"
-        [attr.aria-pressed]="filterCategoryId() === null"
-        (click)="selectAllFilter()"
-      >
-        Todos
-      </button>
-      @for (c of categories(); track c.id) {
-        <button
-          type="button"
-          class="chip"
-          [class.chip--active]="filterCategoryId() === c.id"
-          [attr.aria-pressed]="filterCategoryId() === c.id"
-          (click)="toggleCategoryFilter(c.id)"
-        >
-          {{ c.name }}
-        </button>
-      }
-    </div>
-
-    <div class="panel">
-      @if (list().length === 0) {
-        <div class="empty">
-          <p class="empty__title">Nenhum lançamento neste mês</p>
-          <p class="empty__hint">
-            @if (categories().length === 0) {
-              Use <strong>Categoria</strong> para criar sua primeira categoria; depois use
-              <strong>Aporte</strong> ou <strong>Resgate</strong>.
-            } @else {
-              Registre um <strong>Aporte</strong>, um <strong>Resgate</strong> (saída parcial por categoria) ou
-              altere o mês no topo.
-            }
-          </p>
+    <section class="section" aria-labelledby="inv-accounts-title">
+      <h2 id="inv-accounts-title" class="section__title">Contas de investimento</h2>
+      @if (accountCards().length === 0) {
+        <div class="panel empty">
+          <p class="empty__title">Nenhuma conta de investimento</p>
+          <p class="empty__hint">Use <strong>Nova conta</strong> para cadastrar onde você guarda dinheiro.</p>
         </div>
       } @else {
-        <ul class="tx-list">
-          @for (t of list(); track t.id) {
-            <li class="tx-list__item">
-              <div class="tx-list__main">
-                <span class="tx-list__cat">{{ facade.getCategory(t.categoryId)?.name }}</span>
-                @if (t.description.trim()) {
-                  <span class="tx-list__desc">{{ t.description }}</span>
-                }
-                <span class="tx-list__badges">
-                  @if (txHasRecurrence(t)) {
-                    <span
-                      class="tx-list__serie"
-                      role="img"
-                      title="Parte de uma série fixa"
-                      aria-label="Recorrente"
-                    >
-                      <lucide-icon name="repeat" [size]="14" [strokeWidth]="2.25"></lucide-icon>
-                    </span>
-                  }
-                  @if (t.amount < 0) {
-                    <span class="tx-list__badge tx-list__badge--resgate">Resgate</span>
-                  }
-                  <span class="tx-list__badge">
-                    {{ t.schedule === 'fixed' ? 'Fixa' : 'Este mês' }}
-                  </span>
-                </span>
+        <ul class="accounts">
+          @for (card of accountCards(); track card.account.id) {
+            <li class="acc-card">
+              <div class="acc-card__head">
+                <h3 class="acc-card__name">{{ card.account.name }}</h3>
+                <span class="acc-card__role">{{ card.roleLabel }}</span>
               </div>
-              <div class="tx-list__side">
-                <span
-                  class="tx-list__amount tx-list__amount--inv"
-                  [class.tx-list__amount--resgate]="t.amount < 0"
-                  >{{
-                  t.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+
+              <p class="acc-card__balance">
+                <span class="acc-card__label">Patrimônio</span>
+                <span class="acc-card__value">{{
+                  card.account.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
                 }}</span>
-                <div class="tx-list__actions">
-                  <button
-                    type="button"
-                    class="link-btn"
-                    [attr.aria-label]="t | transactionActionLabel: 'Editar' : facade.getCategory(t.categoryId)?.name"
-                    (click)="editTx(t)"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    type="button"
-                    class="link-btn link-btn--danger"
-                    [attr.aria-label]="t | transactionActionLabel: 'Excluir' : facade.getCategory(t.categoryId)?.name"
-                    (click)="deletion.request(t)"
-                  >
-                    Excluir
-                  </button>
+              </p>
+
+              <dl class="acc-card__facts">
+                <div class="acc-card__fact">
+                  <dt>Rendimento no mês</dt>
+                  <dd>
+                    @if (card.monthYield !== null) {
+                      {{ card.monthYield | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                    } @else {
+                      —
+                    }
+                  </dd>
                 </div>
+                <div class="acc-card__fact">
+                  <dt>Rendimento acumulado</dt>
+                  <dd>{{ card.account.yield | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+                </div>
+                <div class="acc-card__fact">
+                  <dt>{{ card.isShortTerm ? 'Devolvido − pego emprestado no mês' : 'Aportes − resgates no mês' }}</dt>
+                  <dd>{{ card.monthNet | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+                </div>
+                @if (card.isShortTerm) {
+                  <div class="acc-card__fact">
+                    <dt>Valor-alvo</dt>
+                    <dd>
+                      @if (card.account.targetBalance !== null) {
+                        {{ card.account.targetBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                      } @else {
+                        Sem valor-alvo
+                      }
+                    </dd>
+                  </div>
+                }
+              </dl>
+
+              @if (card.hasMissing) {
+                <p class="acc-card__warning">
+                  <lucide-icon name="shield-alert" [size]="16" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+                  Faltam {{ card.account.missingToTarget | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} para completar
+                </p>
+              }
+
+              <p class="acc-card__hint">
+                @if (card.account.lastBalanceUpdate; as update) {
+                  Saldo atualizado em {{ formatDate(update.date) }}.
+                } @else {
+                  Sem atualização de saldo ainda.
+                }
+              </p>
+
+              <div class="acc-card__actions">
+                <button
+                  type="button"
+                  class="btn btn--secondary btn--sm"
+                  (click)="openNewMovement(card.account.id, directions.contribution)"
+                >
+                  {{ actionLabel(card, directions.contribution) }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--secondary btn--sm"
+                  (click)="openNewMovement(card.account.id, directions.withdrawal)"
+                >
+                  {{ actionLabel(card, directions.withdrawal) }}
+                </button>
+                <button type="button" class="btn btn--secondary btn--sm" (click)="openBalanceUpdate(card.account)">
+                  Atualizar saldo
+                </button>
+              </div>
+              <div class="acc-card__links">
+                <button
+                  type="button"
+                  class="link-btn"
+                  [attr.aria-label]="'Editar a conta ' + card.account.name"
+                  (click)="openEditAccount(card.account)"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  class="link-btn link-btn--danger"
+                  [attr.aria-label]="'Excluir a conta ' + card.account.name"
+                  [attr.aria-busy]="deletingAccountId() === card.account.id"
+                  [disabled]="deletingAccountId() !== null"
+                  (click)="deleteAccount(card.account)"
+                >
+                  {{ deletingAccountId() === card.account.id ? 'Excluindo…' : 'Excluir' }}
+                </button>
               </div>
             </li>
           }
         </ul>
       }
-    </div>
+    </section>
+
+    @if (view(); as v) {
+      <app-investment-evolution-chart [view]="v" />
+    }
+
+    <section class="section" aria-labelledby="inv-movements-title">
+      <h2 id="inv-movements-title" class="section__title">Lançamentos do mês</h2>
+      @if (hasAccounts()) {
+        <div class="chips" role="group" aria-label="Filtrar por conta">
+          <button
+            type="button"
+            class="chip chip--system"
+            [class.chip--active]="filterAccountId() === null"
+            [attr.aria-pressed]="filterAccountId() === null"
+            (click)="selectAllAccounts()"
+          >
+            Todas
+          </button>
+          @for (account of accounts(); track account.id) {
+            <button
+              type="button"
+              class="chip"
+              [class.chip--active]="filterAccountId() === account.id"
+              [attr.aria-pressed]="filterAccountId() === account.id"
+              (click)="toggleAccountFilter(account.id)"
+            >
+              {{ account.name }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="panel">
+        @if (movements().length === 0) {
+          <div class="empty">
+            <p class="empty__title">Nenhum lançamento neste mês</p>
+            <p class="empty__hint">Registre um <strong>Aporte ou resgate</strong> ou altere o mês no topo.</p>
+          </div>
+        } @else {
+          <ul class="tx-list">
+            @for (m of movements(); track m.id) {
+              <li class="tx-list__item">
+                <div class="tx-list__main">
+                  <span class="tx-list__cat">{{ accountName(m) }}</span>
+                  @if (m.description?.trim()) {
+                    <span class="tx-list__desc">{{ m.description }}</span>
+                  }
+                  <span class="tx-list__badges">
+                    <span class="tx-list__badge tx-list__badge--direction">{{ badgeLabel(m) }}</span>
+                    <span class="tx-list__badge">{{ formatDate(m.date) }}</span>
+                  </span>
+                </div>
+                <div class="tx-list__side">
+                  <span class="tx-list__amount tx-list__amount--inv">{{
+                    m.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR'
+                  }}</span>
+                  <div class="tx-list__actions">
+                    <button
+                      type="button"
+                      class="link-btn"
+                      [attr.aria-label]="movementActionLabel('Editar', m)"
+                      (click)="openEditMovement(m)"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      type="button"
+                      class="link-btn link-btn--danger"
+                      [attr.aria-label]="movementActionLabel('Excluir', m)"
+                      (click)="deletion.request(m)"
+                    >
+                      Excluir
+                    </button>
+                  </div>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      </div>
+    </section>
   }
 </div>
 
-<app-category-modal
-  [visible]="categoryOpen()"
-  [flow]="'investment'"
-  (closed)="closeCategory()"
+<app-account-modal
+  [visible]="accountModalOpen()"
+  [editing]="editingAccount()"
+  (closed)="closeAccountModal()"
+  (saved)="onAccountSaved()"
 />
 
-<app-transaction-modal
-  [visible]="txOpen()"
-  [flow]="'investment'"
-  [investmentIntent]="txInvestmentIntent()"
-  [editing]="editingTx()"
-  (closed)="closeTx()"
+<app-movement-modal
+  [visible]="movementModalOpen()"
+  [accounts]="accounts()"
+  [editing]="editingMovement()"
+  [preset]="movementPreset()"
+  (closed)="closeMovementModal()"
+  (saved)="onMovementSaved()"
+/>
+
+<app-balance-update-modal
+  [account]="balanceAccount()"
+  (closed)="closeBalanceUpdate()"
+  (saved)="onBalanceUpdated()"
 />
 
 <app-series-delete-modal
   [visible]="deletion.isOpen()"
-  [isSeries]="deletion.isSeries()"
   [itemLabel]="deletion.itemLabel()"
   [deletingScope]="deletion.deletingScope()"
-  (confirmed)="deletion.confirm($event)"
+  (confirmed)="deletion.confirm()"
   (cancelled)="deletion.cancel()"
 />

@@ -1,0 +1,98 @@
+@use '../../../shared/components/investments/disclosure';
+
+:host {
+  display: block;
+}
+
+.chart-panel {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--fin-surface);
+  border: 1px solid var(--fin-border);
+  border-radius: var(--fin-radius);
+  box-shadow: var(--fin-shadow);
+}
+
+.chart-panel__title {
+  margin: 0 0 0.25rem;
+  font-size: var(--fin-text-lg);
+  font-weight: var(--fin-weight-extrabold);
+  color: var(--fin-text);
+}
+
+.chart-panel__caption {
+  margin: 0 0 1rem;
+  font-size: var(--fin-text-sm);
+  color: var(--fin-text-muted);
+  line-height: var(--fin-leading-snug);
+}
+
+.inv-chart {
+  position: relative;
+  height: 280px;
+  width: 100%;
+}
+
+.chart-data {
+  margin-top: 0.75rem;
+}
+
+.chart-data__scroll {
+  overflow-x: auto;
+}
+
+.chart-data__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fin-text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--fin-text);
+}
+
+.chart-data__caption {
+  padding-bottom: 0.5rem;
+  text-align: start;
+  font-size: var(--fin-text-xs);
+  color: var(--fin-text-muted);
+}
+
+.chart-data__table th,
+.chart-data__table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--fin-border);
+  text-align: end;
+  white-space: nowrap;
+}
+
+.chart-data__table th:first-child {
+  text-align: start;
+}
+
+.chart-data__table thead th {
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-semibold);
+  color: var(--fin-text-secondary);
+}
+
+.chart-data__table tbody th {
+  font-weight: var(--fin-weight-medium);
+}
+
+.chart-data__swatch {
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  margin-inline-end: 0.25rem;
+  border-radius: var(--fin-radius-full);
+  vertical-align: middle;
+}
+
+@media (max-width: 767px) {
+  .chart-panel {
+    padding: 1rem;
+  }
+
+  .inv-chart {
+    height: 240px;
+  }
+}

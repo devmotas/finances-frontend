@@ -1,0 +1,121 @@
+@if (visible()) {
+  <div class="modal__backdrop" (click)="backdropClick($event)" role="presentation">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="acc-modal-title"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal__head">
+        <h2 id="acc-modal-title" class="modal__title">{{ title() }}</h2>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">
+          <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </div>
+
+      <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
+        <div class="field">
+          <label class="field__label" for="acc-name">Nome</label>
+          <input
+            id="acc-name"
+            class="field__input"
+            type="text"
+            formControlName="name"
+            placeholder="Ex.: Tesouro Selic, Caixinha Nubank"
+            autocomplete="off"
+            [maxlength]="limits.categoryNameMax"
+            cdkFocusInitial
+            [attr.aria-invalid]="isInvalid(form.controls.name)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.name) && 'acc-name-err')"
+          />
+          @if (isInvalid(form.controls.name)) {
+            <span id="acc-name-err" class="field__err" role="alert">
+              Informe um nome de até {{ limits.categoryNameMax }} caracteres.
+            </span>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="acc-role">Papel</label>
+          <select id="acc-role" class="field__input" formControlName="role" aria-describedby="acc-role-hint">
+            @for (role of roles; track role) {
+              <option [value]="role">{{ roleLabel[role] }}</option>
+            }
+          </select>
+          <span id="acc-role-hint" class="field__hint">{{ roleHint() }}</span>
+        </div>
+
+        @if (hasTarget()) {
+          <div class="field">
+            <label class="field__label" for="acc-target">Valor-alvo (R$)</label>
+            <input
+              id="acc-target"
+              class="field__input"
+              type="text"
+              inputmode="decimal"
+              formControlName="targetBalance"
+              placeholder="0,00"
+              autocomplete="off"
+              [attr.aria-invalid]="isInvalid(form.controls.targetBalance)"
+              [attr.aria-describedby]="
+                describedBy('acc-target-hint', isInvalid(form.controls.targetBalance) && 'acc-target-err')
+              "
+            />
+            <span id="acc-target-hint" class="field__hint">Quanto a conta deve ter quando está completa.</span>
+            @if (isInvalid(form.controls.targetBalance)) {
+              <span id="acc-target-err" class="field__err" role="alert">Informe um valor maior que zero.</span>
+            }
+          </div>
+        }
+
+        <div class="field">
+          <label class="field__label" for="acc-initial">Saldo inicial (R$)</label>
+          <input
+            id="acc-initial"
+            class="field__input"
+            type="text"
+            inputmode="decimal"
+            formControlName="initialBalance"
+            placeholder="0,00"
+            autocomplete="off"
+            [attr.aria-invalid]="isInvalid(form.controls.initialBalance)"
+            [attr.aria-describedby]="
+              describedBy('acc-initial-hint', isInvalid(form.controls.initialBalance) && 'acc-initial-err')
+            "
+          />
+          <span id="acc-initial-hint" class="field__hint">
+            Quanto já havia na conta antes dos lançamentos no app. Use vírgula para os centavos.
+          </span>
+          @if (isInvalid(form.controls.initialBalance)) {
+            <span id="acc-initial-err" class="field__err" role="alert">Informe zero ou um valor positivo.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="acc-initial-date">Data do saldo inicial</label>
+          <input
+            id="acc-initial-date"
+            class="field__input"
+            type="date"
+            formControlName="initialBalanceDate"
+            [attr.aria-invalid]="isInvalid(form.controls.initialBalanceDate)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.initialBalanceDate) && 'acc-initial-date-err')"
+          />
+          @if (isInvalid(form.controls.initialBalanceDate)) {
+            <span id="acc-initial-date-err" class="field__err" role="alert">Informe a data.</span>
+          }
+        </div>
+
+        <div class="modal__actions">
+          <button type="button" class="btn btn--secondary" (click)="close()">Cancelar</button>
+          <button type="submit" class="btn btn--primary" [appBusyButton]="isSaving()" [busyLabel]="savingLabel">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

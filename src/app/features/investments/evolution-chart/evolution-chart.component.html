@@ -1,0 +1,58 @@
+@if (hasData()) {
+  <section class="chart-panel" aria-labelledby="inv-chart-title">
+    <h2 id="inv-chart-title" class="chart-panel__title">Evolução do patrimônio</h2>
+    <p class="chart-panel__caption">
+      Saldo inicial e os últimos 12 meses. Cada cor é uma conta de investimento; a altura da barra é o
+      patrimônio no fim do mês, já com o rendimento.
+    </p>
+    <div class="inv-chart">
+      <canvas
+        baseChart
+        role="img"
+        [attr.aria-label]="summary()"
+        [data]="data()"
+        [options]="options()"
+        [type]="chartType"
+      ></canvas>
+    </div>
+
+    <details class="disclosure chart-data">
+      <summary class="disclosure__toggle">
+        Ver dados do gráfico
+        <lucide-icon name="chevron-down" [size]="16" [strokeWidth]="2.5" class="disclosure__chevron"></lucide-icon>
+      </summary>
+      <div class="chart-data__scroll">
+        <table class="chart-data__table">
+          <caption class="chart-data__caption">
+            Patrimônio de cada conta no fim de cada período, total e rendimento acumulado.
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Período</th>
+              @for (account of accounts(); track account.id; let i = $index) {
+                <th scope="col">
+                  <span class="chart-data__swatch" [style.background]="accountShade(i)" aria-hidden="true"></span>
+                  {{ account.name }}
+                </th>
+              }
+              <th scope="col">Patrimônio</th>
+              <th scope="col">Rendimento acumulado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of rows(); track $index) {
+              <tr>
+                <th scope="row">{{ row.label }}</th>
+                @for (position of row.positions; track $index) {
+                  <td>{{ position | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
+                }
+                <td>{{ row.total | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
+                <td>{{ row.yield | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </section>
+}

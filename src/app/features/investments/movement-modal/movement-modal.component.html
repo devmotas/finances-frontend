@@ -1,0 +1,123 @@
+@if (visible()) {
+  <div class="modal__backdrop" (click)="backdropClick($event)" role="presentation">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mov-modal-title"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
+      (click)="$event.stopPropagation()"
+    >
+      <div class="modal__head">
+        <h2 id="mov-modal-title" class="modal__title">{{ title() }}</h2>
+        <button type="button" class="modal__x" (click)="close()" aria-label="Fechar">
+          <lucide-icon name="x" [size]="22" [strokeWidth]="2"></lucide-icon>
+        </button>
+      </div>
+
+      <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
+        <div class="field">
+          <label class="field__label" for="mov-account">Conta</label>
+          <select
+            id="mov-account"
+            class="field__input"
+            formControlName="accountId"
+            cdkFocusInitial
+            [attr.aria-invalid]="isInvalid(form.controls.accountId)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.accountId) && 'mov-account-err')"
+          >
+            <option value="">Selecione a conta</option>
+            @for (account of accounts(); track account.id) {
+              <option [value]="account.id">{{ account.name }}</option>
+            }
+          </select>
+          @if (isInvalid(form.controls.accountId)) {
+            <span id="mov-account-err" class="field__err" role="alert">Selecione uma conta.</span>
+          }
+        </div>
+
+        <fieldset class="field" aria-describedby="mov-direction-hint">
+          <legend class="field__label">Tipo</legend>
+          <div class="segmented">
+            @for (direction of directions; track direction) {
+              <input
+                class="segmented__input"
+                type="radio"
+                [id]="'mov-direction-' + direction"
+                [value]="direction"
+                formControlName="direction"
+              />
+              <label class="segmented__option" [for]="'mov-direction-' + direction">
+                {{ directionLabel(direction) }}
+              </label>
+            }
+          </div>
+          <span id="mov-direction-hint" class="field__hint">{{ directionHint() }}</span>
+        </fieldset>
+
+        <div class="field">
+          <label class="field__label" for="mov-amount">Valor (R$)</label>
+          <input
+            id="mov-amount"
+            class="field__input"
+            type="text"
+            inputmode="decimal"
+            formControlName="amount"
+            placeholder="0,00"
+            autocomplete="off"
+            [attr.aria-invalid]="isInvalid(form.controls.amount)"
+            [attr.aria-describedby]="describedBy('mov-amount-hint', isInvalid(form.controls.amount) && 'mov-amount-err')"
+          />
+          <span id="mov-amount-hint" class="field__hint">Sempre positivo. Use vírgula para os centavos.</span>
+          @if (isInvalid(form.controls.amount)) {
+            <span id="mov-amount-err" class="field__err" role="alert">Informe um valor maior que zero.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="mov-date">Data</label>
+          <input
+            id="mov-date"
+            class="field__input"
+            type="date"
+            formControlName="date"
+            [attr.aria-invalid]="isInvalid(form.controls.date)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.date) && 'mov-date-err')"
+          />
+          @if (isInvalid(form.controls.date)) {
+            <span id="mov-date-err" class="field__err" role="alert">Informe a data.</span>
+          }
+        </div>
+
+        <div class="field">
+          <label class="field__label" for="mov-description">
+            Descrição <span class="field__optional">(opcional)</span>
+          </label>
+          <input
+            id="mov-description"
+            class="field__input"
+            type="text"
+            formControlName="description"
+            autocomplete="off"
+            [maxlength]="limits.descriptionMax"
+            [attr.aria-invalid]="isInvalid(form.controls.description)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.description) && 'mov-description-err')"
+          />
+          @if (isInvalid(form.controls.description)) {
+            <span id="mov-description-err" class="field__err" role="alert">
+              Use no máximo {{ limits.descriptionMax }} caracteres.
+            </span>
+          }
+        </div>
+
+        <div class="modal__actions">
+          <button type="button" class="btn btn--secondary" (click)="close()">Cancelar</button>
+          <button type="submit" class="btn btn--primary" [appBusyButton]="isSaving()" [busyLabel]="savingLabel">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

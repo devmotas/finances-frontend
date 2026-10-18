@@ -2,87 +2,114 @@
   <header class="ef__intro">
     <h1 class="ef__title">Reserva de emergência</h1>
     <p class="ef__sub">
-      A reserva soma o saldo em caixa (entradas − saídas − aportes) ao valor investido (saldos iniciais
-      das categorias de investimento + aportes). A barra usa quantos meses de despesa do mês da barra
-      superior esse conjunto cobre.
+      Soma das contas de reserva com a reserva de curto prazo. O saldo em caixa e as outras contas de
+      investimento não entram.
     </p>
   </header>
 
-  @if (summary(); as s) {
-    <div class="ef__grid">
-      <article class="ef-card">
-        <h2 class="ef-card__label">Despesas no mês (referência)</h2>
-        <p class="ef-card__value">{{ s.monthExpenseTotal | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</p>
-        <p class="ef-card__hint">Essenciais + não essenciais no mês atual da barra superior</p>
-      </article>
-
-      <article class="ef-card">
-        <h2 class="ef-card__label">Saldo em caixa</h2>
-        <p class="ef-card__value" [class.ef-card__value--pos]="s.accumulatedBalance >= 0" [class.ef-card__value--neg]="s.accumulatedBalance < 0">
-          {{ s.accumulatedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-        </p>
-        <p class="ef-card__hint">
-          Entradas − saídas − aportes em investimentos, desde o início até o fim do mês selecionado
-        </p>
-      </article>
-
-      <article class="ef-card">
-        <h2 class="ef-card__label">Investido</h2>
-        <p class="ef-card__value ef-card__value--inv">
-          {{ s.investedPosition | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-        </p>
-        <p class="ef-card__hint">Saldo inicial das categorias de investimento + aportes − resgates</p>
-      </article>
-
-      <article class="ef-card ef-card--highlight">
-        <h2 class="ef-card__label">Reserva total (referência)</h2>
-        <p class="ef-card__value">
-          {{ s.totalEmergencyReserve | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-        </p>
-        <p class="ef-card__hint">
-          Saldo em caixa + investido
-        </p>
-      </article>
-    </div>
-
-    <section class="ef-progress panel" aria-labelledby="ef-progress-title">
-      <div class="ef-progress__head">
-        <h2 id="ef-progress-title" class="ef-progress__title">
-          Meta: {{ resolvedTargetMonths() }} meses de despesas
-        </h2>
-        @if (reserveMonthsVsReference() != null) {
-          <p class="ef-progress__status">
-            Você está em
-            <strong>{{ reserveMonthsVsReference() | number: '1.1-2' : 'pt-BR' }}</strong>
-            × a despesa mensal de referência
+  @if (resource.hasError()) {
+    <app-month-load-error />
+  } @else if (resource.isPending()) {
+    <app-month-loading />
+  } @else {
+    @if (reserve(); as r) {
+      <section class="ef-hero" aria-labelledby="ef-coverage-title">
+        <h2 id="ef-coverage-title" class="ef-hero__label">Cobertura</h2>
+        @if (r.coverageMonths !== null) {
+          <p class="ef-hero__answer">
+            Sua reserva cobre
+            <strong class="ef-hero__months">
+              {{ r.coverageMonths | number: '1.0-1' : 'pt-BR' }} {{ r.coverageMonths === 1 ? 'mês' : 'meses' }}
+            </strong>
+            de despesas essenciais.
           </p>
         } @else {
-          <p class="ef-progress__status ef-progress__status--muted">
-            Sem despesas no mês de referência — não é possível estimar meses cobertos.
+          <p class="ef-hero__answer ef-hero__answer--muted">
+            Ainda não dá para calcular a cobertura: nenhum dos últimos {{ referenceWindowMonths }} meses fechados
+            tem saídas essenciais lançadas.
           </p>
         }
+
+        <p class="ef-hero__amount">
+          <span class="ef-hero__amount-label">Reserva de emergência</span>
+          <span class="ef-hero__amount-value">{{ r.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</span>
+        </p>
+
+        <div class="ef-goal">
+          <div class="ef-goal__head">
+            <h3 id="ef-goal-title" class="ef-goal__title">Meta da reserva: {{ r.targetMonths }} meses</h3>
+            @if (progress(); as p) {
+              <span class="ef-goal__pct">{{ p.percent }}% da meta</span>
+            }
+          </div>
+          @if (progress(); as p) {
+            <div
+              class="ef-goal__bar"
+              role="progressbar"
+              aria-labelledby="ef-goal-title"
+              aria-describedby="ef-goal-caption"
+              aria-valuemin="0"
+              aria-valuemax="100"
+              [attr.aria-valuenow]="p.barPercent"
+              [attr.aria-valuetext]="p.percent + '% da meta'"
+            >
+              <div class="ef-goal__fill" [style.width.%]="p.barPercent"></div>
+            </div>
+            <p id="ef-goal-caption" class="ef-goal__caption">
+              {{ p.reached ? 'Meta alcançada.' : 'Ainda abaixo da meta.' }} A meta muda em Configurações.
+            </p>
+          } @else {
+            <p class="ef-goal__caption">O progresso aparece quando houver despesa de referência.</p>
+          }
+        </div>
+      </section>
+
+      <div class="ef__grid">
+        <article class="ef-card" aria-labelledby="ef-reference-title">
+          <h2 id="ef-reference-title" class="ef-card__label">Despesa de referência</h2>
+          <p class="ef-card__value">
+            @if (r.referenceExpense !== null) {
+              {{ r.referenceExpense | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            } @else {
+              —
+            }
+          </p>
+          <p class="ef-card__hint">
+            Média das saídas essenciais dos últimos {{ referenceWindowMonths }} meses fechados.
+          </p>
+        </article>
+
+        <article class="ef-card" aria-labelledby="ef-composition-title">
+          <h2 id="ef-composition-title" class="ef-card__label">Composição</h2>
+          <dl class="ef-parts">
+            <div class="ef-parts__row">
+              <dt>Contas de reserva</dt>
+              <dd>{{ reserveAccounts() | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+            </div>
+            <div class="ef-parts__row">
+              <dt>Reserva de curto prazo</dt>
+              <dd>{{ r.shortTermBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+            </div>
+            @if (r.shortTermTarget !== null) {
+              <div class="ef-parts__row ef-parts__row--sub">
+                <dt>Valor-alvo da reserva de curto prazo</dt>
+                <dd>{{ r.shortTermTarget | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+              </div>
+            }
+          </dl>
+          @if (shortTermBelowTarget()) {
+            <p class="ef-warning">
+              <lucide-icon name="shield-alert" [size]="16" [strokeWidth]="2.25" aria-hidden="true"></lucide-icon>
+              Faltam {{ r.shortTermMissing | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} para completar a reserva
+              de curto prazo.
+            </p>
+          }
+          <a class="ef-link" [routerLink]="investmentsRoute">
+            Gerenciar contas em Investimentos
+            <lucide-icon name="chevron-right" [size]="16" [strokeWidth]="2.5" aria-hidden="true"></lucide-icon>
+          </a>
+        </article>
       </div>
-      <div
-        class="ef-progress__bar"
-        role="progressbar"
-        [attr.aria-valuenow]="progressPct()"
-        aria-valuemin="0"
-        aria-valuemax="100"
-        [attr.aria-label]="'Progresso em relação à meta de ' + resolvedTargetMonths() + ' meses'"
-      >
-        <div class="ef-progress__fill" [style.width.%]="progressPct()"></div>
-      </div>
-      <p class="ef-progress__caption">100% indica que a reserva cobre pelo menos a meta de meses configurada.</p>
-    </section>
-  } @else if (loadFailed()) {
-    <div class="ef-empty panel" role="alert">
-      <span class="ef-empty__icon" aria-hidden="true">
-        <lucide-icon name="piggy-bank" [size]="40" [strokeWidth]="1.75"></lucide-icon>
-      </span>
-      <p class="ef-empty__title">Não foi possível carregar o resumo</p>
-      <p class="ef-empty__hint">O servidor não respondeu. Recarregue a página em alguns instantes para tentar de novo.</p>
-    </div>
-  } @else {
-    <app-month-loading />
+    }
   }
 </div>
