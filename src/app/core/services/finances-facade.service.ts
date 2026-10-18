@@ -7,11 +7,13 @@ import {
   filter,
   forkJoin,
   merge,
+  MonoTypeOperatorFunction,
   Observable,
   of,
   Subject,
   switchMap,
   tap,
+  throwError,
 } from 'rxjs';
 import {
   Category,
@@ -24,6 +26,7 @@ import {
 } from '../models/finances.models';
 import { LOAD_STATE, LoadState } from '../models/load-state.model';
 import { computeMonthTotals, filterTransactionsByMonth } from '../utils/finance-calculations';
+import { isLostResponse } from '../utils/http-error.util';
 import { AuthTokenService } from './auth-token.service';
 import { CategoryApiService } from './category-api.service';
 import { MonthContextService, YearMonth } from './month-context.service';
@@ -222,13 +225,17 @@ export class FinancesFacadeService {
       tap((created) => {
         this._transactions.update((list) => [...list, created]);
         this.notifyChange(created.flow);
-      })
+      }),
+      this.refreshWhenResponseLost(this.getCategory(dto.categoryId)?.flow)
     );
   }
 
   createRecurrence(dto: RecurrenceCreateDto) {
     const flow = this.getCategory(dto.categoryId)?.flow;
-    return this.recurrenceApi.create(dto).pipe(tap(() => this.afterTransactionChange(flow)));
+    return this.recurrenceApi.create(dto).pipe(
+      tap(() => this.afterTransactionChange(flow)),
+      this.refreshWhenResponseLost(flow)
+    );
   }
 
   updateTransaction(t: Transaction, options?: { applyToFutureSeries?: boolean }) {
@@ -241,7 +248,10 @@ export class FinancesFacadeService {
     };
     return this.transactionApi
       .update(t.id, dto, options?.applyToFutureSeries === true)
-      .pipe(tap(() => this.afterTransactionChange(t.flow)));
+      .pipe(
+        tap(() => this.afterTransactionChange(t.flow)),
+        this.refreshWhenResponseLost(t.flow)
+      );
   }
 
   deleteTransaction(id: number, options?: { applyToFutureSeries?: boolean }) {
@@ -255,6 +265,13 @@ export class FinancesFacadeService {
     return this.transactionApi
       .restore(transactions)
       .pipe(tap((restored) => this.afterTransactionChange(restored[0]?.flow)));
+  }
+
+  private refreshWhenResponseLost<T>(flow: Flow | undefined): MonoTypeOperatorFunction<T> {
+    return catchError((err: unknown) => {
+      if (isLostResponse(err)) this.afterTransactionChange(flow);
+      return throwError(() => err);
+    });
   }
 
   private afterTransactionChange(flow: Flow | undefined): void {

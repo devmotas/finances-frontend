@@ -22,7 +22,7 @@ import { MonthContextService } from '../../../core/services/month-context.servic
 import { ToastService } from '../../../core/services/toast.service';
 import { UserProfileService } from '../../../core/services/user-profile.service';
 import { formatNumberToBrlInput, parseBrlToNumber } from '../../../core/utils/brl-parse';
-import { httpErrorMessage } from '../../../core/utils/http-error.util';
+import { saveErrorMessage } from '../../../core/utils/http-error.util';
 import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
 import { trackBusy } from '../../../core/utils/track-busy';
 import { BusyButtonComponent } from '../busy-button/busy-button.component';
@@ -359,6 +359,6 @@ export class TransactionModalComponent {
   }
 
   private showError(err: unknown, fallback: string): void {
-    this.toast.show(httpErrorMessage(err, fallback), 'error');
+    this.toast.show(saveErrorMessage(err, fallback), 'error');
   }
 }

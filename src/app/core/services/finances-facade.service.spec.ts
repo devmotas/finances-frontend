@@ -1,3 +1,4 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { signal } from '@angular/core';
 import { of, Subject, throwError } from 'rxjs';
@@ -197,5 +198,85 @@ describe('FinancesFacadeService - avisos de alteração', () => {
     facade.deleteTransaction(contribution.id).subscribe({ error: () => undefined });
 
     expect(changedFlows).toEqual([]);
+  });
+});
+
+describe('FinancesFacadeService - resposta perdida ao salvar', () => {
+  let categoryApi: jasmine.SpyObj<CategoryApiService>;
+  let transactionApi: jasmine.SpyObj<TransactionApiService>;
+  let recurrenceApi: jasmine.SpyObj<RecurrenceApiService>;
+  let facade: FinancesFacadeService;
+  let changedFlows: string[];
+  let receivedErrors: unknown[];
+
+  const expenseCategory = { id: 7, name: 'Aluguel', flow: 'expense' } as Category;
+  const lostResponse = new HttpErrorResponse({ status: 0 });
+  const serverError = new HttpErrorResponse({ status: 500 });
+  const seriesDto = {
+    categoryId: expenseCategory.id,
+    description: null,
+    amount: 1500,
+    startDate: '2026-04-05',
+    months: 12,
+  };
+
+  beforeEach(() => {
+    categoryApi = jasmine.createSpyObj<CategoryApiService>('CategoryApiService', ['getAll']);
+    transactionApi = jasmine.createSpyObj<TransactionApiService>('TransactionApiService', [
+      'getByMonth',
+      'create',
+    ]);
+    recurrenceApi = jasmine.createSpyObj<RecurrenceApiService>('RecurrenceApiService', ['create']);
+    categoryApi.getAll.and.returnValue(of([expenseCategory]));
+    transactionApi.getByMonth.and.returnValue(of([] as Transaction[]));
+
+    TestBed.configureTestingModule({
+      providers: [
+        { provide: CategoryApiService, useValue: categoryApi },
+        { provide: TransactionApiService, useValue: transactionApi },
+        { provide: RecurrenceApiService, useValue: recurrenceApi },
+        { provide: AuthTokenService, useValue: { hasToken: signal(false) } },
+        { provide: UserApiService, useValue: {} },
+        { provide: UserProfileService, useValue: {} },
+      ],
+    });
+    facade = TestBed.inject(FinancesFacadeService);
+    facade.reloadCurrentMonth();
+    transactionApi.getByMonth.calls.reset();
+    changedFlows = [];
+    receivedErrors = [];
+    facade.dataChanged$.subscribe((flow) => changedFlows.push(flow));
+  });
+
+  it('recarrega o mês quando a criação da série fica sem resposta', () => {
+    recurrenceApi.create.and.returnValue(throwError(() => lostResponse));
+
+    facade.createRecurrence(seriesDto).subscribe({ error: (err) => receivedErrors.push(err) });
+
+    expect(transactionApi.getByMonth).toHaveBeenCalledTimes(1);
+    expect(changedFlows).toEqual(['expense']);
+    expect(receivedErrors).toEqual([lostResponse]);
+  });
+
+  it('recarrega o mês quando o lançamento avulso fica sem resposta', () => {
+    transactionApi.create.and.returnValue(throwError(() => lostResponse));
+
+    facade
+      .addTransaction({ categoryId: expenseCategory.id, amount: 80, date: '2026-04-10', schedule: 'variable' })
+      .subscribe({ error: (err) => receivedErrors.push(err) });
+
+    expect(transactionApi.getByMonth).toHaveBeenCalledTimes(1);
+    expect(changedFlows).toEqual(['expense']);
+    expect(receivedErrors).toEqual([lostResponse]);
+  });
+
+  it('não recarrega quando o servidor responde com erro', () => {
+    recurrenceApi.create.and.returnValue(throwError(() => serverError));
+
+    facade.createRecurrence(seriesDto).subscribe({ error: (err) => receivedErrors.push(err) });
+
+    expect(transactionApi.getByMonth).not.toHaveBeenCalled();
+    expect(changedFlows).toEqual([]);
+    expect(receivedErrors).toEqual([serverError]);
   });
 });
