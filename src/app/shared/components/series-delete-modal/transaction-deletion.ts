@@ -3,6 +3,7 @@ import { finalize } from 'rxjs';
 import { Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { formatBrl } from '../../../core/utils/brl-format';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
 import { isSeriesTransaction } from '../../../core/utils/transaction-series';
 import { SERIES_DELETE_SCOPE, SeriesDeleteScope } from './series-delete-scope';
@@ -26,7 +27,7 @@ export class TransactionDeletion {
   });
   readonly itemLabel = computed(() => {
     const t = this.pending();
-    return t ? this.texts.itemLabel(t) : '';
+    return t ? this.describe(t) : '';
   });
 
   constructor(
@@ -47,6 +48,13 @@ export class TransactionDeletion {
   confirm(scope: SeriesDeleteScope): void {
     const t = this.pending();
     if (t && !this.isDeleting()) this.delete(t, scope);
+  }
+
+  private describe(t: Transaction): string {
+    const kind = this.texts.itemLabel(t);
+    const amount = formatBrl(Math.abs(t.amount));
+    const name = t.description?.trim() || this.facade.getCategory(t.categoryId)?.name;
+    return name ? `${kind} “${name}” de ${amount}` : `${kind} de ${amount}`;
   }
 
   private isDeleting(): boolean {

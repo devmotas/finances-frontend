@@ -21,11 +21,20 @@ describe('SeriesDeleteModalComponent', () => {
     fixture.detectChanges();
   }
 
-  function button(label: string): HTMLButtonElement {
-    const buttons = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.modal__actions button')
+  function actionButtons(): HTMLButtonElement[] {
+    return Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        '.scope-options button, .modal__actions button'
+      )
     );
-    const found = buttons.find((b) => b.textContent?.trim() === label);
+  }
+
+  function buttonTitle(b: HTMLButtonElement): string | undefined {
+    return (b.querySelector('.scope-option__title') ?? b).textContent?.trim();
+  }
+
+  function button(label: string): HTMLButtonElement {
+    const found = actionButtons().find((b) => buttonTitle(b) === label);
     if (!found) throw new Error(`Botão "${label}" não encontrado`);
     return found;
   }
@@ -85,11 +94,8 @@ describe('SeriesDeleteModalComponent', () => {
     fixture.componentRef.setInput('deletingScope', SERIES_DELETE_SCOPE.thisAndFuture);
     fixture.detectChanges();
 
-    const buttons = Array.from(
-      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>('.modal__actions button')
-    );
-    expect(buttons.every((b) => b.disabled)).toBeTrue();
-    expect(buttons[2].getAttribute('aria-busy')).toBe('true');
+    expect(actionButtons().every((b) => b.disabled)).toBeTrue();
+    expect(button('Este e os próximos').getAttribute('aria-busy')).toBe('true');
 
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(cancelled).toBe(0);

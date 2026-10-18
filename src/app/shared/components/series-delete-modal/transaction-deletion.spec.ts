@@ -1,25 +1,59 @@
 import { of, Subject, throwError } from 'rxjs';
-import { Transaction } from '../../../core/models/finances.models';
+import { Category, Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { SERIES_DELETE_SCOPE } from './series-delete-scope';
 import { TransactionDeletion } from './transaction-deletion';
 
+function brl(value: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+}
+
 describe('TransactionDeletion', () => {
-  const seriesTx = { id: 7, schedule: 'fixed', recurrenceId: 3, amount: 100 } as Transaction;
-  const singleTx = { id: 8, schedule: 'variable', recurrenceId: null, amount: 50 } as Transaction;
+  const seriesTx = {
+    id: 7,
+    categoryId: 1,
+    description: 'Academia',
+    schedule: 'fixed',
+    recurrenceId: 3,
+    amount: 100,
+  } as Transaction;
+  const singleTx = {
+    id: 8,
+    categoryId: 1,
+    description: '',
+    schedule: 'variable',
+    recurrenceId: null,
+    amount: 50,
+  } as Transaction;
 
   let facade: jasmine.SpyObj<FinancesFacadeService>;
   let deletion: TransactionDeletion;
 
   beforeEach(() => {
-    facade = jasmine.createSpyObj<FinancesFacadeService>('FinancesFacadeService', ['deleteTransaction']);
+    facade = jasmine.createSpyObj<FinancesFacadeService>('FinancesFacadeService', [
+      'deleteTransaction',
+      'getCategory',
+    ]);
     facade.deleteTransaction.and.returnValue(of(undefined) as never);
+    facade.getCategory.and.returnValue({ id: 1, name: 'Moradia' } as Category);
     const toast = jasmine.createSpyObj<ToastService>('ToastService', ['show']);
     deletion = new TransactionDeletion(facade, toast, {
       itemLabel: () => 'esta saída',
       deletedMessage: () => 'Saída excluída.',
     });
+  });
+
+  it('identifica o lançamento pela descrição e pelo valor', () => {
+    deletion.request(seriesTx);
+
+    expect(deletion.itemLabel()).toBe(`esta saída “Academia” de ${brl(100)}`);
+  });
+
+  it('usa o nome da categoria quando não há descrição', () => {
+    deletion.request(singleTx);
+
+    expect(deletion.itemLabel()).toBe(`esta saída “Moradia” de ${brl(50)}`);
   });
 
   it('cancelar não faz nenhuma requisição', () => {

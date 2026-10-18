@@ -1,22 +1,21 @@
-import { Component, ElementRef, HostListener, computed, effect, inject, input, output } from '@angular/core';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { Component, HostListener, computed, input, output } from '@angular/core';
 import { LucideAngularModule } from 'lucide-angular';
 import { BusyButtonComponent } from '../busy-button/busy-button.component';
 import { BUSY_LABEL } from '../busy-button/busy-labels';
+import { lockBodyScrollWhile } from '../../a11y/body-scroll-lock';
 import { SERIES_DELETE_SCOPE, SeriesDeleteScope } from './series-delete-scope';
 
 const ESCAPE_KEY = 'Escape';
 const BACKDROP_CLASS = 'modal__backdrop';
-const AUTOFOCUS_SELECTOR = '[data-autofocus]';
 
 @Component({
   selector: 'app-series-delete-modal',
-  imports: [LucideAngularModule, BusyButtonComponent],
+  imports: [LucideAngularModule, BusyButtonComponent, CdkTrapFocus],
   templateUrl: './series-delete-modal.component.html',
   styleUrl: './series-delete-modal.component.scss',
 })
 export class SeriesDeleteModalComponent {
-  private readonly el = inject(ElementRef);
-
   readonly visible = input(false);
   readonly isSeries = input(false);
   readonly itemLabel = input.required<string>();
@@ -30,9 +29,7 @@ export class SeriesDeleteModalComponent {
   readonly cancelled = output<void>();
 
   constructor() {
-    effect(() => {
-      if (this.visible()) setTimeout(() => this.focusSafestAction());
-    });
+    lockBodyScrollWhile(this.visible);
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -59,11 +56,5 @@ export class SeriesDeleteModalComponent {
 
   deleteThisAndFuture(): void {
     this.confirmed.emit(SERIES_DELETE_SCOPE.thisAndFuture);
-  }
-
-  private focusSafestAction(): void {
-    (this.el.nativeElement as HTMLElement)
-      .querySelector<HTMLButtonElement>(AUTOFOCUS_SELECTOR)
-      ?.focus();
   }
 }

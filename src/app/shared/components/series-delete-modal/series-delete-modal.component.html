@@ -6,6 +6,8 @@
       aria-modal="true"
       aria-labelledby="series-delete-title"
       aria-describedby="series-delete-desc"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
       (click)="$event.stopPropagation()"
     >
       <div class="modal__head">
@@ -17,41 +19,45 @@
         </button>
       </div>
 
-      @if (isSeries()) {
-        <p id="series-delete-desc" class="modal__text">
-          Este lançamento faz parte de uma série fixa. Você pode excluir só o mês atual ou este mês e
-          todos os seguintes da série.
-        </p>
-      } @else {
-        <p id="series-delete-desc" class="modal__text">Excluir {{ itemLabel() }}?</p>
-      }
-
-      <div class="modal__actions">
-        <button type="button" class="btn btn--ghost" data-autofocus [disabled]="isDeleting()" (click)="cancel()">
-          Cancelar
-        </button>
+      <div id="series-delete-desc" class="modal__text">
+        <p class="modal__question">Excluir {{ itemLabel() }}?</p>
         @if (isSeries()) {
+          <p class="modal__detail">Ele faz parte de uma série fixa. Escolha até onde excluir.</p>
+        }
+      </div>
+
+      @if (isSeries()) {
+        <div class="scope-options" role="group" aria-label="Até onde excluir">
           <button
             type="button"
-            class="btn btn--secondary"
+            class="scope-option"
             [appBusyButton]="isDeletingScope(scope.thisMonth)"
             [busyLabel]="deletingLabel"
             [disabled]="isDeleting()"
             (click)="deleteThisMonth()"
           >
-            Só este mês
+            <span class="scope-option__title">Só este mês</span>
+            <span class="scope-option__hint">Os outros meses da série continuam.</span>
           </button>
           <button
             type="button"
-            class="btn btn--danger"
+            class="scope-option scope-option--danger"
             [appBusyButton]="isDeletingScope(scope.thisAndFuture)"
             [busyLabel]="deletingLabel"
             [disabled]="isDeleting()"
             (click)="deleteThisAndFuture()"
           >
-            Este e os próximos
+            <span class="scope-option__title">Este e os próximos</span>
+            <span class="scope-option__hint">Apaga este mês e todos os seguintes da série.</span>
           </button>
-        } @else {
+        </div>
+      }
+
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" cdkFocusInitial [disabled]="isDeleting()" (click)="cancel()">
+          Cancelar
+        </button>
+        @if (!isSeries()) {
           <button
             type="button"
             class="btn btn--danger"
