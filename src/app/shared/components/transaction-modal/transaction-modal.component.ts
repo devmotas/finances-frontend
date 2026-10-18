@@ -14,6 +14,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { LucideAngularModule } from 'lucide-angular';
 import { Flow, Schedule, Transaction } from '../../../core/models/finances.models';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
@@ -26,6 +27,8 @@ import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
 import { trackBusy } from '../../../core/utils/track-busy';
 import { BusyButtonComponent } from '../busy-button/busy-button.component';
 import { BUSY_LABEL } from '../busy-button/busy-labels';
+import { lockBodyScrollWhile } from '../../a11y/body-scroll-lock';
+import { describedBy, isInvalid } from '../../a11y/field-a11y';
 
 type EntryKind = 'income' | 'expense' | 'contribution' | 'withdrawal';
 
@@ -72,7 +75,7 @@ function amountValidator(control: AbstractControl): ValidationErrors | null {
 
 @Component({
   selector: 'app-transaction-modal',
-  imports: [ReactiveFormsModule, LucideAngularModule, BusyButtonComponent],
+  imports: [ReactiveFormsModule, LucideAngularModule, BusyButtonComponent, CdkTrapFocus],
   templateUrl: './transaction-modal.component.html',
   styleUrl: './transaction-modal.component.scss',
 })
@@ -85,6 +88,8 @@ export class TransactionModalComponent {
   private readonly userProfile = inject(UserProfileService);
   readonly savingLabel = BUSY_LABEL.saving;
   readonly isSaving = signal(false);
+  readonly describedBy = describedBy;
+  readonly isInvalid = isInvalid;
 
   readonly visible = input(false);
   readonly flow = input.required<Flow>();
@@ -107,6 +112,7 @@ export class TransactionModalComponent {
   });
 
   constructor() {
+    lockBodyScrollWhile(this.visible);
     effect(() => {
       if (!this.visible()) return;
       const selYm = this.monthCtx.selectedMonth();
@@ -178,6 +184,10 @@ export class TransactionModalComponent {
       return resgate ? 'Valor do resgate (R$)' : 'Valor do aporte (R$)';
     }
     return 'Valor (R$)';
+  }
+
+  showsWithdrawalHint(): boolean {
+    return this.flow() === 'investment' && !this.editing() && this.investmentIntent() === 'resgate';
   }
 
   investmentNewHidesRecurrenceControls(): boolean {

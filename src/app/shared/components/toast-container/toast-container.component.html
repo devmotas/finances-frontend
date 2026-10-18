@@ -1,10 +1,25 @@
-@if (toast.toasts().length) {
-  <div class="toast-host" role="region" aria-label="Notificações">
-    @for (t of toast.toasts(); track t.id) {
-      <div class="toast toast--{{ t.kind }}" role="status">
-        <span class="toast__msg">{{ t.message }}</span>
-        <button type="button" class="toast__close" (click)="dismiss(t.id)" aria-label="Fechar">×</button>
-      </div>
+<div class="toast-host" role="region" aria-label="Notificações">
+  <div class="toast-stack" aria-live="polite">
+    @for (t of politeToasts(); track t.id) {
+      <ng-container *ngTemplateOutlet="toastItem; context: { $implicit: t }" />
     }
   </div>
-}
+  <div class="toast-stack" aria-live="assertive">
+    @for (t of errorToasts(); track t.id) {
+      <ng-container *ngTemplateOutlet="toastItem; context: { $implicit: t }" />
+    }
+  </div>
+</div>
+
+<ng-template #toastItem let-t>
+  <div
+    class="toast toast--{{ t.kind }}"
+    (mouseenter)="pause(t.id)"
+    (mouseleave)="resume(t.id)"
+    (focusin)="pause(t.id)"
+    (focusout)="resume(t.id)"
+  >
+    <span class="toast__msg">{{ t.message }}</span>
+    <button type="button" class="toast__close" (click)="dismiss(t.id)" aria-label="Fechar notificação">×</button>
+  </div>
+</ng-template>

@@ -1,13 +1,18 @@
-import { DOCUMENT } from '@angular/common';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { BreakpointObserver } from '@angular/cdk/layout';
 import {
+  afterNextRender,
   Component,
   computed,
-  DestroyRef,
-  effect,
+  ElementRef,
   HostListener,
   inject,
+  Injector,
   signal,
+  Signal,
+  viewChild,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
@@ -15,6 +20,10 @@ import { FinancesFacadeService } from '../../core/services/finances-facade.servi
 import { MonthContextService } from '../../core/services/month-context.service';
 import { PendingRequestsService } from '../../core/services/pending-requests.service';
 import { ToastService } from '../../core/services/toast.service';
+import { lockBodyScrollWhile } from '../../shared/a11y/body-scroll-lock';
+
+const DESKTOP_MEDIA_QUERY = '(min-width: 768px)';
+const INERT_ON = '';
 
 export interface ShellNavItem {
   readonly path: string;
@@ -26,7 +35,7 @@ export interface ShellNavItem {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, LucideAngularModule, CdkTrapFocus],
   templateUrl: './app-shell.component.html',
   styleUrl: './app-shell.component.scss',
 })
@@ -34,8 +43,7 @@ export class AppShellComponent {
   private readonly _financesBootstrap = inject(FinancesFacadeService);
 
   private readonly monthCtx = inject(MonthContextService);
-  private readonly document = inject(DOCUMENT);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly injector = inject(Injector);
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -78,6 +86,10 @@ export class AppShellComponent {
   ];
 
   readonly mobileNavOpen = signal(false);
+  readonly inertWhileNavOpen = computed(() => (this.mobileNavOpen() ? INERT_ON : null));
+
+  private readonly navToggle = viewChild.required<ElementRef<HTMLButtonElement>>('navToggle');
+  private readonly drawerClose = viewChild.required<ElementRef<HTMLButtonElement>>('drawerClose');
 
   readonly monthLabel = computed(() => {
     this.monthCtx.selectedMonth();
@@ -85,12 +97,13 @@ export class AppShellComponent {
   });
 
   constructor() {
-    effect(() => {
-      this.document.body.style.overflow = this.mobileNavOpen() ? 'hidden' : '';
-    });
-    this.destroyRef.onDestroy(() => {
-      this.document.body.style.overflow = '';
-    });
+    lockBodyScrollWhile(this.mobileNavOpen);
+    inject(BreakpointObserver)
+      .observe(DESKTOP_MEDIA_QUERY)
+      .pipe(takeUntilDestroyed())
+      .subscribe(({ matches }) => {
+        if (matches) this.mobileNavOpen.set(false);
+      });
   }
 
   @HostListener('document:keydown.escape')
@@ -109,11 +122,23 @@ export class AppShellComponent {
   }
 
   toggleMobileNav(): void {
-    this.mobileNavOpen.update((v) => !v);
+    if (this.mobileNavOpen()) this.closeMobileNav();
+    else this.openMobileNav();
   }
 
   closeMobileNav(): void {
+    if (!this.mobileNavOpen()) return;
     this.mobileNavOpen.set(false);
+    this.focusAfterRender(this.navToggle);
+  }
+
+  private openMobileNav(): void {
+    this.mobileNavOpen.set(true);
+    this.focusAfterRender(this.drawerClose);
+  }
+
+  private focusAfterRender(target: Signal<ElementRef<HTMLElement>>): void {
+    afterNextRender(() => target().nativeElement.focus(), { injector: this.injector });
   }
 
   logout(): void {

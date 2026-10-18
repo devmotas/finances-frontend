@@ -14,104 +14,129 @@
       </p>
     </div>
   } @else {
-    <div class="tabs" role="tablist" aria-label="Seções de configurações">
-      <button
-        type="button"
-        class="tabs__btn"
-        role="tab"
-        [attr.aria-selected]="activeTab() === 'prefs'"
-        [class.tabs__btn--active]="activeTab() === 'prefs'"
-        (click)="setTab('prefs')"
-      >
-        Preferências
-      </button>
-      <button
-        type="button"
-        class="tabs__btn"
-        role="tab"
-        [attr.aria-selected]="activeTab() === 'profile'"
-        [class.tabs__btn--active]="activeTab() === 'profile'"
-        (click)="setTab('profile')"
-      >
-        Perfil e senha
-      </button>
+    <div class="tabs" role="tablist" aria-label="Seções de configurações" (keydown)="onTabKeydown($event)">
+      @for (tab of tabs; track tab.id) {
+        <button
+          #tabButton
+          type="button"
+          class="tabs__btn"
+          role="tab"
+          [id]="tabId(tab.id)"
+          [attr.aria-selected]="activeTab() === tab.id"
+          [attr.aria-controls]="activeTab() === tab.id ? panelId(tab.id) : null"
+          [attr.tabindex]="activeTab() === tab.id ? 0 : -1"
+          [class.tabs__btn--active]="activeTab() === tab.id"
+          (click)="setTab(tab.id)"
+        >
+          {{ tab.label }}
+        </button>
+      }
     </div>
 
     @if (activeTab() === 'prefs') {
-      <div class="panel">
+      <div class="panel" role="tabpanel" [id]="panelId('prefs')" [attr.aria-labelledby]="tabId('prefs')">
         <form class="form" (ngSubmit)="savePrefs()" [formGroup]="prefsForm">
           <div class="form__icon" aria-hidden="true">
             <lucide-icon name="settings" [size]="28" [strokeWidth]="2"></lucide-icon>
           </div>
-          <label class="field">
-            <span class="field__label">Meses para frente (padrão)</span>
+          <div class="field">
+            <label class="field__label" for="settings-default-months">Meses para frente (padrão)</label>
             <input
+              id="settings-default-months"
               class="field__input"
               type="number"
               [min]="limits.monthsMin"
               [max]="limits.monthsMax"
               formControlName="defaultRecurrenceMonths"
-              [title]="'Entre ' + limits.monthsMin + ' e ' + limits.monthsMax + ' meses'"
+              [attr.aria-invalid]="isInvalid(prefsForm.controls.defaultRecurrenceMonths)"
+              [attr.aria-describedby]="
+                describedBy(
+                  'settings-default-months-hint',
+                  isInvalid(prefsForm.controls.defaultRecurrenceMonths) && 'settings-default-months-err'
+                )
+              "
             />
-            @if (
-              prefsForm.controls.defaultRecurrenceMonths.touched &&
-              prefsForm.controls.defaultRecurrenceMonths.invalid
-            ) {
-              <span class="field__err">Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.</span>
-            }
-            <span class="field__hint">
-              Esse valor pré-preenche o campo “Repetir por X meses” ao lançar uma despesa ou receita
-              <strong>fixa</strong>.
+            <span id="settings-default-months-hint" class="field__hint">
+              Entre {{ limits.monthsMin }} e {{ limits.monthsMax }} meses. Esse valor pré-preenche o campo
+              “Repetir por (meses)” ao lançar uma entrada ou saída <strong>fixa</strong>.
             </span>
-          </label>
-          <label class="field">
-            <span class="field__label">Meta do fundo de emergência (meses de despesa)</span>
+            @if (isInvalid(prefsForm.controls.defaultRecurrenceMonths)) {
+              <span id="settings-default-months-err" class="field__err" role="alert">
+                Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.
+              </span>
+            }
+          </div>
+          <div class="field">
+            <label class="field__label" for="settings-emergency-months">
+              Meta do fundo de emergência (meses de despesa)
+            </label>
             <input
+              id="settings-emergency-months"
               class="field__input"
               type="number"
               [min]="limits.monthsMin"
               [max]="limits.monthsMax"
               formControlName="emergencyFundTargetMonths"
-              title="Ex.: 6 para reserva de 6 meses de gastos médios"
+              [attr.aria-invalid]="isInvalid(prefsForm.controls.emergencyFundTargetMonths)"
+              [attr.aria-describedby]="
+                describedBy(
+                  'settings-emergency-months-hint',
+                  isInvalid(prefsForm.controls.emergencyFundTargetMonths) && 'settings-emergency-months-err'
+                )
+              "
             />
-            @if (
-              prefsForm.controls.emergencyFundTargetMonths.touched &&
-              prefsForm.controls.emergencyFundTargetMonths.invalid
-            ) {
-              <span class="field__err">Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.</span>
-            }
-            <span class="field__hint">
-              Usado na página <strong>Reserva</strong> (barra lateral) para a barra de progresso: meta de quantos
-              meses de despesa do mês selecionado você deseja cobrir.
+            <span id="settings-emergency-months-hint" class="field__hint">
+              Usado na tela <strong>Reserva</strong> para a barra de progresso: quantos meses de despesa do mês
+              selecionado você deseja cobrir. Ex.: 6 para uma reserva de 6 meses de gastos.
             </span>
-          </label>
+            @if (isInvalid(prefsForm.controls.emergencyFundTargetMonths)) {
+              <span id="settings-emergency-months-err" class="field__err" role="alert">
+                Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.
+              </span>
+            }
+          </div>
           <div class="form__actions">
             <button type="submit" class="btn btn--primary" [appBusyButton]="prefsSaving()" [busyLabel]="busyLabel.saving">
-                Salvar
-              </button>
+              Salvar
+            </button>
           </div>
         </form>
       </div>
     }
 
     @if (activeTab() === 'profile') {
-      <div class="profile-layout">
+      <div class="profile-layout" role="tabpanel" [id]="panelId('profile')" [attr.aria-labelledby]="tabId('profile')">
         <div class="panel">
           <form class="form form--wide" (ngSubmit)="saveProfile()" [formGroup]="profileForm">
             <div class="form__icon" aria-hidden="true">
               <lucide-icon name="user" [size]="28" [strokeWidth]="2"></lucide-icon>
             </div>
             <h2 class="panel__section-title">Dados do perfil</h2>
-            <label class="field">
-              <span class="field__label">Nome</span>
-              <input class="field__input" type="text" autocomplete="name" formControlName="name" />
+            <div class="field">
+              <label class="field__label" for="settings-name">Nome</label>
+              <input
+                id="settings-name"
+                class="field__input"
+                type="text"
+                autocomplete="name"
+                formControlName="name"
+                [attr.aria-invalid]="isInvalid(profileForm.controls.name)"
+                [attr.aria-describedby]="describedBy(isInvalid(profileForm.controls.name) && 'settings-name-err')"
+              />
               @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('required')) {
-                <span class="field__err">Informe seu nome.</span>
+                <span id="settings-name-err" class="field__err" role="alert">Informe seu nome.</span>
               }
               @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('minlength')) {
-                <span class="field__err">Use ao menos {{ limits.nameMin }} caracteres.</span>
+                <span id="settings-name-err" class="field__err" role="alert">
+                  Use ao menos {{ limits.nameMin }} caracteres.
+                </span>
               }
-            </label>
+              @if (profileForm.controls.name.touched && profileForm.controls.name.hasError('maxlength')) {
+                <span id="settings-name-err" class="field__err" role="alert">
+                  Use no máximo {{ limits.nameMax }} caracteres.
+                </span>
+              }
+            </div>
             <div class="field">
               <span class="field__label">E-mail</span>
               <p class="field__readonly">{{ accountEmail() }}</p>
@@ -131,76 +156,106 @@
               <lucide-icon name="lock" [size]="28" [strokeWidth]="2"></lucide-icon>
             </div>
             <h2 class="panel__section-title">Alterar senha</h2>
-            <label class="field">
-              <span class="field__label">Senha atual</span>
+            <div class="field">
+              <label class="field__label" for="settings-current-password">Senha atual</label>
               <div class="field__row">
                 <input
+                  id="settings-current-password"
                   class="field__input field__input--grow"
                   [type]="passwordVisible() ? 'text' : 'password'"
                   autocomplete="current-password"
                   formControlName="currentPassword"
+                  [attr.aria-invalid]="isInvalid(passwordForm.controls.currentPassword)"
+                  [attr.aria-describedby]="
+                    describedBy(isInvalid(passwordForm.controls.currentPassword) && 'settings-current-password-err')
+                  "
                 />
                 <button
                   type="button"
                   class="btn btn--icon"
                   (click)="togglePasswordVisibility()"
                   [attr.aria-label]="passwordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                  [attr.aria-pressed]="passwordVisible()"
                 >
                   <lucide-icon [name]="passwordVisible() ? 'eye-off' : 'eye'" [size]="20"></lucide-icon>
                 </button>
               </div>
-            </label>
-            <label class="field">
-              <span class="field__label">Nova senha</span>
+              @if (isInvalid(passwordForm.controls.currentPassword)) {
+                <span id="settings-current-password-err" class="field__err" role="alert">Informe a senha atual.</span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label" for="settings-new-password">Nova senha</label>
               <div class="field__row">
                 <input
+                  id="settings-new-password"
                   class="field__input field__input--grow"
                   [type]="newPasswordVisible() ? 'text' : 'password'"
                   autocomplete="new-password"
                   formControlName="newPassword"
+                  [attr.aria-invalid]="isInvalid(passwordForm.controls.newPassword)"
+                  [attr.aria-describedby]="
+                    describedBy(
+                      'settings-new-password-hint',
+                      isInvalid(passwordForm.controls.newPassword) && 'settings-new-password-err'
+                    )
+                  "
                 />
                 <button
                   type="button"
                   class="btn btn--icon"
                   (click)="toggleNewPasswordVisibility()"
                   [attr.aria-label]="newPasswordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                  [attr.aria-pressed]="newPasswordVisible()"
                 >
                   <lucide-icon [name]="newPasswordVisible() ? 'eye-off' : 'eye'" [size]="20"></lucide-icon>
                 </button>
               </div>
-              @if (
-                passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength')
-              ) {
-                <span class="field__err">Mínimo de {{ limits.passwordMin }} caracteres.</span>
+              <span id="settings-new-password-hint" class="field__hint">
+                Pelo menos {{ limits.passwordMin }} caracteres, como no cadastro.
+              </span>
+              @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('required')) {
+                <span id="settings-new-password-err" class="field__err" role="alert">Informe a nova senha.</span>
               }
-            </label>
-            <label class="field">
-              <span class="field__label">Confirmar nova senha</span>
+              @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('minlength')) {
+                <span id="settings-new-password-err" class="field__err" role="alert">
+                  Mínimo de {{ limits.passwordMin }} caracteres.
+                </span>
+              }
+              @if (passwordForm.controls.newPassword.touched && passwordForm.controls.newPassword.hasError('maxlength')) {
+                <span id="settings-new-password-err" class="field__err" role="alert">
+                  Máximo de {{ limits.passwordMax }} caracteres.
+                </span>
+              }
+            </div>
+            <div class="field">
+              <label class="field__label" for="settings-confirm-password">Confirmar nova senha</label>
               <div class="field__row">
                 <input
+                  id="settings-confirm-password"
                   class="field__input field__input--grow"
                   [type]="confirmPasswordVisible() ? 'text' : 'password'"
                   autocomplete="new-password"
                   formControlName="confirmNewPassword"
+                  [attr.aria-invalid]="confirmPasswordInvalid()"
+                  [attr.aria-describedby]="describedBy(confirmPasswordInvalid() && 'settings-confirm-password-err')"
                 />
                 <button
                   type="button"
                   class="btn btn--icon"
                   (click)="toggleConfirmPasswordVisibility()"
                   [attr.aria-label]="confirmPasswordVisible() ? 'Ocultar senha' : 'Mostrar senha'"
+                  [attr.aria-pressed]="confirmPasswordVisible()"
                 >
                   <lucide-icon [name]="confirmPasswordVisible() ? 'eye-off' : 'eye'" [size]="20"></lucide-icon>
                 </button>
               </div>
-              @if (
-                passwordForm.touched &&
-                passwordForm.hasError('passwordMismatch') &&
-                passwordForm.controls.confirmNewPassword.value
-              ) {
-                <span class="field__err">As senhas não coincidem.</span>
+              @if (isInvalid(passwordForm.controls.confirmNewPassword)) {
+                <span id="settings-confirm-password-err" class="field__err" role="alert">Confirme a nova senha.</span>
+              } @else if (passwordMismatch()) {
+                <span id="settings-confirm-password-err" class="field__err" role="alert">As senhas não coincidem.</span>
               }
-            </label>
-            <p class="field__hint">A nova senha precisa ter pelo menos {{ limits.passwordMin }} caracteres, como no cadastro.</p>
+            </div>
             <div class="form__actions">
               <button type="submit" class="btn btn--primary" [appBusyButton]="passwordSaving()" [busyLabel]="busyLabel.changingPassword">
                 Alterar senha

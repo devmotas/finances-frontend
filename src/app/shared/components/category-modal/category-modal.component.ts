@@ -1,3 +1,4 @@
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { CurrencyPipe } from '@angular/common';
 import { Component, ElementRef, HostListener, effect, inject, input, output, signal } from '@angular/core';
 import { finalize } from 'rxjs';
@@ -11,6 +12,8 @@ import { VALIDATION_LIMITS } from '../../../core/models/validation-limits';
 import { trackBusy } from '../../../core/utils/track-busy';
 import { BusyButtonComponent } from '../busy-button/busy-button.component';
 import { BUSY_LABEL } from '../busy-button/busy-labels';
+import { lockBodyScrollWhile } from '../../a11y/body-scroll-lock';
+import { describedBy, isInvalid } from '../../a11y/field-a11y';
 
 const CATEGORY_FEEDBACK = {
   created: 'Categoria criada.',
@@ -21,9 +24,12 @@ const CATEGORY_FEEDBACK = {
   deleteFailed: 'Não foi possível excluir a categoria.',
 } as const;
 
+const MODAL_SELECTOR = '.modal';
+const NAME_INPUT_SELECTOR = '#cat-name';
+
 @Component({
   selector: 'app-category-modal',
-  imports: [ReactiveFormsModule, LucideAngularModule, CurrencyPipe, BusyButtonComponent],
+  imports: [ReactiveFormsModule, LucideAngularModule, CurrencyPipe, BusyButtonComponent, CdkTrapFocus],
   templateUrl: './category-modal.component.html',
   styleUrl: './category-modal.component.scss',
 })
@@ -42,6 +48,8 @@ export class CategoryModalComponent {
   readonly busyLabel = BUSY_LABEL;
   readonly isSaving = signal(false);
   readonly deletingId = signal<number | null>(null);
+  readonly describedBy = describedBy;
+  readonly isInvalid = isInvalid;
 
   readonly form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(VALIDATION_LIMITS.categoryNameMax)]],
@@ -53,6 +61,7 @@ export class CategoryModalComponent {
   });
 
   constructor() {
+    lockBodyScrollWhile(this.visible);
     effect(() => {
       if (this.visible()) {
         this.editingId = null;
@@ -110,9 +119,9 @@ export class CategoryModalComponent {
       expenseGroup: c.expenseGroup ?? 'essential',
       openingBalanceAmount: c.openingBalanceAmount ?? 0,
     });
-    (this.el.nativeElement as HTMLElement)
-      .querySelector<HTMLElement>('.modal')
-      ?.scrollTo({ top: 0, behavior: 'smooth' });
+    const host = this.el.nativeElement as HTMLElement;
+    host.querySelector<HTMLElement>(MODAL_SELECTOR)?.scrollTo({ top: 0, behavior: 'smooth' });
+    host.querySelector<HTMLInputElement>(NAME_INPUT_SELECTOR)?.focus({ preventScroll: true });
   }
 
   cancelEdit(): void {

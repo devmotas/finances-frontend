@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, ElementRef, inject, signal, viewChildren } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
@@ -12,6 +12,7 @@ import { VALIDATION_LIMITS } from '../../core/models/validation-limits';
 import { trackBusy } from '../../core/utils/track-busy';
 import { BusyButtonComponent } from '../../shared/components/busy-button/busy-button.component';
 import { BUSY_LABEL } from '../../shared/components/busy-button/busy-labels';
+import { describedBy, isInvalid } from '../../shared/a11y/field-a11y';
 
 const SETTINGS_FEEDBACK = {
   loadFailed: 'Não foi possível carregar suas configurações.',
@@ -27,6 +28,29 @@ const SETTINGS_FEEDBACK = {
 } as const;
 
 type SettingsTab = 'prefs' | 'profile';
+
+interface SettingsTabOption {
+  readonly id: SettingsTab;
+  readonly label: string;
+}
+
+const SETTINGS_TABS: readonly SettingsTabOption[] = [
+  { id: 'prefs', label: 'Preferências' },
+  { id: 'profile', label: 'Perfil e senha' },
+];
+
+const TAB_ID_PREFIX = 'settings-tab-';
+const PANEL_ID_PREFIX = 'settings-panel-';
+const PASSWORD_MISMATCH_ERROR = 'passwordMismatch';
+
+const TAB_KEY_STEP: Readonly<Record<string, number>> = {
+  ArrowRight: 1,
+  ArrowDown: 1,
+  ArrowLeft: -1,
+  ArrowUp: -1,
+};
+const FIRST_TAB_KEY = 'Home';
+const LAST_TAB_KEY = 'End';
 
 @Component({
   selector: 'app-settings',
@@ -44,6 +68,10 @@ export class SettingsComponent {
   private readonly toast = inject(ToastService);
 
   readonly busyLabel = BUSY_LABEL;
+  readonly tabs = SETTINGS_TABS;
+  readonly describedBy = describedBy;
+  readonly isInvalid = isInvalid;
+  private readonly tabButtons = viewChildren<ElementRef<HTMLButtonElement>>('tabButton');
   readonly activeTab = signal<SettingsTab>('prefs');
   readonly initialLoading = signal(true);
   readonly prefsSaving = signal(false);
@@ -103,6 +131,41 @@ export class SettingsComponent {
 
   setTab(tab: SettingsTab): void {
     this.activeTab.set(tab);
+  }
+
+  tabId(tab: SettingsTab): string {
+    return TAB_ID_PREFIX + tab;
+  }
+
+  panelId(tab: SettingsTab): string {
+    return PANEL_ID_PREFIX + tab;
+  }
+
+  onTabKeydown(event: KeyboardEvent): void {
+    const index = this.targetTabIndex(event.key);
+    if (index === null) return;
+    event.preventDefault();
+    this.setTab(this.tabs[index].id);
+    this.tabButtons()[index]?.nativeElement.focus();
+  }
+
+  passwordMismatch(): boolean {
+    const confirm = this.passwordForm.controls.confirmNewPassword;
+    return confirm.touched && !!confirm.value && this.passwordForm.hasError(PASSWORD_MISMATCH_ERROR);
+  }
+
+  confirmPasswordInvalid(): boolean {
+    return isInvalid(this.passwordForm.controls.confirmNewPassword) || this.passwordMismatch();
+  }
+
+  private targetTabIndex(key: string): number | null {
+    const last = this.tabs.length - 1;
+    if (key === FIRST_TAB_KEY) return 0;
+    if (key === LAST_TAB_KEY) return last;
+    const step = TAB_KEY_STEP[key];
+    if (step === undefined) return null;
+    const current = this.tabs.findIndex((t) => t.id === this.activeTab());
+    return (current + step + this.tabs.length) % this.tabs.length;
   }
 
   savePrefs(): void {

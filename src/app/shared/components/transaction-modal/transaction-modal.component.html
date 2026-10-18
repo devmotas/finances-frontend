@@ -5,6 +5,8 @@
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="'tx-modal-title'"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
       (click)="$event.stopPropagation()"
     >
       <div class="modal__head">
@@ -22,12 +24,17 @@
           </p>
         }
 
-        <label class="field">
-          <span class="field__label">Categoria</span>
+        <div class="field">
+          <label class="field__label" for="tx-category">Categoria</label>
           <select
+            id="tx-category"
             class="field__input"
             formControlName="categoryId"
-            title="Obrigatório — define onde este lançamento entra nos relatórios"
+            [attr.cdkFocusInitial]="blockNewWithoutCategories() ? null : ''"
+            [attr.aria-invalid]="isInvalid(form.controls.categoryId)"
+            [attr.aria-describedby]="
+              describedBy('tx-category-hint', isInvalid(form.controls.categoryId) && 'tx-category-err')
+            "
             [disabled]="blockNewWithoutCategories()"
           >
             <option value="">{{ categorySelectPlaceholder() }}</option>
@@ -35,60 +42,89 @@
               <option [value]="c.id">{{ c.name }}</option>
             }
           </select>
+          <span id="tx-category-hint" class="field__hint">Define onde este lançamento entra nos relatórios.</span>
           @if (form.controls.categoryId.touched && form.controls.categoryId.errors?.['required']) {
-            <span class="field__err">Selecione uma categoria.</span>
+            <span id="tx-category-err" class="field__err" role="alert">Selecione uma categoria.</span>
           }
-        </label>
+        </div>
 
-        <label class="field">
-          <span class="field__label">Descrição <span class="field__optional">(opcional)</span></span>
+        <div class="field">
+          <label class="field__label" for="tx-description">
+            Descrição <span class="field__optional">(opcional)</span>
+          </label>
           <input
+            id="tx-description"
             class="field__input"
             type="text"
             formControlName="description"
             [placeholder]="descriptionPlaceholder()"
             autocomplete="off"
             [maxlength]="limits.descriptionMax"
+            [attr.aria-invalid]="isInvalid(form.controls.description)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.description) && 'tx-description-err')"
             [disabled]="blockNewWithoutCategories()"
           />
           @if (form.controls.description.touched && form.controls.description.errors?.['maxlength']) {
-            <span class="field__err">Use no máximo {{ limits.descriptionMax }} caracteres.</span>
+            <span id="tx-description-err" class="field__err" role="alert">
+              Use no máximo {{ limits.descriptionMax }} caracteres.
+            </span>
           }
-        </label>
+        </div>
 
-        <label class="field">
-          <span class="field__label">{{ amountFieldLabel() }}</span>
+        <div class="field">
+          <label class="field__label" for="tx-amount">{{ amountFieldLabel() }}</label>
           <input
+            id="tx-amount"
             class="field__input"
             type="text"
             inputmode="decimal"
             formControlName="amount"
             [placeholder]="amountPlaceholder()"
-            title="Use vírgula para centavos, ex.: 1.250,50"
             autocomplete="off"
+            [attr.aria-invalid]="isInvalid(form.controls.amount)"
+            [attr.aria-describedby]="
+              describedBy(
+                'tx-amount-hint',
+                showsWithdrawalHint() && 'tx-amount-withdrawal-hint',
+                isInvalid(form.controls.amount) && 'tx-amount-err'
+              )
+            "
             [disabled]="blockNewWithoutCategories()"
           />
-          @if (form.controls.amount.touched && form.controls.amount.errors) {
-            <span class="field__err">Informe um valor maior que zero.</span>
-          }
-          @if (flow() === 'investment' && !editing() && investmentIntent() === 'resgate') {
-            <span class="field__hint">
+          <span id="tx-amount-hint" class="field__hint">Use vírgula para os centavos, ex.: 1.250,50.</span>
+          @if (showsWithdrawalHint()) {
+            <span id="tx-amount-withdrawal-hint" class="field__hint">
               O valor informado será registrado como saída desta categoria e volta ao saldo disponível na
               visão geral (líquido do mês).
             </span>
           }
-        </label>
+          @if (isInvalid(form.controls.amount)) {
+            <span id="tx-amount-err" class="field__err" role="alert">Informe um valor maior que zero.</span>
+          }
+        </div>
 
-        <label class="field">
-          <span class="field__label">Data</span>
+        <div class="field">
+          <label class="field__label" for="tx-date">Data</label>
           <input
+            id="tx-date"
             class="field__input"
             type="date"
             formControlName="date"
-            title="Ao criar: data padrão = hoje se o mês do topo for o mês civil atual; senão dia 1 daquele mês."
+            [attr.aria-invalid]="isInvalid(form.controls.date)"
+            [attr.aria-describedby]="
+              describedBy(!editing() && 'tx-date-hint', isInvalid(form.controls.date) && 'tx-date-err')
+            "
             [disabled]="blockNewWithoutCategories()"
           />
-        </label>
+          @if (!editing()) {
+            <span id="tx-date-hint" class="field__hint">
+              Já vem com hoje se o mês selecionado for o atual; senão, com o dia 1 daquele mês.
+            </span>
+          }
+          @if (isInvalid(form.controls.date)) {
+            <span id="tx-date-err" class="field__err" role="alert">Informe a data.</span>
+          }
+        </div>
 
         @if (investmentNewHidesRecurrenceControls()) {
           <p class="modal__hint modal__hint--invest-pontual" role="note">
@@ -96,69 +132,88 @@
             cria séries fixas nem lançamentos futuros automáticos para investimento.
           </p>
         } @else {
-          <label class="field">
-            <span class="field__label">Recorrência</span>
+          <div class="field">
+            <label class="field__label" for="tx-schedule">Recorrência</label>
             <select
+              id="tx-schedule"
               class="field__input"
               formControlName="schedule"
+              aria-describedby="tx-schedule-hint"
               [disabled]="blockNewWithoutCategories()"
-              title="Fixa repete todo mês; variável vale só no mês selecionado"
             >
               <option value="fixed">Fixa — todo mês</option>
               <option value="variable">Só neste mês</option>
             </select>
-          </label>
+            <span id="tx-schedule-hint" class="field__hint">
+              Fixa repete todo mês; “Só neste mês” vale apenas para o mês selecionado.
+            </span>
+          </div>
         }
 
         @if (showSeriesUpdateScope()) {
-          <label class="field">
-            <span class="field__label">Alteração na série fixa</span>
+          <div class="field">
+            <label class="field__label" for="tx-series-scope">Alteração na série fixa</label>
             <select
+              id="tx-series-scope"
               class="field__input"
               formControlName="seriesUpdateScope"
-              title="Define se a alteração vale só para este mês ou para os meses seguintes da mesma série"
+              aria-describedby="tx-series-scope-hint"
             >
               <option value="thisMonth">Somente este mês</option>
               <option value="futureSeries">Este mês e todos os futuros da série</option>
             </select>
-            <span class="field__hint">
+            <span id="tx-series-scope-hint" class="field__hint">
               “Somente este mês” altera só esta ocorrência. A outra opção replica a alteração para os
               meses seguintes da mesma série (a partir deste lançamento).
             </span>
-          </label>
+          </div>
         }
 
         @if (showRecurrenceMonths()) {
-          <label class="field">
-            <span class="field__label">Repetir por (meses)</span>
+          <div class="field">
+            <label class="field__label" for="tx-recurrence-months">Repetir por (meses)</label>
             <input
+              id="tx-recurrence-months"
               class="field__input"
               type="number"
               [min]="limits.monthsMin"
               [max]="limits.monthsMax"
               formControlName="recurrenceMonths"
-              title="Quantos meses à frente serão gerados de uma vez"
+              [attr.aria-invalid]="isInvalid(form.controls.recurrenceMonths)"
+              [attr.aria-describedby]="
+                describedBy(
+                  'tx-recurrence-months-hint',
+                  isInvalid(form.controls.recurrenceMonths) && 'tx-recurrence-months-err'
+                )
+              "
               [disabled]="blockNewWithoutCategories()"
             />
-            @if (
-              form.controls.recurrenceMonths.touched && form.controls.recurrenceMonths.invalid
-            ) {
-              <span class="field__err">Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.</span>
-            }
-            <span class="field__hint">
-              Gera lançamentos fixos nos meses seguintes automaticamente. O padrão vem de
+            <span id="tx-recurrence-months-hint" class="field__hint">
+              Quantos meses à frente serão gerados de uma vez, como lançamentos fixos. O padrão vem de
               <strong>Configurações</strong>.
             </span>
-          </label>
+            @if (isInvalid(form.controls.recurrenceMonths)) {
+              <span id="tx-recurrence-months-err" class="field__err" role="alert">
+                Use um número entre {{ limits.monthsMin }} e {{ limits.monthsMax }}.
+              </span>
+            }
+          </div>
           @if (flow() === 'expense') {
-            <label class="field field--check">
-              <input type="checkbox" formControlName="markInstallment" />
-              <span class="field__label field__label--inline">Compra parcelada (rótulo “Parcela X de Y”)</span>
-              <span class="field__hint">
+            <div class="field field--check">
+              <input
+                id="tx-installment"
+                type="checkbox"
+                formControlName="markInstallment"
+                aria-describedby="tx-installment-hint"
+              />
+              <label class="field__label field__label--inline" for="tx-installment">
+                Compra parcelada (rótulo “Parcela X de Y”)
+              </label>
+              <span id="tx-installment-hint" class="field__hint">
                 Só faz sentido para saídas (ex.: compra em 12x). O número de parcelas é o mesmo de
                 “Repetir por (meses)”.
               </span>
-            </label>
+            </div>
           }
         }
 

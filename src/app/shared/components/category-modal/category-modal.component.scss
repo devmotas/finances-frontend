@@ -52,6 +52,14 @@
   color: var(--fin-expense);
 }
 
+.field__hint {
+  margin: 0;
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-medium);
+  line-height: var(--fin-leading-snug);
+  color: var(--fin-text-muted);
+}
+
 .modal__actions {
   display: flex;
   flex-wrap: wrap;
@@ -86,9 +94,8 @@
 }
 
 .btn--sm {
-  padding: 0.375rem 0.625rem;
+  padding: 0.375rem 0.75rem;
   font-size: var(--fin-text-sm);
-  min-height: 36px;
 }
 
 .modal__section {

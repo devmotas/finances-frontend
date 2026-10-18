@@ -278,9 +278,6 @@
   position: fixed;
   inset: 0;
   z-index: 140;
-  margin: 0;
-  padding: 0;
-  border: none;
   background: color-mix(in srgb, var(--fin-text) 45%, transparent);
   cursor: pointer;
   animation: shell-backdrop-in 0.2s ease-out;
@@ -322,6 +319,9 @@
   transform: translateX(0);
   visibility: visible;
   pointer-events: auto;
+  transition:
+    transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+    visibility 0s;
 }
 
 .shell__drawer-head {

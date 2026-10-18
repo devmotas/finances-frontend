@@ -5,6 +5,8 @@
       role="dialog"
       aria-modal="true"
       [attr.aria-labelledby]="'cat-modal-title'"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
       (click)="$event.stopPropagation()"
     >
       <div class="modal__head">
@@ -17,58 +19,76 @@
       </div>
 
       <form class="modal__form" (ngSubmit)="save()" [formGroup]="form">
-        <label class="field">
-          <span class="field__label">Nome</span>
+        <div class="field">
+          <label class="field__label" for="cat-name">Nome</label>
           <input
+            id="cat-name"
             class="field__input"
             type="text"
             formControlName="name"
             [placeholder]="namePlaceholder()"
             autocomplete="off"
             [maxlength]="limits.categoryNameMax"
+            cdkFocusInitial
+            [attr.aria-invalid]="isInvalid(form.controls.name)"
+            [attr.aria-describedby]="describedBy(isInvalid(form.controls.name) && 'cat-name-err')"
           />
           @if (form.controls.name.touched && form.controls.name.errors?.['required']) {
-            <span class="field__err">Informe o nome.</span>
+            <span id="cat-name-err" class="field__err" role="alert">Informe o nome.</span>
           }
           @if (form.controls.name.touched && form.controls.name.errors?.['maxlength']) {
-            <span class="field__err">No máximo {{ limits.categoryNameMax }} caracteres.</span>
+            <span id="cat-name-err" class="field__err" role="alert">
+              No máximo {{ limits.categoryNameMax }} caracteres.
+            </span>
           }
-        </label>
+        </div>
 
         @if (isExpense()) {
-          <label class="field">
-            <span class="field__label">Grupo da despesa</span>
+          <div class="field">
+            <label class="field__label" for="cat-expense-group">Grupo da despesa</label>
             <select
+              id="cat-expense-group"
               class="field__input"
               formControlName="expenseGroup"
-              title="Essencial: necessidades básicas. Não essencial: desejos e extras."
+              aria-describedby="cat-expense-group-hint"
             >
               <option value="essential">Essencial (necessidades)</option>
               <option value="nonEssential">Não essencial (extras)</option>
             </select>
-          </label>
+            <span id="cat-expense-group-hint" class="field__hint">
+              Essencial: necessidades básicas. Não essencial: desejos e extras.
+            </span>
+          </div>
         }
 
         @if (isInvestment()) {
-          <label class="field">
-            <span class="field__label">Saldo inicial nesta categoria (R$)</span>
+          <div class="field">
+            <label class="field__label" for="cat-opening-balance">Saldo inicial nesta categoria (R$)</label>
             <input
+              id="cat-opening-balance"
               class="field__input"
               type="number"
               step="0.01"
               formControlName="openingBalanceAmount"
-              title="Valor já existente nesta linha antes dos lançamentos no app (compõe o valor investido)"
+              [attr.aria-invalid]="isInvalid(form.controls.openingBalanceAmount)"
+              [attr.aria-describedby]="
+                describedBy(
+                  'cat-opening-balance-hint',
+                  isInvalid(form.controls.openingBalanceAmount) && 'cat-opening-balance-err'
+                )
+              "
             />
-            @if (
-              form.controls.openingBalanceAmount.touched && form.controls.openingBalanceAmount.invalid
-            ) {
-              <span class="field__err">Use um valor numérico dentro do limite permitido.</span>
-            }
-            <span class="field__hint">
+            <span id="cat-opening-balance-hint" class="field__hint">
+              Valor que já existia nesta categoria antes dos lançamentos no app (compõe o valor investido).
               Distribua o patrimônio pré-existente entre as categorias de investimento; o resumo usa a soma de
               todas elas.
             </span>
-          </label>
+            @if (isInvalid(form.controls.openingBalanceAmount)) {
+              <span id="cat-opening-balance-err" class="field__err" role="alert">
+                Use um valor numérico dentro do limite permitido.
+              </span>
+            }
+          </div>
         }
 
         <div class="modal__actions">

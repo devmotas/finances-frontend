@@ -1,5 +1,5 @@
 <div class="shell">
-  <div class="shell__sticky">
+  <div class="shell__sticky" [attr.inert]="inertWhileNavOpen()">
     @if (pendingRequests.hasPending()) {
       <div class="shell__progress" role="progressbar" aria-label="Comunicando com o servidor">
         <span class="shell__progress-bar"></span>
@@ -13,6 +13,7 @@
         <span class="shell__title">Minhas Finanças</span>
       </div>
       <button
+        #navToggle
         type="button"
         class="shell__nav-toggle"
         (click)="toggleMobileNav()"
@@ -67,12 +68,7 @@
   </div>
 
   @if (mobileNavOpen()) {
-    <button
-      type="button"
-      class="shell__drawer-backdrop"
-      (click)="closeMobileNav()"
-      aria-label="Fechar menu de navegação"
-    ></button>
+    <div class="shell__drawer-backdrop" (click)="closeMobileNav()" aria-hidden="true"></div>
   }
 
   <aside
@@ -80,10 +76,15 @@
     class="shell__drawer"
     [class.shell__drawer--open]="mobileNavOpen()"
     [attr.aria-hidden]="mobileNavOpen() ? 'false' : 'true'"
+    [attr.role]="mobileNavOpen() ? 'dialog' : null"
+    [attr.aria-modal]="mobileNavOpen() ? 'true' : null"
+    aria-label="Menu de navegação"
+    [cdkTrapFocus]="mobileNavOpen()"
   >
     <div class="shell__drawer-head">
       <span class="shell__drawer-title">Ir para</span>
       <button
+        #drawerClose
         type="button"
         class="shell__drawer-close"
         (click)="closeMobileNav()"
@@ -126,7 +127,7 @@
     </div>
   </aside>
 
-  <main class="shell__main">
+  <main class="shell__main" [attr.inert]="inertWhileNavOpen()">
     <router-outlet />
   </main>
 </div>
