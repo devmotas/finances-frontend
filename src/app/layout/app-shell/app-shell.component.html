@@ -11,6 +11,9 @@
           <lucide-icon name="wallet" [size]="26" [strokeWidth]="2"></lucide-icon>
         </span>
         <span class="shell__title">Minhas Finanças</span>
+        @if (!isProduction) {
+          <span class="shell__env" title="Ambiente local, ligado ao banco de desenvolvimento">DEV</span>
+        }
       </div>
       <button
         #navToggle

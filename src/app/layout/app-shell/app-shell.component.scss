@@ -60,6 +60,17 @@
   gap: 0.5rem;
 }
 
+.shell__env {
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--fin-radius-full);
+  border: 1px solid color-mix(in srgb, var(--fin-warning) 35%, transparent);
+  background: var(--fin-warning-soft);
+  color: var(--fin-warning);
+  font-size: var(--fin-text-xs);
+  font-weight: var(--fin-weight-bold);
+  letter-spacing: var(--fin-tracking-wide);
+}
+
 .shell__logo {
   display: inline-flex;
   align-items: center;
@@ -198,7 +209,6 @@
 .shell__month-label {
   font-weight: var(--fin-weight-semibold);
   color: var(--fin-text);
-  text-transform: capitalize;
   min-width: 9.5rem;
   text-align: center;
   font-size: var(--fin-text-base);

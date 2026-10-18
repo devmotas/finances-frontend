@@ -15,6 +15,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/services/auth.service';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
@@ -48,6 +49,7 @@ export class AppShellComponent {
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
   readonly pendingRequests = inject(PendingRequestsService);
+  readonly isProduction = environment.production;
 
   readonly navItems: readonly ShellNavItem[] = [
     {
