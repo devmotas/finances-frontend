@@ -18,6 +18,7 @@ import {
   formatCompactBrl,
 } from '../../shared/charts/chart-theme';
 import { formatBrl } from '../../core/utils/brl-format';
+import { closingStatus, meterWidths, walletPlanStatus } from '../../core/utils/month-closing';
 
 type FlowAmounts = Record<ChartFlow, number>;
 
@@ -195,6 +196,26 @@ export class OverviewComponent {
   readonly selectedMonthName = computed(() => {
     const { year, month } = this.monthCtx.selectedMonth();
     return monthName(year, month);
+  });
+
+  readonly previousMonthName = computed(() => {
+    const { year, month } = this.monthCtx.selectedMonth();
+    return monthName(year, month - 1);
+  });
+
+  readonly closing = computed(() => {
+    const s = this.summary();
+    return s ? closingStatus(s.monthClosing.balance) : null;
+  });
+
+  readonly walletPlan = computed(() => {
+    const next = this.summary()?.nextMonth;
+    return next ? walletPlanStatus(next.availableForWallet, next.plannedWalletTransfer) : null;
+  });
+
+  readonly walletMeter = computed(() => {
+    const next = this.summary()?.nextMonth;
+    return next ? meterWidths(next.availableForWallet, next.plannedWalletTransfer) : null;
   });
 
   readonly nextMonthName = computed(() => {

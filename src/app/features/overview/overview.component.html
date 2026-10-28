@@ -1,7 +1,7 @@
 <div class="overview">
   <header class="overview__intro">
     <h1 class="overview__title">Visão Geral</h1>
-    <p class="overview__sub">Como fecha {{ selectedMonthName() }} e o que já está comprometido para o próximo mês</p>
+    <p class="overview__sub">Como fecha {{ selectedMonthName() }} e quanto dá para mandar para a carteira no próximo mês</p>
   </header>
 
   @if (facade.hasLoadError()) {
@@ -10,98 +10,252 @@
     <app-month-loading />
   } @else {
     @if (summary(); as s) {
-      <section class="hero" [attr.aria-label]="'Saldos de ' + selectedMonthName()">
-        <div class="hero__item">
-          <span class="hero__label">
-            <lucide-icon name="wallet" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
-            Saldo do mês
-          </span>
-          <p
-            class="hero__value"
-            [class.hero__value--in]="s.monthBalance >= 0"
-            [class.hero__value--out]="s.monthBalance < 0"
-          >
-            {{ s.monthBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
-          <p class="hero__caption">Entradas − saídas − aportes + resgates de {{ selectedMonthName() }}.</p>
-        </div>
-        <div class="hero__item hero__item--cash">
-          <span class="hero__label">
-            <lucide-icon name="piggy-bank" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
-            Saldo em caixa
-          </span>
-          <p
-            class="hero__value"
-            [class.hero__value--in]="s.cashBalance >= 0"
-            [class.hero__value--out]="s.cashBalance < 0"
-          >
-            {{ s.cashBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
-          <p class="hero__caption">
-            Conta corrente + Carteira no fim do mês; a sobra de cada mês passa para o seguinte.
-          </p>
-          <p class="hero__caption">
-            Conta corrente {{ s.ledgerBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} · Carteira
-            {{ s.walletBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
-          </p>
-        </div>
-      </section>
+      <div class="books">
+        <section class="book" aria-labelledby="closing-title">
+          <h2 id="closing-title" class="book__title">
+            <lucide-icon name="scale" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Fechamento de {{ selectedMonthName() }}
+          </h2>
+          <p class="book__caption">Conta corrente: o que entrou menos contas, investimentos e o que foi para a carteira.</p>
+          <dl class="ledger">
+            <div class="ledger__row">
+              <dt>Entradas</dt>
+              <dd class="ledger__amount ledger__amount--in">
+                {{ s.monthClosing.income | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>Essenciais</dt>
+              <dd class="ledger__amount ledger__amount--ess">
+                − {{ s.monthClosing.essential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>Não essenciais <span class="ledger__note">fora da carteira</span></dt>
+              <dd class="ledger__amount ledger__amount--ne">
+                − {{ s.monthClosing.nonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>Investimentos</dt>
+              <dd class="ledger__amount ledger__amount--inv">
+                − {{ s.monthClosing.investments | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>Para a carteira</dt>
+              <dd class="ledger__amount">
+                − {{ s.monthClosing.walletTransfers | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row ledger__row--total">
+              <dt>Fechamento</dt>
+              <dd
+                class="ledger__amount ledger__amount--total"
+                [class.ledger__amount--in]="closing()?.tone === 'surplus'"
+                [class.ledger__amount--out]="closing()?.tone === 'short'"
+              >
+                {{ s.monthClosing.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+          </dl>
+          @if (closing(); as c) {
+            <p [class]="'verdict verdict--' + c.tone">
+              @switch (c.tone) {
+                @case ('short') {
+                  <lucide-icon name="triangle-alert" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  <span>
+                    Faltaram {{ c.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}: saíram da sobra da conta
+                    corrente.
+                  </span>
+                }
+                @case ('surplus') {
+                  <lucide-icon name="circle-plus" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  <span>
+                    Sobraram {{ c.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}: dá para mandar mais para a
+                    carteira ou investir.
+                  </span>
+                }
+                @default {
+                  <lucide-icon name="circle-check" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                  <span>Fechou no zero a zero.</span>
+                }
+              }
+            </p>
+          }
+        </section>
 
-      <section class="next-month" aria-labelledby="next-month-title">
-        <div class="next-month__head">
-          <span class="next-month__icon" aria-hidden="true">
+        <section class="book" aria-labelledby="wallet-title">
+          <h2 id="wallet-title" class="book__title">
+            <lucide-icon name="wallet" [size]="20" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+            Carteira
+          </h2>
+          <p class="book__caption">Dinheiro livre do dia a dia; o que não for gasto passa para o mês seguinte.</p>
+          <dl class="ledger">
+            <div class="ledger__row">
+              <dt>Veio de {{ previousMonthName() }}</dt>
+              <dd class="ledger__amount">
+                {{ s.wallet.openingBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>Transferências</dt>
+              <dd class="ledger__amount">
+                + {{ s.wallet.transfers | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row">
+              <dt>Gastos <span class="ledger__note">pela atualização de saldo</span></dt>
+              <dd class="ledger__amount ledger__amount--ne">
+                − {{ s.wallet.spending | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+            <div class="ledger__row ledger__row--total">
+              <dt>Saldo</dt>
+              <dd class="ledger__amount ledger__amount--total">
+                {{ s.wallet.balance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              </dd>
+            </div>
+          </dl>
+          <p class="book__foot">
+            Passa para {{ nextMonthName() }}. Média de gastos dos últimos 3 meses:
+            <strong>{{ s.nextMonth.walletAverageSpending | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</strong>
+          </p>
+        </section>
+      </div>
+
+      <p class="cash-line">
+        Em caixa no fim de {{ selectedMonthName() }}: conta corrente
+        {{ s.ledgerBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} + carteira
+        {{ s.walletBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} =
+        <strong class="cash-line__total" [class.cash-line__total--out]="s.cashBalance < 0">
+          {{ s.cashBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+        </strong>
+      </p>
+
+      <section class="plan" aria-labelledby="plan-title">
+        <div class="plan__head">
+          <span class="plan__icon" aria-hidden="true">
             <lucide-icon name="calendar-clock" [size]="22" [strokeWidth]="2"></lucide-icon>
           </span>
           <div>
-            <h2 id="next-month-title" class="next-month__title">{{ nextMonthName() }} já comprometido</h2>
-            <p class="next-month__caption">
-              O que já está lançado para {{ nextMonthName() }}: séries e lançamentos avulsos registrados, mais a
-              média de gastos da carteira dos últimos três meses.
+            <h2 id="plan-title" class="plan__title">{{ nextMonthName() }}: quanto dá para a carteira</h2>
+            <p class="plan__caption">
+              Com o que já está lançado para {{ nextMonthName() }}. Se faltar, diminua a transferência para a
+              carteira; se sobrar, aumente ou invista.
             </p>
           </div>
         </div>
-        <dl class="next-month__rows">
-          <div class="next-month__row">
+
+        @if (walletMeter(); as meter) {
+          <div class="meter" aria-hidden="true">
+            <div class="meter__row">
+              <span class="meter__label">Disponível</span>
+              <span class="meter__track">
+                <span class="meter__bar meter__bar--available" [style.width.%]="meter.available"></span>
+              </span>
+            </div>
+            <div class="meter__row">
+              <span class="meter__label">Planejado</span>
+              <span class="meter__track">
+                <span
+                  class="meter__bar meter__bar--planned"
+                  [class.meter__bar--over]="walletPlan()?.tone === 'short'"
+                  [style.width.%]="meter.planned"
+                ></span>
+                @if (walletPlan()?.tone === 'short') {
+                  <span class="meter__limit" [style.left.%]="meter.available"></span>
+                }
+              </span>
+            </div>
+          </div>
+        }
+
+        <dl class="ledger">
+          <div class="ledger__row">
+            <dt>Conta corrente no fim de {{ selectedMonthName() }}</dt>
+            <dd class="ledger__amount">{{ s.ledgerBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}</dd>
+          </div>
+          <div class="ledger__row">
             <dt>Entradas</dt>
-            <dd class="next-month__amount next-month__amount--in">
-              {{ s.nextMonth.committedIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            <dd class="ledger__amount ledger__amount--in">
+              + {{ s.nextMonth.committedIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
-          <div class="next-month__row">
+          <div class="ledger__row">
             <dt>Essenciais</dt>
-            <dd class="next-month__amount next-month__amount--ess">
-              {{ s.nextMonth.committedEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            <dd class="ledger__amount ledger__amount--ess">
+              − {{ s.nextMonth.committedEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
-          <div class="next-month__row">
+          <div class="ledger__row">
             <dt>Não essenciais</dt>
-            <dd class="next-month__amount next-month__amount--ne">
-              {{ s.nextMonth.committedNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            <dd class="ledger__amount ledger__amount--ne">
+              − {{ s.nextMonth.committedNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
-          <div class="next-month__row">
-            <dt>Investimentos (aportes − resgates)</dt>
-            <dd class="next-month__amount next-month__amount--inv">
-              {{ s.nextMonth.committedInvestment | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          <div class="ledger__row">
+            <dt>Investimentos</dt>
+            <dd class="ledger__amount ledger__amount--inv">
+              − {{ s.nextMonth.committedInvestment | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
-          <div class="next-month__row">
-            <dt>Gastos previstos da carteira</dt>
-            <dd class="next-month__amount next-month__amount--ne">
-              {{ s.nextMonth.expectedWalletSpending | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+          <div class="ledger__row ledger__row--subtotal">
+            <dt>Disponível para a carteira</dt>
+            <dd class="ledger__amount" [class.ledger__amount--out]="s.nextMonth.availableForWallet < 0">
+              {{ s.nextMonth.availableForWallet | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
-          <div class="next-month__row next-month__row--total">
-            <dt>Saldo em caixa previsto no fim de {{ nextMonthName() }}</dt>
+          <div class="ledger__row">
+            <dt>Carteira planejada</dt>
+            <dd class="ledger__amount">
+              − {{ s.nextMonth.plannedWalletTransfer | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+            </dd>
+          </div>
+          <div class="ledger__row ledger__row--total">
+            <dt>Fechamento previsto</dt>
             <dd
-              class="next-month__amount next-month__amount--total"
-              [class.next-month__amount--in]="s.nextMonth.projectedBalance >= 0"
-              [class.next-month__amount--out]="s.nextMonth.projectedBalance < 0"
+              class="ledger__amount ledger__amount--total"
+              [class.ledger__amount--in]="walletPlan()?.tone === 'surplus'"
+              [class.ledger__amount--out]="walletPlan()?.tone === 'short'"
             >
-              {{ s.nextMonth.projectedBalance | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ s.nextMonth.projectedClosing | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
             </dd>
           </div>
         </dl>
+
+        @if (walletPlan(); as plan) {
+          <p [class]="'verdict verdict--' + plan.tone">
+            @switch (plan.tone) {
+              @case ('short') {
+                <lucide-icon name="triangle-alert" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                @if (plan.maxTransfer > 0) {
+                  <span>
+                    A carteira planejada passa {{ plan.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} do
+                    disponível. Para fechar no zero, mande no máximo
+                    {{ plan.maxTransfer | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}.
+                  </span>
+                } @else {
+                  <span>
+                    As contas já passam do que entra: faltam
+                    {{ plan.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }} mesmo sem a carteira.
+                  </span>
+                }
+              }
+              @case ('surplus') {
+                <lucide-icon name="circle-plus" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                <span>
+                  Sobram {{ plan.amount | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}: dá para aumentar a
+                  carteira ou investir.
+                </span>
+              }
+              @default {
+                <lucide-icon name="circle-check" [size]="18" [strokeWidth]="2" aria-hidden="true"></lucide-icon>
+                <span>Fecha no zero a zero.</span>
+              }
+            }
+          </p>
+        }
       </section>
 
       <h2 class="overview__section-title">{{ selectedMonthName() }} por fluxo</h2>

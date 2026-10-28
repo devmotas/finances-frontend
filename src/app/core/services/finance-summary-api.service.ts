@@ -19,8 +19,27 @@ export interface NextMonthSummaryDto {
   committedEssential: number;
   committedNonEssential: number;
   committedInvestment: number;
-  expectedWalletSpending: number;
-  projectedBalance: number;
+  availableForWallet: number;
+  plannedWalletTransfer: number;
+  projectedClosing: number;
+  walletAverageSpending: number;
+}
+
+export interface MonthClosingDto {
+  income: number;
+  essential: number;
+  nonEssential: number;
+  bills: number;
+  investments: number;
+  walletTransfers: number;
+  balance: number;
+}
+
+export interface WalletSummaryDto {
+  openingBalance: number;
+  transfers: number;
+  spending: number;
+  balance: number;
 }
 
 export interface FinanceSummaryDto {
@@ -34,6 +53,8 @@ export interface FinanceSummaryDto {
   totalWithdrawals: number;
   netInvested: number;
   monthBalance: number;
+  monthClosing: MonthClosingDto;
+  wallet: WalletSummaryDto;
   cashBalance: number;
   ledgerBalance: number;
   walletBalance: number;
