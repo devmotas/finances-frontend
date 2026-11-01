@@ -1,1 +1,10 @@
 @use '../../../shared/components/investments/investment-modal';
+
+.field__warning {
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--fin-radius-sm);
+  background: var(--fin-warning-soft);
+  color: var(--fin-warning);
+  font-size: var(--fin-text-sm);
+  font-weight: var(--fin-weight-semibold);
+}

@@ -17,6 +17,7 @@ import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/rou
 import { LucideAngularModule } from 'lucide-angular';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../../core/services/auth.service';
+import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { MonthContextService } from '../../core/services/month-context.service';
 import { PendingRequestsService } from '../../core/services/pending-requests.service';
@@ -48,6 +49,7 @@ export class AppShellComponent {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   readonly pendingRequests = inject(PendingRequestsService);
   readonly isProduction = environment.production;
 
@@ -69,6 +71,11 @@ export class AppShellComponent {
       label: 'Saídas',
       icon: 'arrow-up-right',
       iconModifier: 'out',
+    },
+    {
+      path: '/app/carteira',
+      label: 'Carteira',
+      icon: 'wallet',
     },
     {
       path: '/app/investimentos',
@@ -143,10 +150,13 @@ export class AppShellComponent {
     afterNextRender(() => target().nativeElement.focus(), { injector: this.injector });
   }
 
-  logout(): void {
-    if (!confirm('Deseja realmente sair da conta?')) {
-      return;
-    }
+  async logout(): Promise<void> {
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Sair da conta',
+      message: 'Deseja realmente sair da conta?',
+      confirmLabel: 'Sair',
+    });
+    if (!confirmed) return;
     this.closeMobileNav();
     this.auth.logout();
     this.toast.show('Você saiu da conta.', 'info');

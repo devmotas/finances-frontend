@@ -89,7 +89,6 @@ const TX_FEEDBACK = {
   invalidAmount: 'Valor inválido.',
   invalidCategory: 'Categoria inválida.',
   totalTooSmall: 'O valor total é pequeno demais para o número de parcelas.',
-  confirmEdit: 'Deseja salvar as alterações?',
   createFailed: 'Não foi possível salvar o lançamento.',
   updateFailed: 'Não foi possível atualizar o lançamento.',
 } as const;
@@ -253,7 +252,10 @@ export class TransactionModalComponent {
   }
 
   categories() {
-    return this.facade.categoriesByFlow(this.flow());
+    const editingCategoryId = this.editing()?.categoryId;
+    return this.facade
+      .categoriesByFlow(this.flow())
+      .filter((c) => !c.walletManaged || c.id === editingCategoryId);
   }
 
   recurrenceOptions(): readonly RecurrenceOption[] {
@@ -430,7 +432,6 @@ export class TransactionModalComponent {
   }
 
   private saveEdit(ed: Transaction, categoryId: number, amount: number): void {
-    if (!confirm(TX_FEEDBACK.confirmEdit)) return;
     const applyToFutureSeries =
       isSeriesTransaction(ed) &&
       this.form.controls.seriesUpdateScope.value === SERIES_UPDATE_SCOPE.futureSeries;

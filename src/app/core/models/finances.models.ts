@@ -20,6 +20,7 @@ export interface Category {
   flow: Flow;
   expenseGroup?: ExpenseGroup;
   openingBalanceAmount?: number;
+  walletManaged?: boolean;
 }
 
 export interface Transaction {

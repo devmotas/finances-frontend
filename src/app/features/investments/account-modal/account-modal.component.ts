@@ -25,11 +25,23 @@ import {
   parseAmount,
   todayIso,
 } from '../../../shared/components/investments/investment-form';
-import { ACCOUNT_ROLE_HINT, ACCOUNT_ROLE_LABEL, ACCOUNT_ROLES, isShortTermReserve } from '../account-role';
+import { ACCOUNT_ROLE_HINT, ACCOUNT_ROLE_LABEL, INVESTMENT_ROLES, isShortTermReserve } from '../account-role';
 
 const ESCAPE_KEY = 'Escape';
 const BACKDROP_CLASS = 'modal__backdrop';
 const ZERO_AMOUNT = 0;
+
+const TITLE = {
+  investment: { creating: 'Nova conta de investimento', editing: 'Editar conta' },
+  wallet: { creating: 'Nova carteira', editing: 'Editar carteira' },
+} as const;
+
+const NAME_PLACEHOLDER = {
+  investment: 'Ex.: Tesouro Selic, Caixinha Nubank',
+  wallet: 'Ex.: Dinheiro, Cartão pré-pago',
+} as const;
+
+export type AccountModalMode = keyof typeof TITLE;
 
 const FEEDBACK = {
   created: 'Conta criada.',
@@ -51,11 +63,12 @@ export class AccountModalComponent {
 
   readonly visible = input(false);
   readonly editing = input<InvestmentAccountRecord | null>(null);
+  readonly mode = input<AccountModalMode>('investment');
   readonly closed = output<void>();
   readonly saved = output<void>();
 
   readonly limits = VALIDATION_LIMITS;
-  readonly roles = ACCOUNT_ROLES;
+  readonly roles = INVESTMENT_ROLES;
   readonly roleLabel = ACCOUNT_ROLE_LABEL;
   readonly savingLabel = BUSY_LABEL.saving;
   readonly describedBy = describedBy;
@@ -76,7 +89,9 @@ export class AccountModalComponent {
 
   readonly hasTarget = computed(() => isShortTermReserve(this.role()));
   readonly roleHint = computed(() => ACCOUNT_ROLE_HINT[this.role()]);
-  readonly title = computed(() => (this.editing() ? 'Editar conta' : 'Nova conta de investimento'));
+  readonly isWalletMode = computed(() => this.mode() === 'wallet');
+  readonly title = computed(() => TITLE[this.mode()][this.editing() ? 'editing' : 'creating']);
+  readonly namePlaceholder = computed(() => NAME_PLACEHOLDER[this.mode()]);
 
   constructor() {
     lockBodyScrollWhile(this.visible);
@@ -144,7 +159,7 @@ export class AccountModalComponent {
   private resetForm(account: InvestmentAccountRecord | null): void {
     this.form.reset({
       name: account?.name ?? '',
-      role: account?.role ?? ACCOUNT_ROLE.investment,
+      role: account?.role ?? (this.isWalletMode() ? ACCOUNT_ROLE.wallet : ACCOUNT_ROLE.investment),
       initialBalance: formatNumberToBrlInput(account?.initialBalance ?? ZERO_AMOUNT),
       initialBalanceDate: account?.initialBalanceDate ?? todayIso(),
       targetBalance: account?.targetBalance != null ? formatNumberToBrlInput(account.targetBalance) : '',

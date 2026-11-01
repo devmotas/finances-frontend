@@ -25,14 +25,13 @@ export const ACCOUNT_ROLE_HINT: Record<AccountRole, string> = {
   [ACCOUNT_ROLE.reserve]: 'Entra na reserva de emergência e quase não é mexida.',
   [ACCOUNT_ROLE.shortTermReserve]:
     'Entra na reserva de emergência. Você pega emprestado num mês apertado e depois devolve.',
-  [ACCOUNT_ROLE.wallet]: 'Dinheiro do dia a dia (entra no saldo em caixa, não é investimento)',
+  [ACCOUNT_ROLE.wallet]: 'Dinheiro do dia a dia (entra no saldo em caixa, não é investimento).',
 };
 
-export const ACCOUNT_ROLES: readonly AccountRole[] = [
+export const INVESTMENT_ROLES: readonly AccountRole[] = [
   ACCOUNT_ROLE.investment,
   ACCOUNT_ROLE.reserve,
   ACCOUNT_ROLE.shortTermReserve,
-  ACCOUNT_ROLE.wallet,
 ];
 
 export const DIRECTIONS: readonly MovementDirection[] = [
@@ -47,7 +46,7 @@ const INVESTMENT_TEXTS: RoleTexts = {
   },
   done: {
     [MOVEMENT_DIRECTION.contribution]: 'Aporte',
-    [MOVEMENT_DIRECTION.withdrawal]: 'Resgate',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Resgate para a conta corrente',
   },
   item: {
     [MOVEMENT_DIRECTION.contribution]: 'este aporte',
@@ -62,7 +61,7 @@ const SHORT_TERM_TEXTS: RoleTexts = {
   },
   done: {
     [MOVEMENT_DIRECTION.contribution]: 'Devolvido',
-    [MOVEMENT_DIRECTION.withdrawal]: 'Pego emprestado',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Pego emprestado para a conta corrente',
   },
   item: {
     [MOVEMENT_DIRECTION.contribution]: 'esta devolução',
@@ -73,11 +72,11 @@ const SHORT_TERM_TEXTS: RoleTexts = {
 const WALLET_TEXTS: RoleTexts = {
   action: {
     [MOVEMENT_DIRECTION.contribution]: 'Entra na carteira',
-    [MOVEMENT_DIRECTION.withdrawal]: 'Volta para o caixa',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Volta para a conta corrente',
   },
   done: {
     [MOVEMENT_DIRECTION.contribution]: 'Entrou na carteira',
-    [MOVEMENT_DIRECTION.withdrawal]: 'Voltou para o caixa',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Voltou para a conta corrente',
   },
   item: {
     [MOVEMENT_DIRECTION.contribution]: 'esta transferência',

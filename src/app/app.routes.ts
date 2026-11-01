@@ -58,6 +58,12 @@ export const routes: Routes = [
           import('./features/expenses/expenses.component').then((m) => m.ExpensesComponent),
       },
       {
+        path: 'carteira',
+        title: pageTitle('Carteira'),
+        loadComponent: () =>
+          import('./features/wallet/wallet.component').then((m) => m.WalletComponent),
+      },
+      {
         path: 'investimentos',
         title: pageTitle('Investimentos'),
         loadChildren: () =>

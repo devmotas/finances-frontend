@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { LucideAngularModule } from 'lucide-angular';
 import { Category, ExpenseGroup, Flow } from '../../../core/models/finances.models';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 import { FinancesFacadeService } from '../../../core/services/finances-facade.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { httpErrorMessage } from '../../../core/utils/http-error.util';
@@ -38,6 +39,7 @@ export class CategoryModalComponent {
   readonly limits = VALIDATION_LIMITS;
   private readonly facade = inject(FinancesFacadeService);
   private readonly toast = inject(ToastService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
   private readonly el = inject(ElementRef);
 
   readonly visible = input(false);
@@ -80,7 +82,7 @@ export class CategoryModalComponent {
   }
 
   list(): Category[] {
-    return this.facade.categoriesByFlow(this.flow());
+    return this.facade.categoriesByFlow(this.flow()).filter((c) => !c.walletManaged);
   }
 
   isExpense(): boolean {
@@ -173,9 +175,15 @@ export class CategoryModalComponent {
     }
   }
 
-  remove(c: Category): void {
+  async remove(c: Category): Promise<void> {
     if (this.deletingId() !== null) return;
-    if (!confirm(`Excluir a categoria "${c.name}"?`)) return;
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Excluir categoria',
+      message: `Excluir a categoria "${c.name}"?`,
+      confirmLabel: 'Excluir',
+      danger: true,
+    });
+    if (!confirmed) return;
     this.deletingId.set(c.id);
     this.facade
       .deleteCategory(c.id)

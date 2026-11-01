@@ -24,7 +24,7 @@
             class="field__input"
             type="text"
             formControlName="name"
-            placeholder="Ex.: Tesouro Selic, Caixinha Nubank"
+            [placeholder]="namePlaceholder()"
             autocomplete="off"
             [maxlength]="limits.categoryNameMax"
             cdkFocusInitial
@@ -38,15 +38,17 @@
           }
         </div>
 
-        <div class="field">
-          <label class="field__label" for="acc-role">Papel</label>
-          <select id="acc-role" class="field__input" formControlName="role" aria-describedby="acc-role-hint">
-            @for (role of roles; track role) {
-              <option [value]="role">{{ roleLabel[role] }}</option>
-            }
-          </select>
-          <span id="acc-role-hint" class="field__hint">{{ roleHint() }}</span>
-        </div>
+        @if (!isWalletMode()) {
+          <div class="field">
+            <label class="field__label" for="acc-role">Papel</label>
+            <select id="acc-role" class="field__input" formControlName="role" aria-describedby="acc-role-hint">
+              @for (role of roles; track role) {
+                <option [value]="role">{{ roleLabel[role] }}</option>
+              }
+            </select>
+            <span id="acc-role-hint" class="field__hint">{{ roleHint() }}</span>
+          </div>
+        }
 
         @if (hasTarget()) {
           <div class="field">

@@ -25,9 +25,11 @@ import { BUSY_LABEL } from '../../../shared/components/busy-button/busy-labels';
 import {
   amountValidator,
   defaultDateForMonth,
+  formatIsoDate,
   parseAmount,
 } from '../../../shared/components/investments/investment-form';
 import { DIRECTIONS, directionActionLabel, isShortTermReserve, isWallet } from '../account-role';
+import { coveredByBalanceUpdate } from './balance-update-coverage';
 
 const ESCAPE_KEY = 'Escape';
 const BACKDROP_CLASS = 'modal__backdrop';
@@ -41,12 +43,12 @@ const FEEDBACK = {
 
 const DIRECTION_HINT = {
   investment: {
-    [MOVEMENT_DIRECTION.contribution]: 'Sai do caixa e entra na conta.',
-    [MOVEMENT_DIRECTION.withdrawal]: 'Sai da conta e volta para o caixa.',
+    [MOVEMENT_DIRECTION.contribution]: 'Sai da conta corrente e entra na conta.',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Sai da conta e vai para a conta corrente.',
   },
   shortTerm: {
-    [MOVEMENT_DIRECTION.contribution]: 'Volta para a reserva de curto prazo. Não conta como saída.',
-    [MOVEMENT_DIRECTION.withdrawal]: 'Vai da reserva de curto prazo para o caixa. Não conta como entrada.',
+    [MOVEMENT_DIRECTION.contribution]: 'Sai da conta corrente e volta para a reserva de curto prazo. Não conta como saída.',
+    [MOVEMENT_DIRECTION.withdrawal]: 'Sai da reserva de curto prazo e vai para a conta corrente. Não conta como entrada.',
   },
   wallet: {
     [MOVEMENT_DIRECTION.contribution]: 'Sai da conta corrente e entra na carteira. Não conta como saída.',
@@ -104,9 +106,20 @@ export class MovementModalComponent {
 
   private readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
 
-  private readonly selectedRole = computed(() => {
+  private readonly selectedAccount = computed(() => {
     const id = Number(this.formValue().accountId);
-    return this.accounts().find((account) => account.id === id)?.role;
+    return this.accounts().find((account) => account.id === id);
+  });
+
+  private readonly selectedRole = computed(() => this.selectedAccount()?.role);
+
+  readonly balanceUpdateWarning = computed(() => {
+    const update = this.selectedAccount()?.lastBalanceUpdate ?? null;
+    if (!update || !coveredByBalanceUpdate(this.formValue().date ?? '', update)) return null;
+    return (
+      `Já existe uma atualização de saldo em ${formatIsoDate(update.date)}. ` +
+      'Com esta data, o valor é considerado já incluído nela: o saldo da conta não muda e a diferença vira rendimento.'
+    );
   });
 
   private readonly kind = computed((): MovementKind => {

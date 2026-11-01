@@ -1,0 +1,28 @@
+@if (request(); as r) {
+  <div class="modal__backdrop" (click)="backdropClick($event)" (keydown)="onKeydown($event)" role="presentation">
+    <div
+      class="modal"
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-dialog-title"
+      aria-describedby="confirm-dialog-desc"
+      cdkTrapFocus
+      cdkTrapFocusAutoCapture
+    >
+      <h2 id="confirm-dialog-title" class="modal__title">{{ r.title }}</h2>
+      <p id="confirm-dialog-desc" class="modal__text">{{ r.message }}</p>
+      <div class="modal__actions">
+        <button type="button" class="btn btn--ghost" cdkFocusInitial (click)="cancel()">Cancelar</button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn--danger]="r.danger"
+          [class.btn--primary]="!r.danger"
+          (click)="confirm()"
+        >
+          {{ r.confirmLabel }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

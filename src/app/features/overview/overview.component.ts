@@ -17,7 +17,7 @@ import {
   flowShade,
   formatCompactBrl,
 } from '../../shared/charts/chart-theme';
-import { formatBrl } from '../../core/utils/brl-format';
+import { formatBrl, formatLedgerBrl } from '../../core/utils/brl-format';
 import { closingStatus, meterWidths, walletPlanStatus } from '../../core/utils/month-closing';
 
 type FlowAmounts = Record<ChartFlow, number>;
@@ -192,6 +192,7 @@ export class OverviewComponent {
   private readonly monthCtx = inject(MonthContextService);
 
   readonly summary = this.facade.summary;
+  readonly ledger = formatLedgerBrl;
 
   readonly selectedMonthName = computed(() => {
     const { year, month } = this.monthCtx.selectedMonth();

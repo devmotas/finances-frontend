@@ -17,7 +17,7 @@ describe('account-role', () => {
     const role = ACCOUNT_ROLE.shortTermReserve;
     expect(directionActionLabel(role, MOVEMENT_DIRECTION.contribution)).toBe('Devolver');
     expect(directionActionLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Pegar emprestado');
-    expect(directionBadgeLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Pego emprestado');
+    expect(directionBadgeLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Pego emprestado para a conta corrente');
   });
 
   it('reconhece só a reserva de curto prazo', () => {
@@ -29,9 +29,9 @@ describe('account-role', () => {
   it('usa os textos de transferência na carteira', () => {
     const role = ACCOUNT_ROLE.wallet;
     expect(directionActionLabel(role, MOVEMENT_DIRECTION.contribution)).toBe('Entra na carteira');
-    expect(directionActionLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Volta para o caixa');
+    expect(directionActionLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Volta para a conta corrente');
     expect(directionBadgeLabel(role, MOVEMENT_DIRECTION.contribution)).toBe('Entrou na carteira');
-    expect(directionBadgeLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Voltou para o caixa');
+    expect(directionBadgeLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('Voltou para a conta corrente');
     expect(directionItemLabel(role, MOVEMENT_DIRECTION.withdrawal)).toBe('esta transferência');
   });
 

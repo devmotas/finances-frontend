@@ -238,6 +238,7 @@
 <app-series-delete-modal
   [visible]="deletion.isOpen()"
   [isSeries]="deletion.isSeries()"
+  [seriesKind]="deletion.seriesKind()"
   [itemLabel]="deletion.itemLabel()"
   [deletingScope]="deletion.deletingScope()"
   (confirmed)="deletion.confirm($event)"

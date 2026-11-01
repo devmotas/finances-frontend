@@ -16,6 +16,7 @@ export interface CategoryApiDto {
   flow: string;
   expenseGroup: string | null;
   openingBalanceAmount: number | null;
+  walletManaged?: boolean;
 }
 
 export interface TransactionApiDto {
@@ -69,6 +70,7 @@ export function mapCategoryApiDto(row: CategoryApiDto): Category {
     flow: asFlow(row.flow),
     expenseGroup: asExpenseGroup(row.expenseGroup),
     openingBalanceAmount: row.openingBalanceAmount ?? 0,
+    walletManaged: row.walletManaged === true,
   };
 }
 

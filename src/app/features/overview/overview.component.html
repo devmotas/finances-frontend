@@ -27,25 +27,25 @@
             <div class="ledger__row">
               <dt>Essenciais</dt>
               <dd class="ledger__amount ledger__amount--ess">
-                − {{ s.monthClosing.essential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                {{ ledger(s.monthClosing.essential, 'out') }}
               </dd>
             </div>
             <div class="ledger__row">
               <dt>Não essenciais <span class="ledger__note">fora da carteira</span></dt>
               <dd class="ledger__amount ledger__amount--ne">
-                − {{ s.monthClosing.nonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                {{ ledger(s.monthClosing.nonEssential, 'out') }}
               </dd>
             </div>
             <div class="ledger__row">
               <dt>Investimentos</dt>
               <dd class="ledger__amount ledger__amount--inv">
-                − {{ s.monthClosing.investments | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                {{ ledger(s.monthClosing.investments, 'out') }}
               </dd>
             </div>
             <div class="ledger__row">
               <dt>Para a carteira</dt>
               <dd class="ledger__amount">
-                − {{ s.monthClosing.walletTransfers | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                {{ ledger(s.monthClosing.walletTransfers, 'out') }}
               </dd>
             </div>
             <div class="ledger__row ledger__row--total">
@@ -101,13 +101,13 @@
             <div class="ledger__row">
               <dt>Transferências</dt>
               <dd class="ledger__amount">
-                + {{ s.wallet.transfers | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                {{ ledger(s.wallet.transfers, 'in') }}
               </dd>
             </div>
             <div class="ledger__row">
               <dt>Gastos <span class="ledger__note">pela atualização de saldo</span></dt>
               <dd class="ledger__amount ledger__amount--ne">
-                − {{ s.wallet.spending | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+                {{ ledger(s.wallet.spending, 'out') }}
               </dd>
             </div>
             <div class="ledger__row ledger__row--total">
@@ -179,25 +179,25 @@
           <div class="ledger__row">
             <dt>Entradas</dt>
             <dd class="ledger__amount ledger__amount--in">
-              + {{ s.nextMonth.committedIncome | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ ledger(s.nextMonth.committedIncome, 'in') }}
             </dd>
           </div>
           <div class="ledger__row">
             <dt>Essenciais</dt>
             <dd class="ledger__amount ledger__amount--ess">
-              − {{ s.nextMonth.committedEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ ledger(s.nextMonth.committedEssential, 'out') }}
             </dd>
           </div>
           <div class="ledger__row">
             <dt>Não essenciais</dt>
             <dd class="ledger__amount ledger__amount--ne">
-              − {{ s.nextMonth.committedNonEssential | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ ledger(s.nextMonth.committedNonEssential, 'out') }}
             </dd>
           </div>
           <div class="ledger__row">
             <dt>Investimentos</dt>
             <dd class="ledger__amount ledger__amount--inv">
-              − {{ s.nextMonth.committedInvestment | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ ledger(s.nextMonth.committedInvestment, 'out') }}
             </dd>
           </div>
           <div class="ledger__row ledger__row--subtotal">
@@ -209,7 +209,7 @@
           <div class="ledger__row">
             <dt>Carteira planejada</dt>
             <dd class="ledger__amount">
-              − {{ s.nextMonth.plannedWalletTransfer | currency: 'BRL' : 'symbol' : '1.2-2' : 'pt-BR' }}
+              {{ ledger(s.nextMonth.plannedWalletTransfer, 'out') }}
             </dd>
           </div>
           <div class="ledger__row ledger__row--total">

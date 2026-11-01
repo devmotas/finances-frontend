@@ -5,11 +5,11 @@ import { finalize } from 'rxjs';
 import {
   InvestmentAccountRecord,
   InvestmentMonthAccount,
-  InvestmentMonthWallet,
   InvestmentMovement,
   MOVEMENT_DIRECTION,
   MovementDirection,
 } from '../../core/models/investment-accounts.models';
+import { ConfirmDialogService } from '../../core/services/confirm-dialog.service';
 import { FinancesFacadeService } from '../../core/services/finances-facade.service';
 import { InvestmentAccountsApiService } from '../../core/services/investment-accounts-api.service';
 import { InvestmentApiService } from '../../core/services/investment-api.service';
@@ -53,11 +53,6 @@ export interface AccountCard {
   hasMissing: boolean;
 }
 
-export interface WalletCard {
-  account: InvestmentMonthWallet;
-  monthNet: number;
-}
-
 @Component({
   selector: 'app-investments',
   imports: [
@@ -79,6 +74,7 @@ export class InvestmentsComponent {
   private readonly toast = inject(ToastService);
   private readonly investmentApi = inject(InvestmentApiService);
   private readonly accountsApi = inject(InvestmentAccountsApiService);
+  private readonly confirmDialog = inject(ConfirmDialogService);
 
   readonly monthView = monthScopedResource((ym) => this.investmentApi.getMonthView(ym.year, ym.month));
   readonly view = this.monthView.value;
@@ -101,14 +97,7 @@ export class InvestmentsComponent {
   readonly formatDate = formatIsoDate;
 
   readonly accounts = computed(() => this.view()?.accounts ?? []);
-  readonly wallets = computed(() => this.view()?.wallets ?? []);
-  readonly movementAccounts = computed(() => [...this.accounts(), ...this.wallets()]);
-  readonly hasAccounts = computed(() => this.movementAccounts().length > 0);
-  readonly walletMovements = computed(() => this.view()?.walletTransactions ?? []);
-
-  readonly walletCards = computed((): WalletCard[] =>
-    this.wallets().map((account) => ({ account, monthNet: accountMonthNet(account) }))
-  );
+  readonly hasAccounts = computed(() => this.accounts().length > 0);
 
   readonly accountCards = computed((): AccountCard[] => {
     const view = this.view();
@@ -176,9 +165,15 @@ export class InvestmentsComponent {
     this.refresh();
   }
 
-  deleteAccount(account: InvestmentMonthAccount): void {
+  async deleteAccount(account: InvestmentMonthAccount): Promise<void> {
     if (this.deletingAccountId() !== null) return;
-    if (!confirm(`Excluir a conta "${account.name}"?`)) return;
+    const confirmed = await this.confirmDialog.ask({
+      title: 'Excluir conta',
+      message: `Excluir a conta "${account.name}"?`,
+      confirmLabel: 'Excluir',
+      danger: true,
+    });
+    if (!confirmed) return;
     this.deletingAccountId.set(account.id);
     this.accountsApi
       .delete(account.id)
@@ -206,10 +201,6 @@ export class InvestmentsComponent {
     this.editingMovement.set(null);
     this.movementPreset.set({ accountId, direction });
     this.movementModalOpen.set(true);
-  }
-
-  openTransfer(wallet: InvestmentMonthWallet): void {
-    this.openNewMovement(wallet.id, MOVEMENT_DIRECTION.contribution);
   }
 
   openEditMovement(movement: InvestmentMovement): void {
@@ -246,7 +237,7 @@ export class InvestmentsComponent {
   }
 
   private findAccount(id: number): InvestmentMonthAccount | undefined {
-    return this.movementAccounts().find((account) => account.id === id);
+    return this.accounts().find((account) => account.id === id);
   }
 
   private describeMovement(movement: InvestmentMovement): string {

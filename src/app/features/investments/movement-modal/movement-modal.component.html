@@ -88,6 +88,9 @@
           @if (isInvalid(form.controls.date)) {
             <span id="mov-date-err" class="field__err" role="alert">Informe a data.</span>
           }
+          @if (balanceUpdateWarning(); as warning) {
+            <span class="field__warning" role="status">{{ warning }}</span>
+          }
         </div>
 
         <div class="field">
